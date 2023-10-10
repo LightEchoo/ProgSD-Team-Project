@@ -21,7 +21,7 @@ def open_responsive_window():
     root.geometry("800x600")
 
     # 创建并加载背景图片
-    background_image = tk.PhotoImage(file="/Users/renpei/Desktop/WechatIMG3043.jpg")  # 请替换为你的背景图片文件路径
+    background_image = tk.PhotoImage(file='map_background.jpg')  # 请替换为你的背景图片文件路径
     background_label = tk.Label(root, image=background_image)
     background_label.place(relwidth=1, relheight=1)  # 使图片充满整个窗口
 
