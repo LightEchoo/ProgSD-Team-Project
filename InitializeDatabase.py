@@ -101,6 +101,7 @@ def input_default_data():
         connect.close()
 
         print("Default data successfully inputed. Including 3 users in tb_Users, and 4 cars in tb_Cars")
+
     except sqlite3.Error as e:
         print("Error in Input Default Data:", str(e))
         connect.rollback()
