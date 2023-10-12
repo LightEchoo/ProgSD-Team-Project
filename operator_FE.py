@@ -2,6 +2,8 @@
 from tkinter import *
 import tkinter as tk
 from tkinter import ttk
+import operator_BE
+
 #=创建全局变量
 previous_window=None
 
@@ -409,7 +411,7 @@ def charge():
     charge_log=Tk()
     charge_log.geometry("500x200")
     charge_log.title("Charge ")
-    label1=Label(charge_log,text="Car code::")#输入操作车辆编号
+    label1=Label(charge_log,text="Car code:")#输入操作车辆编号
     label1.place(x=20,y=20)
     
     box1=Entry(charge_log,text=0)
@@ -420,8 +422,8 @@ def charge():
     label2.place(x=20,y=50)
     box2=Listbox(charge_log)
     box2.place(x=100,y=50,width=100,height=50)
-    button=Button(charge_log,text="Charge",command=lambda:operator_BE.charge(car_id))
-    button.place(x=100,y=20,width=100,height=25)
+    button=Button(charge_log,text="Charge",command=lambda:operator_BE.charge(charge_log, car_id))
+    button.place(x=200,y=20,width=100,height=25)
 
 def repair():
     repair_log=Tk()

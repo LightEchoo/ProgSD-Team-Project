@@ -39,6 +39,7 @@ def update_user_debt(user_name, user_debt):
         cursor.execute("UPDATE tb_Users SET UserDebt = ? WHERE UserName = ?", (user_debt, user_name))
         connect.commit()
         connect.close()
+        return True
     except sqlite3.Error as e:
         print("Error in Update User Debt:", str(e))
         connect.rollback()
@@ -54,6 +55,7 @@ def update_user_deposit(user_name, user_deposit):
         cursor.execute("UPDATE tb_Users SET UserDeposit = ? WHERE UserName = ?", (user_name, user_deposit))
         connect.commit()
         connect.close()
+        return True
     except sqlite3.Error as e:
         print("Error in Update User Deposit:", str(e))
         connect.rollback()
@@ -69,6 +71,7 @@ def update_user_location(user_name, user_location):
         cursor.execute("UPDATE tb_Users SET UserLocation = ? WHERE UserName = ?", (user_location, user_name))
         connect.commit()
         connect.close()
+        return True
     except sqlite3.Error as e:
         print("Error in Update User Location:", str(e))
         connect.rollback()
@@ -105,15 +108,31 @@ def get_one_user_info(user_name):
         connect.close()
         return None
 
+# 查看用户的所有订单
+def get_one_user_orders(user_name):
+    connect = connect_to_database()
+    cursor = connect.cursor()
+
+    try:
+        cursor.execute("SELECT * FROM tb_Order WHERE UserName = ?", (user_name,))
+        user_orders = cursor.fetchall()
+        connect.close()
+        return user_orders
+    except sqlite3.Error as e:
+        print("查询用户订单时发生错误:", str(e))
+        connect.close()
+        return []
+
 #更新车辆电量
 def update_car_power(car_id, car_power):
     connect = connect_to_database()
     cursor = connect.cursor()
 
     try:
-        cursor.execute("UPDATE tb_Cars SET CarState = ? WHERE CarId = ?", (car_power, car_id))
+        cursor.execute("UPDATE tb_Cars SET CarPower = ? WHERE CarId = ?", (car_power, car_id))
         connect.commit()
         connect.close()
+        return True
     except sqlite3.Error as e:
         print("Error in Update Car Power:", str(e))
         connect.rollback()
@@ -129,6 +148,7 @@ def update_car_state(car_id, car_state):
         cursor.execute("UPDATE tb_Cars SET CarState = ? WHERE CarId = ?", (car_state, car_id))
         connect.commit()
         connect.close()
+        return True
     except sqlite3.Error as e:
         print("Error in Update Car State:", str(e))
         connect.rollback()
@@ -144,6 +164,7 @@ def update_car_repair_detail(car_id, repair_detail):
         cursor.execute("UPDATE tb_Cars SET RepairDetail = ? WHERE CarId = ?", (repair_detail, car_id))
         connect.commit()
         connect.close()
+        return True
     except sqlite3.Error as e:
         print("Error in Update Car Repair Detail:", str(e))
         connect.rollback()
@@ -159,6 +180,7 @@ def update_car_location(car_id, car_location):
         cursor.execute("UPDATE tb_Cars SET CarLocation = ? WHERE CarId = ?", (car_location, car_id))
         connect.commit()
         connect.close()
+        return True
     except sqlite3.Error as e:
         print("Error in Update Car Location:", str(e))
         connect.rollback()
@@ -181,7 +203,7 @@ def get_all_cars():
         return []
 
 # 查询单个车辆信息
-def get_one_user_info(car_id):
+def get_one_car_info(car_id):
     connect = connect_to_database()
     cursor = connect.cursor()
 
@@ -227,6 +249,20 @@ def get_one_order_info(order_id):
         connect.close()
         return None
 
+def get_all_orders():
+    connect = connect_to_database()
+    cursor = connect.cursor()
+
+    try:
+        cursor.execute("SELECT * FROM tb_Orders")
+        users_info = cursor.fetchall()
+        connect.close()
+        return users_info
+    except sqlite3.Error as e:
+        print("Error in Get All Orders:", str(e))
+        connect.close()
+        return []
+
 #结束订单
 def end_one_order(order_id, order_end_time, car_end_location):
     connect = connect_to_database()
@@ -236,6 +272,7 @@ def end_one_order(order_id, order_end_time, car_end_location):
         cursor.execute("UPDATE tb_Orders SET OrderEndTime = ?, OrderState = ?, OrderEndLocation = ? WHERE OrderId = ?", (order_end_time, 'due', car_end_location, order_id))
         connect.commit()
         connect.close()
+        return True
     except sqlite3.Error as e:
         print("Error in End order:", str(e))
         connect.rollback()
@@ -252,6 +289,7 @@ def update_order_price(order_id, order_price):
                        (order_price, order_id))
         connect.commit()
         connect.close()
+        return True
     except sqlite3.Error as e:
         print("Error in Update Order Price:", str(e))
         connect.rollback()
@@ -268,6 +306,7 @@ def pay_one_order(order_id):
                        ('end', order_id))
         connect.commit()
         connect.close()
+        return True
     except sqlite3.Error as e:
         print("Error in Pay Order:", str(e))
         connect.rollback()
