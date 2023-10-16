@@ -8,6 +8,10 @@ Created on Tue Oct  3 21:52:18 2023
 
 
 import tkinter as tk
+from ttkbootstrap import Style
+
+style = Style()
+style = Style(theme="sandstone")# 使用ttkbootstrap的"Sandstone"主题
 
 # 创建全局变量来保存上一个页面的引用
 previous_window = None
@@ -21,7 +25,7 @@ def open_responsive_window():
     root.geometry("800x600")
 
     # 创建并加载背景图片
-    background_image = tk.PhotoImage(file='map_background.jpg')  # 请替换为你的背景图片文件路径
+    background_image = tk.PhotoImage(file='')  # 请替换为你的背景图片文件路径
     background_label = tk.Label(root, image=background_image)
     background_label.place(relwidth=1, relheight=1)  # 使图片充满整个窗口
 
