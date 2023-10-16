@@ -4,7 +4,7 @@ from tkinter import *
 
 #### 用于 Customer_FE 用户界面的函数
 
-def register(user_name, password):
+def register(label_name, user_name, password):
     '''
     Customer 首次注册的函数。包含以下逻辑：
         1. 根据输入的 user_name 查询是否存在已有用户
@@ -28,23 +28,32 @@ def register(user_name, password):
         msg = Label(label_name, text="User is exist")
         msg.place(x=20, y=150)
 
-def filter_car_state(car_state):
+def filter_car(filter, index):
     '''
     Customer 在页面筛选可用车辆的函数。包含以下逻辑：
-        1. 根据输入的 customer_state 查询该状态下的所有车辆
-        2. 函数返回值为二维列表，包括所有车辆的所有信息
+        1. 根据 filter 选择筛选条件
+        2. 根据 index 选择筛选内容
+        2. 函数返回值为二维列表，包括匹配上的所有车辆的所有信息
     '''
 
     connect = SqlFunction.connect_to_database()
     cursor = connect.cursor()
 
     try:
-        cursor.execute("SELECT * FROM tb_Cars WHERE CarState = ?", (car_state,))
-        cars_info = cursor.fetchall()
+        if filter == "state":
+            cursor.execute("SELECT * FROM tb_Cars WHERE CarState = ?", (index,))
+        elif filter == "type":
+            cursor.execute("SELECT * FROM tb_Cars WHERE CarType = ?", (index,))
+        elif filter == "location":
+            cursor.execute("SELECT * FROM tb_Cars WHERE CarLocation = ?", (index,))
+        else:
+            cursor.execute("SELECT * FROM tb_Cars")
+
+        filtered_cars = cursor.fetchall()
         connect.close()
-        return cars_info
+        return filtered_cars
     except sqlite3.Error as e:
-        print("Error in Filter Car State:", str(e))
+        print("Error in Filter:", str(e))
         connect.close()
         return []
 
