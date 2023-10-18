@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import messagebox
 from tkinter import ttk
 from PIL import Image, ImageTk
+import random
 
 
 class MyApp:
@@ -80,11 +81,11 @@ class MyApp:
         f_b_r = tk.Frame(f_bottom, bg='pink', padx=3, pady=3)
         f_b_r.place(relx=2 / 3, rely=0, relwidth=1 / 3, relheight=1)
 
-        b_car = tk.Button(f_b_l, text="Car", command=lambda: self.user_place_page(f_middle))
+        b_vehicle = tk.Button(f_b_l, text="Vehicle", command=lambda: self.user_place_page(f_middle))
         b_order = tk.Button(f_b_m, text="Order")
         b_home = tk.Button(f_b_r, text="Home")
 
-        b_car.pack(fill='both', expand=True)
+        b_vehicle.pack(fill='both', expand=True)
         b_order.pack(fill='both', expand=True)
         b_home.pack(fill='both', expand=True)
 
@@ -193,6 +194,7 @@ class MyApp:
         用户主界面
         :return: None
         """
+        self.root.geometry("400x800")
         f_main = tk.Frame(self.root, relief='groove', borderwidth=3, bg='yellow')
         f_main.place(relx=0, rely=0, relwidth=1, relheight=1)
         top = self.frame_top(f_main)
@@ -208,15 +210,15 @@ class MyApp:
         """
         self.middle_page_clear()
 
-        choose_place_lab_frame = tk.LabelFrame(f_middle, text='Choose Place')
+        choose_place_lab_frame = tk.Frame(f_middle, bg='blue')
         self.current_middle_page = choose_place_lab_frame  # 将传入的page设置为当前页面
 
-        choose_place_lab_frame.place(relx=1 / 3, rely=1 / 3, relwidth=1 / 3, relheight=1 / 3)
+        choose_place_lab_frame.place(relx=0.1, rely=1 / 6, relwidth=0.8, relheight=2 / 3)
 
         l_pickup = tk.Label(choose_place_lab_frame, text='Pickup Location: ')
-        l_pickup.place(relx=0.1, rely=0.1, relwidth=0.2, relheight=0.2)
+        l_pickup.place(relx=0.2, rely=1 / 16, relwidth=0.6, relheight=1 / 8)
         l_return = tk.Label(choose_place_lab_frame, text='Return Location: ')
-        l_return.place(relx=0.1, rely=0.5, relwidth=0.2, relheight=0.2)
+        l_return.place(relx=0.2, rely=7 / 16, relwidth=0.6, relheight=1 / 8)
 
         v_pickup = tk.StringVar()  # 用户选择的出发位置
         v_return = tk.StringVar()  # 用户选择的到达位置
@@ -224,34 +226,125 @@ class MyApp:
         locations = ['l1', 'l2', 'l3', 'l4', 'l5']  # 地点位置list
 
         c_pickup = ttk.Combobox(choose_place_lab_frame, textvariable=v_pickup, values=locations)
-        c_pickup.place(relx=0.4, rely=0.1, relwidth=0.4, relheight=0.2)
+        c_pickup.place(relx=0.2, rely=4 / 16, relwidth=0.6, relheight=1 / 8)
         c_return = ttk.Combobox(choose_place_lab_frame, textvariable=v_return, values=locations)
-        c_return.place(relx=0.4, rely=0.5, relwidth=0.4, relheight=0.2)
+        c_return.place(relx=0.2, rely=10 / 16, relwidth=0.6, relheight=1 / 8)
 
         b_map = tk.Button(choose_place_lab_frame, text='Map', command=self.view_map)
-        b_map.place(relx=0.2, rely=0.8, relwidth=0.2, relheight=0.2)
+        b_map.place(relx=0.2, rely=13 / 16, relwidth=0.2, relheight=1 / 8)
         b_booking = tk.Button(choose_place_lab_frame, text='Booking', command=lambda: self.booking_page(f_middle))
-        b_booking.place(relx=0.6, rely=0.8, relwidth=0.2, relheight=0.2)
+        b_booking.place(relx=0.6, rely=13 / 16, relwidth=0.2, relheight=1 / 8)
 
     def view_map(self):
         pass
 
-    def booking_page(self,f_middle):
+    def booking_page(self, f_middle):
         flag = True
         if flag:  # 用户输入信息正确检测
             pass
-        canvas_car = tk.Canvas(f_middle)
-        canvas_car.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+
+        self.middle_page_clear()
+
+        f_condition = tk.Frame(f_middle, bg='purple', padx=2, pady=2)
+        f_condition.place(relx=0.02, rely=0.01, relwidth=0.96, relheight=0.1)
+
+        f_select_vehicle = tk.Frame(f_middle, bg='pink', padx=2, pady=2)
+        f_select_vehicle.place(relx=0.02, rely=0.12, relwidth=0.96, relheight=0.87)
+
+        # 创建一个Canvas小部件，它用于包含可滚动的内容。
+        canvas_vehicle = tk.Canvas(f_select_vehicle)
+        # 将Canvas小部件放置在中部窗口中，使其在左侧占据空间，并允许其在水平和垂直方向上扩展以填满可用空间。
+        canvas_vehicle.place(relx=0, rely=0, relwidth=0.9, relheight=1)
+        scrollbar_style = ttk.Style()
+
+        scrollbar_style.configure("TScrollbar",
+                                  troughcolor="lightgray",
+                                  borderwidth=5,
+                                  lightcolor="red",
+                                  darkcolor="blue",
+                                  sliderlength=30)
 
         # 创建一个垂直滚动条（Scrollbar），使用ttk模块创建，与Canvas小部件关联，以便控制Canvas的垂直滚动。
-        scrollbar = ttk.Scrollbar(f_middle, orient=tk.VERTICAL, command=canvas_car.yview)
+        scrollbar = ttk.Scrollbar(f_select_vehicle, orient=tk.VERTICAL, style="TScrollbar",
+                                  command=canvas_vehicle.yview)
         # 将垂直滚动条放置在主窗口的右侧，使其占据垂直空间。
-        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        # scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        scrollbar.place(relx=0.9, rely=0, relwidth=0.1, relheight=1)
         # 配置Canvas小部件以与垂直滚动条(scrollbar)相关联，使它能够通过滚动条进行垂直滚动。
-        canvas_car.configure(yscrollcommand=scrollbar.set)
+        canvas_vehicle.configure(yscrollcommand=scrollbar.set)
 
+        # 创建一个Frame小部件，该Frame用于包含实际的滚动内容。
+        f_vehicle = tk.Frame(canvas_vehicle)
+        # # 将Frame小部件添加到Canvas中，并配置Frame在Canvas上的位置，以及锚点在左上角（NW表示北西）。
+        canvas_vehicle.create_window((0, 0), window=f_vehicle, anchor=tk.NW)
 
-    def user_car_page(self):
+        single_vehicle_bar = self.single_vehicle_bar(f_vehicle, 1, 0, 80, 11)
+        single_vehicle_bar.pack()
+
+        vehicle_no = range(10)
+        vehicle_type = [random.randint(0, 1) for _ in range(10)]
+        battery_lift = [random.uniform(0, 1) * 100 for _ in range(10)]
+        rent = [random.uniform(0, 1) * 10 for _ in range(10)]
+
+        for vehicle_no, vehicle_type, battery_lift, rent in zip(vehicle_no, vehicle_type, battery_lift, rent):
+            single_vehicle_bar = self.single_vehicle_bar(f_vehicle, vehicle_no, vehicle_type, battery_lift, rent)
+            single_vehicle_bar.pack()
+
+        def on_canvas_configure(event):
+            canvas_vehicle.configure(scrollregion=canvas_vehicle.bbox("all"))
+
+        # 配置Canvas以根据内容自动调整滚动区域
+        # 绑定一个事件处理函数，当Frame的配置发生变化时，将调用on_canvas_configure函数来自动调整Canvas的滚动区域。
+        f_vehicle.bind("<Configure>", on_canvas_configure)
+
+    def single_vehicle_bar(self, frame, vehicle_no, vehicle_type, battery_lift, rent,
+                           image_file='images/WechatIMG3255.jpg', ):
+        single_frame = tk.Frame(frame, width=360, height=100, relief='groove', bd=1)
+
+        frame_image = tk.Frame(single_frame, width=100, height=100)
+        frame_image.place(x=0, y=0)
+        vehicle = Image.open(image_file)
+        vehicle = vehicle.resize((100, 100), Image.Resampling.LANCZOS)  # 重置图像大小
+        vehicle = ImageTk.PhotoImage(vehicle)
+        l_icon = tk.Label(frame_image, image=vehicle, borderwidth=2, relief="solid")
+        l_icon.image = vehicle  # 保持对图像的引用，以防止被垃圾回收
+        l_icon.place(relx=0.1, rely=0.1, relwidth=0.8, relheight=0.8, bordermode='outside')
+
+        frame_info = tk.Frame(single_frame, width=160, height=100)
+        frame_info.place(x=100, y=0)
+        v_vehicle_no = tk.StringVar()
+        v_vehicle_no.set('Vehicle No.' + str(vehicle_no))
+        l_vehicle_no = tk.Label(frame_info, textvariable=v_vehicle_no)
+        l_vehicle_no.pack()
+
+        v_vehicle_type = tk.StringVar()
+        if vehicle_type == 0:
+            v_vehicle_type.set("Vehicle type: electric bicycle")
+        elif vehicle_type == 1:
+            v_vehicle_type.set("Vehicle type: electric scooter")
+        l_vehicle_type = tk.Label(frame_info, textvariable=v_vehicle_type)
+        l_vehicle_type.pack()
+
+        v_battery_life = tk.StringVar()
+        battery_lift = round(battery_lift, 2)
+        v_battery_life.set("Battery life:" + str(battery_lift) + "%")
+        l_battery_life = tk.Label(frame_info, textvariable=v_battery_life)
+        l_battery_life.pack()
+
+        v_rent = tk.StringVar()
+        rent = round(rent, 2)
+        v_rent.set("Rental cost £" + str(rent) + "%/h")
+        l_rent = tk.Label(frame_info, textvariable=v_rent)
+        l_rent.pack()
+
+        frame_book = tk.Frame(single_frame, width=100, height=100)
+        frame_book.place(x=300, y=0)
+        b_booking = tk.Button(frame_book, text="Book")
+        b_booking.place(x=0, y=40, width=40, height=20)
+
+        return single_frame
+
+    def user_vehicle_page(self):
         pass
 
     def user_order_page(self):
