@@ -273,42 +273,9 @@ def end_one_order(order_id, order_end_time, car_end_location):
         connect.commit()
         connect.close()
         return True
+
     except sqlite3.Error as e:
         print("Error in End order:", str(e))
-        connect.rollback()
-        connect.close()
-        return False
-
-#更新订单价格
-def update_order_price(order_id, order_price):
-    connect = connect_to_database()
-    cursor = connect.cursor()
-
-    try:
-        cursor.execute("UPDATE tb_Orders SET Orderprice = ? WHERE OrderId = ?",
-                       (order_price, order_id))
-        connect.commit()
-        connect.close()
-        return True
-    except sqlite3.Error as e:
-        print("Error in Update Order Price:", str(e))
-        connect.rollback()
-        connect.close()
-        return False
-
-#完成订单支付
-def pay_one_order(order_id):
-    connect = connect_to_database()
-    cursor = connect.cursor()
-
-    try:
-        cursor.execute("UPDATE tb_Orders SET Orderprice = ? WHERE OrderId = ?",
-                       ('end', order_id))
-        connect.commit()
-        connect.close()
-        return True
-    except sqlite3.Error as e:
-        print("Error in Pay Order:", str(e))
         connect.rollback()
         connect.close()
         return False
