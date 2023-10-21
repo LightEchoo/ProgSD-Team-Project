@@ -264,18 +264,41 @@ def get_all_orders():
         return []
 
 #结束订单
-def end_one_order(order_id, order_end_time, car_end_location):
+def end_one_order(order_id, order_price, order_end_time, car_end_location):
     connect = connect_to_database()
     cursor = connect.cursor()
 
     try:
-        cursor.execute("UPDATE tb_Orders SET OrderEndTime = ?, OrderState = ?, OrderEndLocation = ? WHERE OrderId = ?", (order_end_time, 'due', car_end_location, order_id))
+        cursor.execute("UPDATE tb_Orders SET OrderEndTime = ?, OrderPrice = ?, OrderState = ?, OrderEndLocation = ? WHERE OrderId = ?", (order_end_time, order_price, 'due', car_end_location, order_id))
         connect.commit()
         connect.close()
         return True
 
     except sqlite3.Error as e:
         print("Error in End order:", str(e))
+        connect.rollback()
+        connect.close()
+        return False
+
+def pay_one_order(order_id):
+    connect = connect_to_database()
+    cursor = connect.cursor()
+
+    try:
+        order_info = get_one_order_info(order_id)
+
+        if order_info:
+            # 修改订单状态为 "end"
+            cursor.execute("UPDATE tb_Order SET OrderState = 'end' WHERE OrderID = ?", (order_id,))
+            connect.commit()
+            connect.close()
+            return True
+        else:
+            connect.close()
+            return False
+
+    except sqlite3.Error as e:
+        print("Error in pay_order:", str(e))
         connect.rollback()
         connect.close()
         return False
