@@ -1,13 +1,11 @@
 import InitializeDatabase
-import SqlFunction
-import bike_share_app
-import customer_BE
-import operator_BE
-import operator_FE
-import operaor_and_manager_FE
-import tkinter123
+import SqlFunction as sqF
+import FE_bs
+import pdsql
 
-ini_flag = False
+import tkinter as tk
+
+db_ini_flag = False
 
 def ini_database():
     '''
@@ -15,17 +13,24 @@ def ini_database():
     Input: None
     return: None
     '''
-    global ini_flag
-    if not ini_flag:
+    global db_ini_flag
+    if not db_ini_flag:
         InitializeDatabase.initialize_etsp_database()
         InitializeDatabase.input_default_data()
-        ini_flag = True
+        db_ini_flag = True
 
 if __name__ == "__main__":
 
     ini_database()
+    pdsql.test_data_initialization()
 
-    a = SqlFunction.get_all_cars()
-    b = SqlFunction.get_all_users()
-    print(a,'\n', b)
+    pd_cars = pdsql.get_all_cars()
+    pd_orders = pdsql.get_all_orders()
+
+    print(pd_cars)
+    print(pd_orders)
+
+    # root = tk.Tk()  # 创建Tkinter根窗口
+    # app = FE_bs.MyApp(root)  # 创建实例
+    # root.mainloop()  # 保持程序运行
 
