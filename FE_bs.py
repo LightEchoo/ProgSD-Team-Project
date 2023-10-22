@@ -11,10 +11,8 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 IMG_PATH = Path(__file__).parent / 'images'
-# 地点位置list
-LOCATIONS = ["Learning Hub", "Adam Smith Building", "Boyd Orr Building", "Main Building"]
 # 车辆状态
-STATE = {0: 'Stationary', 1: 'In Use', 2: 'To be Repaired', 3: 'To be Charged', 4: 'To be Repaired/Charged'}
+CAR_STATE_D = {0: 'Stationary', 1: 'In Use', 2: 'To be Repaired', 3: 'To be Charged', 4: 'To be Repaired/Charged'}
 
 
 class MyApp:
@@ -227,7 +225,7 @@ class MyApp:
         :param f_middle: 中部框架
         :return:
         """
-        pass
+        pass # 密码强度检测
         flag = True  # 注册成功标志
         if not flag:
             tk.messagebox.showerror("Error!", "This user is registered!")  # 注册失败显示信息
@@ -472,7 +470,7 @@ class MyApp:
             l_location = tk.Label(frame_info, textvariable=v_location)
 
             v_state = bs.StringVar()  # 状态
-            v_state.set("State: " + str(STATE[state]))
+            v_state.set("State: " + str(CAR_STATE_D[state]))
             # l_state = bs.Label(frame_info, textvariable=v_state, bootstyle='inverse-info')
             l_state = tk.Label(frame_info, textvariable=v_state)
 
