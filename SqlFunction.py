@@ -14,9 +14,14 @@ def connect_to_database():
     return connect
 
 # 插入新用户，用户注册
-def create_user(user_name, password, user_type='customer', user_debt=0, user_deposit=0, user_location=''):
+def create_user(user_name, password):
     connect = connect_to_database()
     cursor = connect.cursor()
+
+    user_type = "customer"
+    user_debt = int(0)
+    user_deposit = int(0)
+    user_location = ""
 
     try:
         cursor.execute("INSERT INTO tb_Users (UserName, UserPassword, UserType, UserDebt, UserDeposit, UserLocation) VALUES (?, ?, ?, ?, ?, ?)",
@@ -106,7 +111,7 @@ def get_one_user_info(user_name):
     except sqlite3.Error as e:
         print("Error in Get One User Info:", str(e))
         connect.close()
-        return None
+        return "None"
 
 # 查看用户的所有订单
 def get_one_user_orders(user_name):
@@ -302,3 +307,19 @@ def pay_one_order(order_id):
         connect.rollback()
         connect.close()
         return False
+
+#生成一个新的 OrderID
+def generate_new_order_id():
+    connect = connect_to_database()
+    cursor = connect.cursor()
+
+    cursor.execute("SELECT MAX(OrderID) FROM tb_Order")
+    max_order_id = cursor.fetchone()[0]
+
+    if max_order_id is not None:
+        new_order_id = max_order_id + 1
+    else:
+        new_order_id = 1
+
+    connect.close()
+    return new_order_id

@@ -39,17 +39,15 @@ def time_to_hours(str_time):
     return total_hours
 
 #生成一个随机地址，返回值为 String 类型，postcode 格式
-def generate_glasgow_postcode():
-    # 格拉斯哥地区邮编前缀
-    glasgow_prefixes = ["G1", "G2", "G3", "G4", "G5", "G11", "G12", "G13", "G14", "G15"]
+def generate_end_location():
 
-    # 随机选择一个格拉斯哥地区的前缀
-    selected_prefix = random.choice(glasgow_prefixes)
+    randomnum = random.randint(1, 4)
 
-    # 随机生成邮编的后半部分（数字部分）
-    second_half = ''.join(random.choice("1234567890") for _ in range(2))
-
-    # 组合成完整的邮编
-    postcode = f"{selected_prefix} {second_half}"
-
-    return postcode
+    if randomnum == 1:
+        return "Learning Hub"
+    elif randomnum == 2:
+        return "Adam Smith Building"
+    elif randomnum == 3:
+        return "Main Building"
+    elif randomnum == 4:
+        return "Boyd Orr Building"

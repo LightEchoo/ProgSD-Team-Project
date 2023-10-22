@@ -1,7 +1,8 @@
-
+'''
 from tkinter import *
 from tkinter import ttk
 
+import BE_Function
 
 #=创建全局变量
 previous_window=None
@@ -23,8 +24,11 @@ def center_window(win, width, height):#居中显示
 def user_login():
     
     log_in.withdraw()#隐藏之前的界面
-    
+
     global user_log
+    global login_user_name
+    global login_password
+    global user_log_textbox1
     def hide():#恢复界面
         user_log.destroy()
         log_in.deiconify()
@@ -39,13 +43,16 @@ def user_login():
     
     label1=Label(user_log,text="account:")# input user's account
     label1.place(x=30,y=20)
-    textbox1=Entry(user_log,text="")#输入框
-    textbox1.place(x=150,y=20,width=200,height=25)
-   
+    user_log_textbox1=Entry(user_log,text="")#输入框
+    user_log_textbox1.place(x=150,y=20,width=200,height=25)
+    user_log_textbox1.focus()
+    login_user_name = str(user_log_textbox1.get()) #获得输入的用户名，作为后续查询的标志
+
     label2=Label(user_log,text="password:")#输入密码
     label2.place(x=30,y=50)
     textbox2=Entry(user_log,text="")
     textbox2.place(x=150,y=50,width=200,height=25)
+    login_password = str(textbox2.get())#获得输入的用户名，作为后续查询的标志
     
     user_button1=Button(user_log,text="Register",command=register)#注册按钮
     user_button1.place(x=50,y=110,width=70,height=50)
@@ -120,16 +127,21 @@ def manager_login():
     
 #所有的登录按钮，返回登录成功提示
 def log():
-    log_success=Tk()
-    log_success.geometry("500x300")
-    label=Label(log_success,text="Successgully Log in")#登陆成功
-    label.place(x=150,y=100)
-    #label2=Label2(log_fault,text="Unexisted user")#用户不存在
-    #label2.place(x=150,y=120)
-    #label3=Label(log_password,text="Incorrect password")#密码错误
-    #label3.place(x=150,y=140)
+
+    login_result = BE_Function.login(login_user_name, login_password)
+    log_window = Tk()
+    log_window.geometry("500x300")
+
+
+    if login_result:
+        label=Label(log_window,text="Successgully Log in")#登陆成功
+        label.place(x=150,y=100)
+    else:
+        log_fault=Tk()
+        label2=Label(log_window,text="Error Log in ")#用户不存在
+        label2.place(x=150,y=120)
     
-    log_success.mainloop()
+
 #注册按钮
 def register():
     global register_interface
@@ -570,3 +582,5 @@ button3=Button(log_in,text="Manager",command=manager_login)#log in manager's int
 button3.place(x=200,y=20)
 
 log_in.mainloop()
+
+'''

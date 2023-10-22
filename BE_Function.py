@@ -16,22 +16,16 @@ def register(user_name, password):
     '''
 
     user_info = SqlFunction.get_one_user_info(user_name)
+    #print(user_info)
 
-    if user_info == "None":
+    if user_info == None:
         registering = SqlFunction.create_user(user_name, password)
         if registering:
-            #msg = Label(label_name, text="registering successful")
-            #msg.place(x=20, y=150)
-            return True
+            return "RegisterSuccessful"
         else:
-            #msg = Label(label_name, text="registering failed")
-            #msg.place(x=20, y=150)
-            return False
-
+            return "RegisterFalse"
     else:
-        #msg = Label(label_name, text="User is exist")
-        #msg.place(x=20, y=150)
-        return False
+        return "ExistFalse"
 
 def login(user_name, password):
     '''
@@ -91,7 +85,7 @@ def filter_car(filter, index):
         connect.close()
         return []
 
-def rent_start(order_id, car_id, user_name, car_start_location):
+def rent_start(car_id, user_name, car_start_location):
     '''
     Customer 租车函数（创建新订单）。包含以下逻辑：
         1. 根据输入的信息查询是否符合租车资格
@@ -102,7 +96,6 @@ def rent_start(order_id, car_id, user_name, car_start_location):
         3. 同时，将 car_id 对应的车辆 CarState 改为 “inrent”
         4. 函数返回值为 boolean
     '''
-    order_start_time = CommonFunction.get_current_time()
     connect = SqlFunction.connect_to_database()
 
     # 检查租车资格
@@ -124,16 +117,20 @@ def rent_start(order_id, car_id, user_name, car_start_location):
         return "This is unavaliable"
 
     try:
+        order_id = SqlFunction.generate_new_order_id()
+        order_start_time = CommonFunction.get_current_time()
+
         SqlFunction.create_new_order(order_id, car_id, user_name, order_start_time, car_start_location)
         SqlFunction.update_car_state(car_id, "inrent")
+
         connect.close()
-        return True
+        return order_id
 
     except sqlite3.Error as e:
         print("Error in Create Order:", str(e))
         return False
 
-def return_car(order_id, car_end_location):
+def return_car(order_id):
     '''
     Customer 还车函数。包含以下逻辑：
     1. 根据对应的order_id获取订单信息，包括 car_id，user_id，order_start_time
@@ -146,7 +143,7 @@ def return_car(order_id, car_end_location):
     7. 函数返回值为 boolean
     '''
     order_end_time = CommonFunction.get_current_time()
-
+    car_end_location = CommonFunction.generate_end_location()
     try:
         order_info = SqlFunction.get_one_order_info(order_id)
 
@@ -180,7 +177,7 @@ def return_car(order_id, car_end_location):
         print("Error Return Car:", str(e))
         return False
 
-def repair(order_id, car_end_location, repair_detail):
+def repair(order_id, repair_detail):
     '''
     Customer 报修函数。包含以下逻辑：
     1. 根据对应的order_id获取订单信息，包括 car_id，user_id，order_start_time
@@ -189,6 +186,7 @@ def repair(order_id, car_end_location, repair_detail):
     4. 函数返回值为 boolean
     '''
     order_end_time = CommonFunction.get_current_time()
+    car_end_location = CommonFunction.generate_end_location()
 
     try:
         order_info = SqlFunction.get_one_order_info(order_id)
