@@ -36,7 +36,7 @@ def initialize_etsp_database():
             CREATE TABLE tb_Cars (
                 CarID INTEGER PRIMARY KEY NOT NULL,
                 CarType TEXT NOT NULL,
-                CarDiscription TEXT,
+                CarDescription TEXT,
                 CarPrice INTEGER,
                 CarPower INTEGER NOT NULL DEFAULT 100,
                 CarJourney INTEGER,
@@ -47,7 +47,7 @@ def initialize_etsp_database():
 
         # 创建tb_Order表格
         cursor.execute('''
-            CREATE TABLE tb_Order (
+            CREATE TABLE tb_Orders (
                 OrderID INTEGER PRIMARY KEY NOT NULL,
                 CarID INTEGER,
                 UserName TEXT,
@@ -89,20 +89,21 @@ def input_default_data():
 
         # 插入初始数据到tb_Cars
         cars_default_data = [
-            (1, 'ebike', 'This is a ebike', 5, 100, 20, 'avaliable', '', 'Learning Hub'),
-            (2, 'escooter', 'This is a escooter', 2, 100, 15, 'inrent', '', 'Learning Hub'),
-            (3, 'ebike', 'This is a ebike', 5, 0, 20, 'lowpower', '', 'Adam Smith Building'),
-            (4, 'ebike', 'This is a ebike', 5, 50, 20, 'repair', 'body', 'Main Building'),
-            (5, 'ebike', 'This is a ebike', 5, 50, 20, 'repair', 'body', 'Boyd Orr Building'),
-            (6, 'ebike', 'This is a ebike', 5, 0, 10, 'lowpower', '', 'Main Building')
+            (1, 'bike', 'This is a bike', 5, 100, 20, 'available', '', 'G11 6QJ'),
+            (2, 'wheel', 'This is a wheel', 2, 100, 15, 'inrent', '', 'G11 6QJ'),
+            (3, 'bike', 'This is a bike', 5, 0, 20, 'lowpower', '', 'G11 6QJ'),
+            (4, 'bike', 'This is a bike', 5, 50, 20, 'repair', 'body', 'G11 6QJ')
+
         ]
         cursor.executemany('INSERT INTO tb_Cars VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)', cars_default_data)
-        
+
+
+
         # 提交更改并关闭连接
         connect.commit()
         connect.close()
 
-        print("Default data successfully inputed. Including 3 users in tb_Users, and 6 cars in tb_Cars")
+        print("Default data successfully inputed. Including 3 users in tb_Users, and 4 cars in tb_Cars")
 
     except sqlite3.Error as e:
         print("Error in Input Default Data:", str(e))
