@@ -9,13 +9,14 @@ Created on Wed Oct 18 15:53:33 2023
 import tkinter as tk
 from ttkbootstrap import Style
 from tkinter import ttk
+from functools import partial
 from PIL import Image, ImageTk
 import tkinter.messagebox as messagebox
 import math
+import BE_Function
+import SqlFunction
 
-
-
-class RegisterPage(tk.Frame):
+'''class RegisterPage(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
         self.controller = controller
@@ -48,11 +49,9 @@ class RegisterPage(tk.Frame):
         bottom_frame = ttk.Frame(center_frame)
         bottom_frame.pack(pady=20)
 
-        btn_icon1 = ttk.Button(bottom_frame, text="注册")
-        btn_icon1.grid(row=0, column=0, padx=10)
+        btn_register = ttk.Button(bottom_frame, text="注册", command=partial(self.register, controller))
+        btn_register.grid(row=0, column=0, padx=10)
 
-       # 修改登录按钮，使用 functools.partial 包装 login 方法并传递 controller 参数
-        from functools import partial
         btn_login = ttk.Button(bottom_frame, text="登录", command=lambda: controller.show_frame(LoginPage))
         btn_login.grid(row=0, column=1, padx=10)
 
@@ -62,38 +61,34 @@ class RegisterPage(tk.Frame):
 
         # 检查用户名和密码是否为空
         if not username or not password:
-            self.error_label.config(text="用户名和密码不能为空", fg="red")
-            return
+            self.error_label.config(text="Empty username / password", fg="red")
 
-        # 在这里添加检查用户名和密码是否与数据库匹配的逻辑
-        if not self.check_credentials(username, password):
-            self.error_label.config(text="用户名或密码不正确", fg="red")
-            return
-
-       # 登录成功的逻辑
-        controller.show_frame(MainPage)
-
-
-    def check_credentials(self, username, password):
-        # 检查用户名是否存在于虚假的用户数据库中，并验证密码是否匹配
-        if username in self.fake_user_database and self.fake_user_database[username] == password:
-            return True  # 注册成功
         else:
-            return False  # 注册失败
+            register_result = BE_Function.register(username, password)
 
+            # 在这里添加检查用户名和密码是否与数据库匹配的逻辑
+            if register_result == "Successful":
+                self.error_label.config(text="Register successfully", fg="green")
+            elif register_result == "ExistFalse":
+                self.error_label.config(text="There is an exist user", fg="red")
 
+        if check_credentials(self, username, password):
+            self.error_label.config(text="Register successfully", fg="green")
+            return
+        else:
+            self.error_label.config(text="There is an exist user", fg="red")
+            return'''
 
-       
 class LoginPage(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
 
-        # 在代码中添加一个虚假的用户数据库字典
+        '''# 在代码中添加一个虚假的用户数据库字典
         self.fake_user_database = {
             "user1": "password1",
             "user2": "password2",
             "user3": "password3"
-        }
+        }'''
 
         # 中央容器，用于保持内容居中
         center_frame = tk.Frame(self)
@@ -128,18 +123,27 @@ class LoginPage(tk.Frame):
 
        # 修改登录按钮，使用 functools.partial 包装 login 方法并传递 controller 参数
         from functools import partial
-        btn_login = ttk.Button(bottom_frame, text="登录", command=partial(self.login, controller))
+        btn_login = ttk.Button(bottom_frame, text="登录", command=partial(self.user_login, controller))
         btn_login.grid(row=0, column=1, padx=10)
 
-    def login(self,controller):
+    def user_login(self,controller):
         username = self.entry_username.get()
         password = self.entry_password.get()
 
         # 检查用户名和密码是否为空
         if not username or not password:
-            self.error_label.config(text="用户名和密码不能为空", fg="red")
-            return
+            self.error_label.config(text="Empty entry", fg="red")
+        else:
+            login_result = BE_Function.login(username,password)
 
+            if login_result == "LoginSuccess":
+                controller.show_frame(MainPage)
+            elif login_result == "NoUserFalse":
+                self.error_label.config(text="No such user", fg="red")
+            elif login_result == "LoginFalse":
+                self.error_label.config(text="Invaild uername / password", fg="red")
+
+        '''
         # 在这里添加检查用户名和密码是否与数据库匹配的逻辑
         if not self.check_credentials(username, password):
             self.error_label.config(text="用户名或密码不正确", fg="red")
@@ -148,13 +152,80 @@ class LoginPage(tk.Frame):
        # 登录成功的逻辑
         controller.show_frame(MainPage)
 
-
     def check_credentials(self, username, password):
         # 检查用户名是否存在于虚假的用户数据库中，并验证密码是否匹配
         if username in self.fake_user_database and self.fake_user_database[username] == password:
             return True  # 登录成功
         else:
-            return False  # 登录失败
+            return False  # 登录失败'''
+
+
+class RegisterPage(tk.Frame):
+    def __init__(self, parent, controller):
+        tk.Frame.__init__(self, parent)
+
+        '''# 在代码中添加一个虚假的用户数据库字典
+        self.fake_user_database = {
+            "user1": "password1",
+            "user2": "password2",
+            "user3": "password3"
+        }'''
+
+        # 中央容器，用于保持内容居中
+        center_frame = tk.Frame(self)
+        center_frame.place(relx=0.4, rely=0.4, anchor=tk.CENTER)
+
+        # 错误消息标签
+        self.error_label = tk.Label(center_frame, text="", fg="red")
+        self.error_label.pack()
+
+        # 应用图标和标题
+        lbl_title = tk.Label(center_frame, text="Register", font=("Arial", 24))
+        lbl_title.pack(pady=20)
+
+        # 用户名输入框
+        self.entry_username = ttk.Entry(center_frame)
+        self.entry_username.insert(0, "输入手机号码")
+        self.entry_username.bind("<FocusIn>", lambda event: self.entry_username.delete(0, tk.END))
+        self.entry_username.pack(pady=10)
+
+        # 密码输入框
+        self.entry_password = ttk.Entry(center_frame)  # 注意：这里改了变量名，避免和用户名输入框重复
+        self.entry_password.insert(0, "输入密码")
+        self.entry_password.bind("<FocusIn>", lambda event: self.entry_password.delete(0, tk.END))
+        self.entry_password.pack(pady=10)
+
+        # 底部图标
+        bottom_frame = ttk.Frame(center_frame)
+        bottom_frame.pack(pady=20)
+
+        btn_icon1 = ttk.Button(bottom_frame, text="返回", command=lambda: controller.show_frame(LoginPage))
+        btn_icon1.grid(row=0, column=0, padx=10)
+
+       # 修改登录按钮，使用 functools.partial 包装 login 方法并传递 controller 参数
+        from functools import partial
+        btn_login = ttk.Button(bottom_frame, text="注册", command=partial(self.user_register, controller))
+        btn_login.grid(row=0, column=1, padx=10)
+
+    def user_register(self,controller):
+        username = self.entry_username.get()
+        password = self.entry_password.get()
+
+        #print("get:",username,password)
+
+        # 检查用户名和密码是否为空
+        if not username or not password:
+            self.error_label.config(text="Empty entry", fg="red")
+        else:
+            register_result = BE_Function.register(username,password)
+            #print("register:", register_result)
+
+            if register_result == "RegisterSuccessful":
+                self.error_label.config(text="Register Successfully", fg="green")
+            elif register_result == "ExistFalse":
+                self.error_label.config(text="User Exist, Please Login", fg="red")
+            else:
+                self.error_label.config(text="Error in Register, try again", fg="red")
         
 class MapPage(tk.Frame):
     def __init__(self, parent, controller):
@@ -168,7 +239,6 @@ class MapPage(tk.Frame):
         return_button = ttk.Button(self, text="返回", command=lambda: controller.show_frame(MainPage))
         return_button.grid(row=0, column=0, padx=10, pady=10)
 
-   
 
 class AccountPage(tk.Frame):
     def __init__(self, parent, controller):
@@ -187,7 +257,6 @@ class AccountPage(tk.Frame):
         # 创建退出账户按钮
         logout_button = ttk.Button(self, text="退出账户", command=self.logout)
         logout_button.grid(row=0, column=10, padx=10, pady=10, sticky="n")
-
 
         # 创建用户信息卡片
         user_info = {"username": "用户名", "account_balance": "$1000"}
@@ -515,7 +584,7 @@ class EndOrderPage(tk.Frame):
         label.pack()  # 默认垂直居中显示
 
         # 创建图片的缩略图
-        image = Image.open("../../Desktop/WechatIMG3255.jpg")
+        image = Image.open("images/WechatIMG3255.jpg")
         image.thumbnail((100, 100))  # 调整图像大小
         photo = ImageTk.PhotoImage(image)
 
