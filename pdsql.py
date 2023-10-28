@@ -5,11 +5,15 @@ from datetime import datetime, timedelta
 
 import pandas as pd
 
+# 车辆类型
+VEHICLE_TYPE = ['ebike', 'escooter']
 # 车辆状态
-CAR_STATE_L = ['available', 'inrent', 'lowpower', 'repair']
+VEHICLE_STATE_L = ['available', 'inrent', 'lowpower', 'repair']
 
 # 地点位置list
-LOCATIONS = ["Learning Hub", "Adam Smith Building", "Boyd Orr Building", "Main Building"]
+LOCATIONS = ["IKEA", "Hospital", "UofG", "St George's Square", "Glasgow City Center"]
+
+REPAIR_TYPE = ['None', 'seat post', 'frames', 'tire', 'battery']
 
 ORDER_STATE = ['Orders in progress', 'Order Closed']
 
@@ -19,7 +23,7 @@ pd.set_option('display.max_columns', None)
 
 # 创建数据库连接
 def connect_to_database():
-    connect = sqlite3.connect('estp_database.db')
+    connect = sqlite3.connect('etsp_database.db')
     return connect
 
 
@@ -79,14 +83,15 @@ def test_user_initialization(num_user_samples):
     """
     # 用户测试用例
     users_test_data = pd.DataFrame({
-        'UserName': ['111', '222', 'abc'],
-        'UserPassword': ['000', '000', 'abc'],
+        'UserName': ['manager', 'operator', 'user'],
+        'UserPassword': ['000', '000', '000'],
         'UserType': ['manager', 'operator', 'customer'],
         'UserDebt': [0, 0, 0],
         'UserDeposit': [0, 0, 1],
-        'UserLocation': ['G11 6QJ', 'G11 6QJ', 'G11 6QJ']
+        'UserLocation': ['None', 'None', 'IKEA']
     })
     num_user_samples = num_user_samples - len(users_test_data)
+    # print(users_test_data)
 
     def generate_usernames(num_usernames):
         # 列表中的名字可以根据需要更改或增加
@@ -130,8 +135,9 @@ def test_user_initialization(num_user_samples):
     df_users = pd.DataFrame({
         'UserName': list_username,
         'UserPassword': list_user_password,
-        'UserType': [random.choices(['customer', 'operator', 'manager'], weights=[96, 3, 1])[0] for _ in
-                     range(num_user_samples)],
+        # 'UserType': [random.choices(['customer', 'operator', 'manager'], weights=[96, 3, 1])[0] for _ in
+        #              range(num_user_samples)],
+        'UserType': ['customer' for _ in range(num_user_samples)],
         # 'UserDebt': [round(random.uniform(0, 100.0), 2) for _ in range(num_user_samples)],
         'UserDebt': [0 for _ in range(num_user_samples)],
         'UserDeposit': [random.choice([0, 1]) for _ in range(num_user_samples)],
@@ -144,12 +150,12 @@ def test_user_initialization(num_user_samples):
 
     connect = connect_to_database()
     df_users.to_sql('tb_Users', connect, if_exists='replace', index=False)
-    print('success')
+    # print('success df_users')
     connect.close()
 
 
 def test_cars_data_initialization(num_car_samples):
-    car_types = [random.choice(['bike', 'wheel']) for _ in range(num_car_samples)]
+    car_types = [random.choice(['ebike', 'escooter']) for _ in range(num_car_samples)]
     car_price = [10 if x == 'bike' else 7 for x in car_types]
     power = list(range(0, 100, 10))
 
@@ -161,10 +167,11 @@ def test_cars_data_initialization(num_car_samples):
         'CarPrice': car_price,
         'CarPower': [random.choice(power) for _ in range(num_car_samples)],
         'CarJourney': [random.randint(0, 1000) for _ in range(num_car_samples)],
-        'CarState': [random.choices(CAR_STATE_L, weights=[20, 10, 5, 2])[0] for _ in
+        'CarState': [random.choices(VEHICLE_STATE_L, weights=[20, 10, 5, 2])[0] for _ in
                      range(num_car_samples)],
-        'RepairDetail': [random.choices(['None', 'seat post', 'frames', 'tire', 'battery'], weights=[20, 1, 1, 1, 1])[0]
+        'RepairDetail': [random.choices(REPAIR_TYPE, weights=[20, 1, 1, 1, 1])[0]
                          for _ in range(num_car_samples)],
+        # TODO: 关联repair and state
         'CarLocation': [random.choice(LOCATIONS) for _ in range(num_car_samples)]
     })
 
