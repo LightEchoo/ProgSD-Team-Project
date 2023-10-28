@@ -49,29 +49,29 @@ class LoginPage(tk.Frame):
 
         # 用户名输入框
         self.entry_username = ttk.Entry(center_frame)
-        self.entry_username.insert(0, "输入手机号码")
+        self.entry_username.insert(0, "Enter mobile number")
         self.entry_username.bind("<FocusIn>", lambda event: self.entry_username.delete(0, tk.END))
-        self.entry_username.pack(pady=10)
+        self.entry_username.pack(pady=20)
 
         # 密码输入框
         self.entry_password = ttk.Entry(center_frame)  # 注意：这里改了变量名，避免和用户名输入框重复
-        self.entry_password.insert(0, "输入密码")
+        self.entry_password.insert(0, "enter password")
         self.entry_password.bind("<FocusIn>", lambda event: self.entry_password.delete(0, tk.END))
-        self.entry_password.pack(pady=10)
+        self.entry_password.pack(pady=20)
 
         # 底部图标
         bottom_frame = ttk.Frame(center_frame)
         bottom_frame.pack(pady=20)
 
-        btn_icon1 = ttk.Button(bottom_frame, text="注册", command=lambda: controller.show_frame(RegisterPage))
+        btn_icon1 = ttk.Button(bottom_frame, text="register", command=lambda: controller.show_frame(RegisterPage))
         btn_icon1.grid(row=0, column=0, padx=10)
 
-       # 修改登录按钮，使用 functools.partial 包装 login 方法并传递 controller 参数
+        # 修改登录按钮，使用 functools.partial 包装 login 方法并传递 controller 参数
         from functools import partial
-        btn_login = ttk.Button(bottom_frame, text="登录", command=partial(self.user_login, controller))
+        btn_login = ttk.Button(bottom_frame, text="Log in", command=partial(self.user_login, controller))
         btn_login.grid(row=0, column=1, padx=10)
 
-    def user_login(self,controller):
+    def user_login(self, controller):
         username = self.entry_username.get()
         password = self.entry_password.get()
 
@@ -79,7 +79,7 @@ class LoginPage(tk.Frame):
         if not username or not password:
             self.error_label.config(text="Empty entry", fg="red")
         else:
-            login_result = BE_Function.login(username,password)
+            login_result = BE_Function.login(username, password)
 
             if login_result == 0:
                 file = open("user.csv", "w")
@@ -135,40 +135,40 @@ class RegisterPage(tk.Frame):
 
         # 用户名输入框
         self.entry_username = ttk.Entry(center_frame)
-        self.entry_username.insert(0, "输入手机号码")
+        self.entry_username.insert(0, "enter user name")
         self.entry_username.bind("<FocusIn>", lambda event: self.entry_username.delete(0, tk.END))
-        self.entry_username.pack(pady=10)
+        self.entry_username.pack(pady=20)
 
         # 密码输入框
         self.entry_password = ttk.Entry(center_frame)  # 注意：这里改了变量名，避免和用户名输入框重复
-        self.entry_password.insert(0, "输入密码")
+        self.entry_password.insert(0, "enter password")
         self.entry_password.bind("<FocusIn>", lambda event: self.entry_password.delete(0, tk.END))
-        self.entry_password.pack(pady=10)
+        self.entry_password.pack(pady=20)
 
         # 底部图标
         bottom_frame = ttk.Frame(center_frame)
         bottom_frame.pack(pady=20)
 
-        btn_icon1 = ttk.Button(bottom_frame, text="返回", command=lambda: controller.show_frame(LoginPage))
+        btn_icon1 = ttk.Button(bottom_frame, text="reture", command=lambda: controller.show_frame(LoginPage))
         btn_icon1.grid(row=0, column=0, padx=10)
 
-       # 修改登录按钮，使用 functools.partial 包装 login 方法并传递 controller 参数
+        # 修改登录按钮，使用 functools.partial 包装 login 方法并传递 controller 参数
         from functools import partial
-        btn_login = ttk.Button(bottom_frame, text="注册", command=partial(self.user_register, controller))
+        btn_login = ttk.Button(bottom_frame, text="register", command=partial(self.user_register, controller))
         btn_login.grid(row=0, column=1, padx=10)
 
-    def user_register(self,controller):
+    def user_register(self, controller):
         username = self.entry_username.get()
         password = self.entry_password.get()
 
-        #print("get:",username,password)
+        # print("get:",username,password)
 
         # 检查用户名和密码是否为空
         if not username or not password:
             self.error_label.config(text="Empty entry", fg="red")
         else:
-            register_result = BE_Function.register(username,password)
-            #print("register:", register_result)
+            register_result = BE_Function.register(username, password)
+            # print("register:", register_result)
 
             if register_result == "RegisterSuccessful":
                 self.error_label.config(text="Register Successfully", fg="green")
@@ -186,7 +186,7 @@ class MapPage(tk.Frame):
         self.create_map()
 
         # 返回按钮，点击返回主页面
-        return_button = ttk.Button(self, text="返回", command=lambda: controller.show_frame(MainPage))
+        return_button = ttk.Button(self, text="return", command=lambda: controller.show_frame(MainPage))
         return_button.grid(row=0, column=0, padx=10, pady=10)
 
 
@@ -201,28 +201,30 @@ class AccountPage(tk.Frame):
         self.current_row = 4
 
         # 创建个人账户页面标签
-        label = tk.Label(self, text="个人账户页面")
-        label.grid(row=0, column=7, padx=10, pady=10, columnspan=3, sticky="n")
+        label = tk.Label(self, text="AccountPage")
+        label.grid(row=0, column=0, padx=10, pady=10, sticky="n")
 
         # 创建退出账户按钮
-        logout_button = ttk.Button(self, text="退出账户", command=self.logout)
-        logout_button.grid(row=0, column=10, padx=10, pady=10, sticky="n")
+        logout_button = ttk.Button(self, text="EXIT", command=self.logout)
+        logout_button.grid(row=0, column=5, padx=10, pady=10)
 
         # 创建用户信息卡片
-        user_info = {"username": "用户名", "account_balance": "$1000"}
+        user_info = {"username": "username", "account_balance": "$1000"}
         self.create_user_info_card(user_info)
 
         # 创建历史订单记录卡片
         history_data = [
-            {"order_number": "001", "order_status": "已完成", "vehicle_number": "12345", "payment_amount": "$10", "usage_time": "1小时"},
-            {"order_number": "002", "order_status": "已取消", "vehicle_number": "54321", "payment_amount": "$5", "usage_time": "30分钟"},
+            {"order_number": "001", "order_status": "completed", "vehicle_number": "12345", "payment_amount": "$10",
+             "usage_time": "1小时"},
+            {"order_number": "002", "order_status": "Cancelled", "vehicle_number": "54321", "payment_amount": "$5",
+             "usage_time": "30分钟"},
         ]
 
         for order_info in history_data:
             self.create_history_card(order_info)
 
-      # 创建返回按钮
-        return_button = ttk.Button(self, text="返回", command=lambda: controller.show_frame(MainPage))
+        # 创建返回按钮
+        return_button = ttk.Button(self, text="return", command=lambda: controller.show_frame(MainPage))
         return_button.grid(row=self.current_row + 1, column=0, padx=10, pady=10, columnspan=3)
 
     def logout(self):
@@ -234,13 +236,13 @@ class AccountPage(tk.Frame):
     def create_user_info_card(self, user_info):
         # 创建用户信息卡片的 Frame
         user_info_frame = tk.Frame(self, bd=2, relief="solid")
-        user_info_frame.grid(row=2, column=7, padx=10, pady=10, columnspan=3, sticky="n")
+        user_info_frame.grid(row=2, column=2, padx=10, pady=10, columnspan=3, sticky="n")
 
         # 显示用户信息
-        username_label = tk.Label(user_info_frame, text=f"用户名: {user_info['username']}", font=("Arial", 12))
+        username_label = tk.Label(user_info_frame, text=f"username: {user_info['username']}", font=("Arial", 12))
         username_label.grid(row=0, column=0, padx=10, pady=5, columnspan=3)
 
-        balance_label = tk.Label(user_info_frame, text=f"账户余额: {user_info['account_balance']}")
+        balance_label = tk.Label(user_info_frame, text=f"balance: {user_info['account_balance']}")
         balance_label.grid(row=1, column=0, padx=10, pady=5, columnspan=3)
 
     def create_history_card(self, order_info):
@@ -252,23 +254,23 @@ class AccountPage(tk.Frame):
         self.current_row += 2
 
         # 创建历史记录标签
-        label = tk.Label(history_frame, text="历史记录")
+        label = tk.Label(history_frame, text="history")
         label.grid(row=0, column=0, padx=10, pady=10)
 
         # 显示历史订单信息
-        order_label = tk.Label(history_frame, text=f"订单号: {order_info['order_number']}", font=("Arial", 12))
+        order_label = tk.Label(history_frame, text=f"order_number: {order_info['order_number']}", font=("Arial", 12))
         order_label.grid(row=0, column=0, padx=10, pady=5)
 
-        status_label = tk.Label(history_frame, text=f"订单状态: {order_info['order_status']}")
+        status_label = tk.Label(history_frame, text=f"order_status: {order_info['order_status']}")
         status_label.grid(row=1, column=0, padx=10, pady=5)
 
-        vehicle_label = tk.Label(history_frame, text=f"车辆编号: {order_info['vehicle_number']}")
+        vehicle_label = tk.Label(history_frame, text=f"vehicle_number: {order_info['vehicle_number']}")
         vehicle_label.grid(row=2, column=0, padx=10, pady=5)
 
-        amount_label = tk.Label(history_frame, text=f"支付金额: {order_info['payment_amount']}")
+        amount_label = tk.Label(history_frame, text=f"payment_amount: {order_info['payment_amount']}")
         amount_label.grid(row=3, column=0, padx=10, pady=5)
 
-        time_label = tk.Label(history_frame, text=f"使用时间: {order_info['usage_time']}")
+        time_label = tk.Label(history_frame, text=f"usage_time: {order_info['usage_time']}")
         time_label.grid(row=4, column=0, padx=10, pady=5)
 
 
@@ -332,8 +334,13 @@ class MainPage(tk.Frame):
         frame1 = tk.Frame(self)
         frame1.grid(row=0, column=0, padx=10, pady=10, sticky='nw')
 
-        account_button = ttk.Button(frame1, text="个人账户", command=lambda: controller.show_frame(AccountPage), style="TButton")
+        account_button = ttk.Button(frame1, text="AccountPage", command=lambda: controller.show_frame(AccountPage),
+                                    style="TButton")
         account_button.grid(row=0, column=0, padx=10, pady=10, sticky='nw')
+
+        # 创建按钮，点击按钮进入地图页面
+        map_button = ttk.Button(frame1, text="map", command=lambda: controller.show_frame(MapPage))
+        map_button.grid(row=0, column=6, padx=10, pady=10)
 
         # 中央容器，用于保持内容居中
         center_frame = tk.Frame(self)
@@ -341,30 +348,32 @@ class MainPage(tk.Frame):
 
         # 应用图标和标题
         lbl_title = tk.Label(center_frame, text="Search your vehicle", font=("Arial", 24))
-        lbl_title.pack(pady=20)
+        lbl_title.pack(pady=10)
 
-        # 创建多选框及其对应的BooleanVar
-        self.option_var1 = tk.BooleanVar()
-        self.option_var2 = tk.BooleanVar()
-        self.option_var3 = tk.BooleanVar()
-        self.option_var4 = tk.BooleanVar()
+        # 创建单选按钮及其对应的`StringVar`
+        self.selected_option = tk.StringVar()
 
-        option_check1 = ttk.Checkbutton(center_frame, text="选项1", variable=self.option_var1)
-        option_check2 = ttk.Checkbutton(center_frame, text="选项2", variable=self.option_var2)
-        option_check3 = ttk.Checkbutton(center_frame, text="选项3", variable=self.option_var3)
-        option_check4 = ttk.Checkbutton(center_frame, text="选项4", variable=self.option_var4)
+        option_radio1 = ttk.Radiobutton(center_frame, text="IKEA", variable=self.selected_option, value="IKEA",
+                                        compound="left")
+        option_radio2 = ttk.Radiobutton(center_frame, text="UofG", variable=self.selected_option, value="UofG",
+                                        compound="left")
+        option_radio3 = ttk.Radiobutton(center_frame, text="Hospital", variable=self.selected_option, value="Hospital",
+                                        compound="left")
+        option_radio4 = ttk.Radiobutton(center_frame, text="Glasgow City Center", variable=self.selected_option,
+                                        value="Glasgow City Center", compound="left")
 
-        option_check1.pack(pady=5)
-        option_check2.pack(pady=5)
-        option_check3.pack(pady=5)
-        option_check4.pack(pady=5)
+        option_radio1.pack(pady=10, anchor="w")
+        option_radio2.pack(pady=10, anchor="w")
+        option_radio3.pack(pady=10, anchor="w")
+        option_radio4.pack(pady=10, anchor="w")
 
         # 创建预约车辆按钮
-        reservation_button = ttk.Button(center_frame, text="预约车辆", command=lambda: controller.show_frame(ReservationPage))
+        reservation_button = ttk.Button(center_frame, text="reserve",
+                                        command=lambda: controller.show_frame(ReservationPage))
         reservation_button.pack(pady=10)
 
         # 创建按钮，点击按钮进入地图页面
-        map_button = ttk.Button(center_frame, text="查看地图", command=lambda: controller.show_frame(MapPage))
+        map_button = ttk.Button(center_frame, text="map", command=lambda: controller.show_frame(MapPage))
         map_button.pack(pady=10)
 
         # 设置行和列的权重，使其自适应
@@ -391,7 +400,7 @@ class ReservationPage(tk.Frame):
         # label.grid(row=0, column=0, padx=10, pady=10)
 
         # 创建返回按钮
-        return_button = ttk.Button(self, text="返回", command=lambda: controller.show_frame(MainPage))
+        return_button = ttk.Button(self, text="return", command=lambda: controller.show_frame(MainPage))
         return_button.grid(row=0, column=1, padx=10, pady=10)
 
         # 创建按钮样式
@@ -444,16 +453,16 @@ class ReservationPage(tk.Frame):
         card_frame = tk.Frame(self.cards_container, bd=2, relief="solid")
         card_frame.grid(row=row, column=column, padx=10, pady=10)
 
-        number_label = tk.Label(card_frame, text=f"车辆编号: {vehicle_info[0]}")
+        number_label = tk.Label(card_frame, text=f"card_number: {vehicle_info[0]}")
         number_label.grid(row=1, column=0, padx=10, pady=5)
 
-        type_label = tk.Label(card_frame, text=f"车辆类型: {vehicle_info[1]}")
+        type_label = tk.Label(card_frame, text=f"car_type: {vehicle_info[1]}")
         type_label.grid(row=2, column=0, padx=10, pady=5)
 
-        battery_label = tk.Label(card_frame, text=f"电量: {vehicle_info[4]}")
+        battery_label = tk.Label(card_frame, text=f"battery: {vehicle_info[4]}")
         battery_label.grid(row=3, column=0, padx=10, pady=5)
 
-        rental_label = tk.Label(card_frame, text=f"租金: {vehicle_info[3]} ")
+        rental_label = tk.Label(card_frame, text=f"rental: {vehicle_info[3]} ")
         rental_label.grid(row=4, column=0, padx=10, pady=5)
 
         # 创建“预约”按钮，并根据余额状态添加相应的功能
@@ -464,25 +473,31 @@ class ReservationPage(tk.Frame):
             reserve_button_command = None'''
 
         reserve_button_command = lambda info=vehicle_info: self.show_reservation_message(info)
-        reserve_button = ttk.Button(card_frame, text="预约", command=reserve_button_command)
+        reserve_button = ttk.Button(card_frame, text="reserve", command=reserve_button_command)
         reserve_button.grid(row=5, column=0, padx=10, pady=5)
 
     def show_reservation_message(self, vehicle_info):
         # 显示预约消息，检查押金并弹出相应消息
-        user_info = BE_Function.get_login_user()
+        file = open("user.csv", "r")
+        login_user = list(file)
+        user_info = SqlFunction.get_one_user_info(login_user[0])
+        file.close()
         car_location = "Main Building"
+        print(user_info)
 
         rent_result = BE_Function.rent_start(vehicle_info[0], user_info[0], car_location)
         #TODO
-        #print(rent_result)
+        print(rent_result)
 
         if rent_result == "DepositError":
             # 若未付押金，则需要用户先交押金
-            messagebox.showwarning("押金不足", "账户押金不足，请及时充值。")
+            messagebox.showwarning("Insufficient deposit",
+                                   "The account deposit is insufficient, please recharge in time")
             # TODO： 跳转支付页面 self.controller.show_frame(PaidPage, vehicle_info)
         elif rent_result == "ExistError":
             # 若存在未完成的订单，则需要用户先结束订单
-            messagebox.showwarning("订单未完成", "存在未完成订单，请先完成订单。")
+            messagebox.showwarning("Order not completed",
+                                   "There is an uncompleted order, please complete the order first")
             # TODO： 跳转支付页面 self.controller.show_frame(PaidPage, vehicle_info)
         elif rent_result == "UnavaliableError":
             # 若车辆不可用，则换一辆车
@@ -490,12 +505,11 @@ class ReservationPage(tk.Frame):
             # TODO： 跳转支付页面 self.controller.show_frame(PaidPage, vehicle_info)
         elif rent_result == "RentError":
             # 若租用失败，则重新租用
-            messagebox.showwarning("租用失败", "租用失败，请重试。")
+            messagebox.showwarning("Rental failed", "Rental failed, please try again.")
             # TODO： 跳转支付页面 self.controller.show_frame(PaidPage, vehicle_info)
         else:
             # 租用成功，返回值为 order_id
-            messagebox.showinfo("租用成功", "您的车辆已开锁！")
-
+            messagebox.showinfo("Rental successful", "Your vehicle is unlocked！")
             self.controller.show_frame(EndOrderPage, vehicle_info)
 
 
@@ -533,7 +547,7 @@ class ReservationPage(tk.Frame):
         # 根据选定的车辆类型筛选车辆信息
         if self.selected_vehicle_type:
             self.vehicle_info_list = [vehicle for vehicle in self.vehicle_info_list if
-                                       vehicle[1] == self.selected_vehicle_type]
+                                      vehicle[1] == self.selected_vehicle_type]
 
         # 计算当前页的起始索引和结束索引
         start_index = (self.current_page - 1) * self.vehicles_per_page
@@ -564,7 +578,7 @@ class EndOrderPage(tk.Frame):
         self.vehicle_info = None
 
         # 创建车辆详情页面标签
-        label = tk.Label(self, text="订单进行中")
+        label = tk.Label(self, text="Order in progress")
         label.pack()  # 默认垂直居中显示
 
         # 创建图片的缩略图
@@ -581,8 +595,8 @@ class EndOrderPage(tk.Frame):
         self.vehicle_info_label.pack()  # 默认垂直居中显示
 
         # TODO: 创建返回按钮，使用 controller 的 show_frame 方法返回到前一页
-        #return_button = ttk.Button(self, text="返回", command=lambda: controller.show_frame(ReservationPage))
-        #return_button.pack()  # 默认垂直居中显示
+        # return_button = ttk.Button(self, text="return", command=lambda: controller.show_frame(ReservationPage))
+        # return_button.pack()  # 默认垂直居中显示
 
         # 创建中央容器，用于保持内容居中
         center_frame = tk.Frame(self)
@@ -593,32 +607,32 @@ class EndOrderPage(tk.Frame):
         button_frame.pack()
 
         # 创建还车按钮
-        pay_button = ttk.Button(button_frame, text="还车", command=self.confirm_payment)
+        pay_button = ttk.Button(button_frame, text="return car", command=self.confirm_payment)
         pay_button.pack(side=tk.LEFT, padx=10)  # 左对齐并添加间距
 
         # 创建report订单按钮
-        report_button = ttk.Button(button_frame, text="报错", command=self.report_order)
+        report_button = ttk.Button(button_frame, text="report", command=self.report_order)
         report_button.pack(side=tk.LEFT, padx=10)  # 左对齐并添加间距
 
     def set_vehicle_info(self, vehicle_info):
         self.vehicle_info = vehicle_info
-        self.vehicle_info_label.config(text=f"车辆编号: {vehicle_info[0]}\n 电量: {vehicle_info[4]}")
-        '''车牌号: {vehicle_info['type']}\n'''
+        self.vehicle_info_label.config(text=f"vehicle number: {vehicle_info[0]}\n Power: {vehicle_info[4]}")
+        '''number_plate: {vehicle_info['type']}\n'''
 
     def confirm_payment(self):
-    # 弹出确认预定的消息框，进入订单开始
         login_user = BE_Function.get_login_user()
         order = SqlFunction.get_user_specific_order(login_user[0], "ongoing")
         result = messagebox.askquestion("确认还车", "您确定要还车吗？")
+        print(order)
 
         if result == "yes":
-        # 用户确认支付，跳转到PaymentPage
+            # 用户确认支付，跳转到PaymentPage
             confirm_result = BE_Function.return_car(order[0])
+            print(confirm_result)
             if confirm_result == "Successful":
                 self.controller.show_frame(PaymentPage)
             else:
                 messagebox.showwarning("归还失败", "归还失败，请重试。")
-
 
     def pay_order(self):
         # 在这里添加支付订单的逻辑，例如显示支付进度页面
@@ -630,55 +644,60 @@ class EndOrderPage(tk.Frame):
         report_frame.pack()  # 默认垂直居中显示
 
         # 添加多选功能的文本显示
-        report_label = ttk.Label(report_frame, text="请选择问题类型:")
+        report_label = ttk.Label(report_frame, text="Please select question type:")
         report_label.pack()  # 默认垂直居中显示
 
-        # 创建多选框
-        problem_var1 = tk.BooleanVar()
-        problem_var2 = tk.BooleanVar()
-        problem_var3 = tk.BooleanVar()
+        # 定义一个Tkinter整数变量用于存储选择
+        selected_problem_var = tk.IntVar()
 
-        problem_check1 = ttk.Checkbutton(report_frame, text="问题类型1", variable=problem_var1)
-        problem_check2 = ttk.Checkbutton(report_frame, text="问题类型2", variable=problem_var2)
-        problem_check3 = ttk.Checkbutton(report_frame, text="问题类型3", variable=problem_var3)
+        # 创建单选按钮
+        problem_radio1 = ttk.Radiobutton(report_frame, text="seat post", variable=selected_problem_var, value=1)
+        problem_radio2 = ttk.Radiobutton(report_frame, text="frames", variable=selected_problem_var, value=2)
+        problem_radio3 = ttk.Radiobutton(report_frame, text="tire", variable=selected_problem_var, value=3)
+        problem_radio4 = ttk.Radiobutton(report_frame, text="battery", variable=selected_problem_var, value=3)
 
-        problem_check1.pack()
-        problem_check2.pack()
-        problem_check3.pack()
+        # 放置单选按钮
+        problem_radio1.pack()
+        problem_radio2.pack()
+        problem_radio3.pack()
+        problem_radio4.pack()
 
         # 创建确定按钮
-        confirm_button = ttk.Button(report_frame, text="确定",
-                                    command=lambda: self.confirm_report(problem_var1, problem_var2, problem_var3, report_frame))
+        # 注意这里将命令函数改为self.confirm_report(selected_problem_var, report_frame)
+        confirm_button = ttk.Button(report_frame, text="Sure",
+                                    command=lambda: self.confirm_report(selected_problem_var, report_frame))
         confirm_button.pack()
 
-    def confirm_report(self, problem_var1, problem_var2, problem_var3, report_frame):
-        # 处理报错确认按钮的点击事件
-        selected_problems = []
 
-        if problem_var1.get():
-            selected_problems.append("问题类型1")
-        if problem_var2.get():
-            selected_problems.append("问题类型2")
-        if problem_var3.get():
-            selected_problems.append("问题类型3")
+def confirm_report(self, problem_var1, problem_var2, problem_var3, problem_var4, report_frame):
+    # 处理报错确认按钮的点击事件
+    selected_problems = []
 
-        if selected_problems:
-            # 显示选中的问题类型
-            report_message = "您选择的问题类型：" + ", ".join(selected_problems)
-            # 跳转到支付页面
-            self.controller.show_frame(PaymentPage)
-        else:
-            report_message = "您未选择任何问题类型。"
+    if problem_var1.get():
+        selected_problems.append("seat post")
+    if problem_var2.get():
+        selected_problems.append("frames")
+    if problem_var3.get():
+        selected_problems.append("tire")
+    if problem_var4.get():
+        selected_problems.append("battery")
 
-        # 弹出消息框显示选中的问题类型
-        messagebox.showinfo("报错信息", report_message)  # 使用messagebox模块显示消息框
+    if selected_problems:
+        # 显示选中的问题类型
+        report_message = "Question type you selected：" + ", ".join(selected_problems)
+        # 跳转到支付页面
+        self.controller.show_frame(PaymentPage)
+    else:
+        report_message = "You have not selected any question type"
 
-        # 清空问题选择并隐藏报错部分
-        problem_var1.set(False)
-        problem_var2.set(False)
-        problem_var3.set(False)
-        report_frame.pack_forget()  # 隐藏报错部分
-        
+    # 弹出消息框显示选中的问题类型
+    messagebox.showinfo("Error message", report_message)  # 使用messagebox模块显示消息框
+
+    # 清空问题选择并隐藏报错部分
+    problem_var1.set(False)
+    problem_var2.set(False)
+    problem_var3.set(False)
+    report_frame.pack_forget()  # 隐藏报错部分
 
 
     
@@ -687,38 +706,37 @@ class PaymentPage(tk.Frame):
         tk.Frame.__init__(self, parent)
         self.controller = controller
 
-        label = tk.Label(self, text="支付订单", font=("Arial", 18))
+        label = tk.Label(self, text="Pay order", font=("Arial", 18))
         label.grid(row=0, column=1, padx=10, pady=10)
 
         # 车辆信息区域
-        vehicle_info_label = tk.Label(self, text="车辆信息", font=("Arial", 18))
+        vehicle_info_label = tk.Label(self, text=" vehicle_info", font=("Arial", 18))
         vehicle_info_label.grid(row=1, column=0, padx=10, pady=5, sticky="w")
 
         self.vehicle_info = None
-        self.vehicle_number_label = tk.Label(self, text="车辆编号: ", font=("Arial", 12))
+        self.vehicle_number_label = tk.Label(self, text="vehicle_number: ", font=("Arial", 12))
         self.vehicle_number_label.grid(row=2, column=0, padx=10, pady=5, sticky="w")
 
-        self.vehicle_type_label = tk.Label(self, text="车辆类型: ", font=("Arial", 12))
+        self.vehicle_type_label = tk.Label(self, text="vehicle_type: ", font=("Arial", 12))
         self.vehicle_type_label.grid(row=3, column=0, padx=10, pady=5, sticky="w")
 
-        self.vehicle_battery_label = tk.Label(self, text="电量: ", font=("Arial", 12))
+        self.vehicle_battery_label = tk.Label(self, text="battery: ", font=("Arial", 12))
         self.vehicle_battery_label.grid(row=4, column=0, padx=10, pady=5, sticky="w")
 
-        self.vehicle_duration_label = tk.Label(self, text="使用总时长: ", font=("Arial", 12))
+        self.vehicle_duration_label = tk.Label(self, text="vehicle_duration: ", font=("Arial", 12))
         self.vehicle_duration_label.grid(row=5, column=0, padx=10, pady=5, sticky="w")
 
         # 订单信息区域
-        order_info_label = tk.Label(self, text="订单信息", font=("Arial", 18))
+        order_info_label = tk.Label(self, text="order_info", font=("Arial", 18))
         order_info_label.grid(row=6, column=0, padx=10, pady=5, sticky="w")
 
-
-        self.start_time_label = tk.Label(self, text="订单开始时间: ", font=("Arial", 12))
+        self.start_time_label = tk.Label(self, text="order_start_time: ", font=("Arial", 12))
         self.start_time_label.grid(row=7, column=0, padx=10, pady=5, sticky="w")
 
-        self.end_time_label = tk.Label(self, text="订单结束时间: ", font=("Arial", 12))
+        self.end_time_label = tk.Label(self, text="order_end_time: ", font=("Arial", 12))
         self.end_time_label.grid(row=8, column=0, padx=10, pady=5, sticky="w")
 
-        self.total_amount_label = tk.Label(self, text="订单总金额: ", font=("Arial", 12))
+        self.total_amount_label = tk.Label(self, text="total_amount: ", font=("Arial", 12))
         self.total_amount_label.grid(row=9, column=0, padx=10, pady=5, sticky="w")
 
         # 车辆照片
@@ -726,13 +744,10 @@ class PaymentPage(tk.Frame):
         self.vehicle_image_label.grid(row=2, column=1, padx=10, pady=5, rowspan=5, columnspan=2)
 
         # 确认支付按钮
-        confirm_button = ttk.Button(self, text="支付订单", command=self.confirm_payment)
+        confirm_button = ttk.Button(self, text="confirm payment", command=self.confirm_payment)
         confirm_button.grid(row=10, column=1, padx=10, pady=10)
 
-
-       
-
-    def set_payment_info(self, vehicle_info):
+    def set_payment_info(self, vehicle_info, start_time, end_time, total_amount, duration):
         # 设置订单完成页面的信息
         # order 格式：(1001, 1, 'user', '2023-10-28 20:44:19', '2023-10-28 20:44:26', 0.0, 'due', 'Main Building', 'Main Building')
         login_user = BE_Function.get_login_user()
@@ -785,38 +800,37 @@ class EndPayPage(tk.Frame):
         tk.Frame.__init__(self, parent)
         self.controller = controller
 
-        label = tk.Label(self, text="完成订单", font=("Arial", 18))
+        label = tk.Label(self, text="Complete order", font=("Arial", 18))
         label.grid(row=0, column=1, padx=10, pady=10)
 
         # 车辆信息区域
-        vehicle_info_label = tk.Label(self, text="车辆信息", font=("Arial", 18))
+        vehicle_info_label = tk.Label(self, text="vehicle_info", font=("Arial", 18))
         vehicle_info_label.grid(row=1, column=0, padx=10, pady=5, sticky="w")
 
         self.vehicle_info = None
-        self.vehicle_number_label = tk.Label(self, text="车辆编号: ", font=("Arial", 12))
+        self.vehicle_number_label = tk.Label(self, text="vehicle_number: ", font=("Arial", 12))
         self.vehicle_number_label.grid(row=2, column=0, padx=10, pady=5, sticky="w")
 
-        self.vehicle_type_label = tk.Label(self, text="车辆类型: ", font=("Arial", 12))
+        self.vehicle_type_label = tk.Label(self, text="vehicle_type: ", font=("Arial", 12))
         self.vehicle_type_label.grid(row=3, column=0, padx=10, pady=5, sticky="w")
 
-        self.vehicle_battery_label = tk.Label(self, text="电量: ", font=("Arial", 12))
+        self.vehicle_battery_label = tk.Label(self, text="battery: ", font=("Arial", 12))
         self.vehicle_battery_label.grid(row=4, column=0, padx=10, pady=5, sticky="w")
 
-        self.vehicle_duration_label = tk.Label(self, text="使用总时长: ", font=("Arial", 12))
+        self.vehicle_duration_label = tk.Label(self, text="vehicle_duration: ", font=("Arial", 12))
         self.vehicle_duration_label.grid(row=5, column=0, padx=10, pady=5, sticky="w")
 
         # 订单信息区域
-        order_info_label = tk.Label(self, text="订单信息", font=("Arial", 18))
+        order_info_label = tk.Label(self, text=" order_info", font=("Arial", 18))
         order_info_label.grid(row=6, column=0, padx=10, pady=5, sticky="w")
 
-
-        self.start_time_label = tk.Label(self, text="订单开始时间: ", font=("Arial", 12))
+        self.start_time_label = tk.Label(self, text="order_start_time: ", font=("Arial", 12))
         self.start_time_label.grid(row=7, column=0, padx=10, pady=5, sticky="w")
 
-        self.end_time_label = tk.Label(self, text="订单结束时间: ", font=("Arial", 12))
+        self.end_time_label = tk.Label(self, text="order_end_time: ", font=("Arial", 12))
         self.end_time_label.grid(row=8, column=0, padx=10, pady=5, sticky="w")
 
-        self.total_amount_label = tk.Label(self, text="订单总金额: ", font=("Arial", 12))
+        self.total_amount_label = tk.Label(self, text="total_amount: ", font=("Arial", 12))
         self.total_amount_label.grid(row=9, column=0, padx=10, pady=5, sticky="w")
 
         # 车辆照片
@@ -824,20 +838,20 @@ class EndPayPage(tk.Frame):
         self.vehicle_image_label.grid(row=11, column=1, padx=10, pady=5, rowspan=5, columnspan=2)
 
         # 确认支付按钮
-        confirm_button = ttk.Button(self, text="确认订单", command=self.confirm_payment)
+        confirm_button = ttk.Button(self, text="confirm_payment", command=self.confirm_payment)
         confirm_button.grid(row=10, column=1, padx=10, pady=10)
 
     def set_payment_info(self, vehicle_info, start_time, end_time, total_amount, duration):
         # 设置订单完成页面的信息
         self.vehicle_info = vehicle_info
-        self.vehicle_number_label.config(text=f"车辆编号: {vehicle_info['number']}")
-        self.vehicle_type_label.config(text=f"车辆类型: {vehicle_info['type']}")
-        self.vehicle_battery_label.config(text=f"电量: {vehicle_info['battery']}")
-        self.vehicle_duration_label.config(text=f"使用总时长: {duration} 小时")
+        self.vehicle_number_label.config(text=f"vehicle_number: {vehicle_info['number']}")
+        self.vehicle_type_label.config(text=f"vehicle_type: {vehicle_info['type']}")
+        self.vehicle_battery_label.config(text=f"battery: {vehicle_info['battery']}")
+        self.vehicle_duration_label.config(text=f"vehicle_duration: {duration} hour")
 
-        self.start_time_label.config(text=f"订单开始时间: {start_time}")
-        self.end_time_label.config(text=f"订单结束时间: {end_time}")
-        self.total_amount_label.config(text=f"订单总金额: {total_amount}")
+        self.start_time_label.config(text=f"order_start_time: {start_time}")
+        self.end_time_label.config(text=f"order_end_time: {end_time}")
+        self.total_amount_label.config(text=f"total_amount: {total_amount}")
 
         # 显示车辆照片
         self.display_vehicle_image(vehicle_info['image_path'])
