@@ -1,18 +1,24 @@
-import tkinter as tk
-from tkinter import ttk
-import ttkbootstrap as bs
-from tkinter import messagebox
-import Styles
-from PIL import Image, ImageTk
-from pathlib import Path
 import random
-import numpy as np
-import matplotlib.pyplot as plt
+import tkinter as tk
+from datetime import datetime
+from pathlib import Path
+from tkinter import messagebox
+from tkinter import ttk
+
+import pandas as pd
+import ttkbootstrap as bs
+from PIL import Image, ImageTk
+from matplotlib import pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+
+import Styles
+import pdsql
 
 IMG_PATH = Path(__file__).parent / 'images'
 # 车辆状态
 CAR_STATE_D = {0: 'Stationary', 1: 'In Use', 2: 'To be Repaired', 3: 'To be Charged', 4: 'To be Repaired/Charged'}
+
+LOCATIONS = ["Learning Hub", "Adam Smith Building", "Boyd Orr Building", "Main Building"]
 
 
 class MyApp:
@@ -26,15 +32,45 @@ class MyApp:
         self.root = root  # 传入的根窗口存储在类的属性root
         self.root.title("My App")
         self.root.geometry('1600x800')
-        self.current_middle_page = None  # 跟踪当前显示的页面
+        self.current_middle_page = None  # 跟踪当前显示的页面 user/operator中部界面
         self.last_middle_page = None
+
+        self.current_manager_middle_page = None  # manager 右侧界面
+        self.last_manager_middle_page = None
 
         self.show_first_page()
         self.style = bs.Style()
 
+        pdsql.test_data_initialization()
+
+        self.pd_users = pdsql.get_all_users()  # 数据库中取出的用户数据
+        self.pd_vehicles = pdsql.get_all_cars()  # 数据库中取出的交通工具数据
+        self.pd_orders = pdsql.get_all_orders()  # 数据库中取出的订单数据
+
         # self.font_button = tk.font.Font(family='Arial', size=20, weight='bold')
         # self.font_title = tk.font.Font(family="Arial", size=20)
         # self.font_label = tk.font.Font(family="Arial", size=16)
+
+    def take_pd_users(self):
+        """
+        获取数据库中的用户数据
+        :return:
+        """
+        self.pd_users = pdsql.get_all_users()
+
+    def take_pd_vehicles(self):
+        """
+        获取数据库中的交通工具数据
+        :return:
+        """
+        self.pd_vehicles = pdsql.get_all_cars()
+
+    def take_pd_orders(self):
+        """
+        获取数据库中的订单数据
+        :return:
+        """
+        self.pd_orders = pdsql.get_all_orders()
 
     def show_first_page(self):
         """
@@ -60,7 +96,7 @@ class MyApp:
         f_top = bs.Frame(frame, bootstyle='dark')
         f_top.place(relx=0, rely=0, relwidth=1, relheight=0.1)
 
-        icon = self.resize_image(icon_file_name, 80, 80)
+        icon = self.resize_image(icon_file_name, 120, 75)
 
         # l_icon = tk.Label(f_top, image=icon, borderwidth=2, relief="solid")
         l_icon = bs.Label(f_top, image=icon, bootstyle='inverse-dark')
@@ -68,12 +104,21 @@ class MyApp:
 
         # l_name = tk.Label(f_top, text=current_page_name)
         l_name = bs.Label(f_top, text=current_page_name, bootstyle='inverse-dark',
-                          font=("Arial", 16), anchor=tk.CENTER, justify=tk.CENTER)
+                          font=("Arial", 30), anchor='center', justify=tk.CENTER)
 
         l_icon.pack(side='left')
-        l_name.pack(side='left')
+        l_name.place(relx=0.3, rely=0.2, relwidth=0.4, relheight=0.6)
+
+        time_label = bs.Label(f_top, font=('Arial', 20), bootstyle='inverse-dark')
+        time_label.place(relx=0.8, rely=0.2, relwidth=0.1, relheight=0.6)
+        self.update_time(f_top, time_label)
 
         return f_top
+
+    def update_time(self, f_top, time_label):
+        current_time = datetime.now().strftime('%H:%M:%S')
+        time_label.config(text=current_time)
+        f_top.after(1000, lambda: self.update_time(f_top, time_label))
 
     def frame_middle(self, frame, login_type=0):
         """
@@ -225,7 +270,7 @@ class MyApp:
         :param f_middle: 中部框架
         :return:
         """
-        pass # 密码强度检测
+        pass  # 密码强度检测
         flag = True  # 注册成功标志
         if not flag:
             tk.messagebox.showerror("Error!", "This user is registered!")  # 注册失败显示信息
@@ -553,6 +598,8 @@ class MyApp:
         f_top = self.frame_top(f_main, 'Manager System')
         paned_window, f_middle_left, f_middle_right = self.frame_middle(f_main, 2)
 
+        self.current_manager_middle_page = f_middle_right
+
         self.style.configure('Treeview', font=('Arial', 10))
 
         tree = bs.Treeview(f_middle_left, bootstyle='success')
@@ -575,54 +622,380 @@ class MyApp:
         tree.insert(3, tk.END, text='Order List', iid=9)
 
         MANAGE_PAGE = {0: self.user_management,
-                       1: self.user_list,
-                       2: self.user_visualization,
-                       3: self.operator_management,
-                       4: self.operator_list,
-                       5: self.vehicle_management,
-                       6: self.vehicle_list,
-                       7: self.vehicle_visualization,
-                       8: self.order_management,
+                       1: self.operator_management,
+                       2: self.vehicle_management,
+                       3: self.order_management,
+                       4: self.user_list,
+                       5: self.user_visualization,
+                       6: self.operator_list,
+                       7: self.vehicle_list,
+                       8: self.vehicle_visualization,
                        9: self.order_list}
 
-        def on_tree_select(event):
-            selected = tree.selection()  # 获取选择的项目的 iid
-            MANAGE_PAGE.get(int(selected[0]))()
+        def on_item_selected(event):
+            item = tree.selection()[0]
+            iid = int(item)  # 将iid转换为整数
+            if iid in MANAGE_PAGE:
+                func = MANAGE_PAGE[iid]
+                func(f_middle_right)  # 调用相应的函数
 
-        tree.bind("<<TreeviewSelect>>", on_tree_select)
+        tree.bind("<ButtonRelease-1>", on_item_selected)
 
-    def user_management(self):
-        pass
+    def manager_middle_page_clear(self):
+        """
+        管理员中间页面清除
+        :return: None
+        """
+        if self.current_manager_middle_page is not None:  # 检查中部当前是否有页面
+            self.last_manager_middle_page = self.current_manager_middle_page
+            self.current_manager_middle_page.place_forget()  # 如果有，删除，但保留在内存中
 
-    def user_list(self):
-        pass
+    def user_management(self, frame):
+        self.manager_middle_page_clear()
+        f_main = bs.Frame(frame, bootstyle='warning')
+        self.current_manager_middle_page = f_main
+        f_main.place(relx=0, rely=0, relwidth=1, relheight=1)
+        l = bs.Label(f_main, text='user_management')
+        l.pack()
 
-    def user_visualization(self):
-        pass
+    def user_list(self, frame):
+        self.manager_middle_page_clear()
+        f_main = bs.Frame(frame, bootstyle='warning')
+        self.current_manager_middle_page = f_main
+        f_main.place(relx=0, rely=0, relwidth=1, relheight=1)
+        l = bs.Label(f_main, text='user_list')
+        l.pack()
 
-    def operator_management(self):
-        pass
+    def user_visualization(self, frame):
+        self.manager_middle_page_clear()
+        f_main = bs.Frame(frame, bootstyle='warning')
+        self.current_manager_middle_page = f_main
+        f_main.place(relx=0, rely=0, relwidth=1, relheight=1)
+        l = bs.Label(f_main, text='user_visualization')
+        l.pack()
 
-    def operator_list(self):
-        pass
+    def operator_management(self, frame):
+        self.manager_middle_page_clear()
+        f_main = bs.Frame(frame, bootstyle='warning')
+        self.current_manager_middle_page = f_main
+        f_main.place(relx=0, rely=0, relwidth=1, relheight=1)
+        l = bs.Label(f_main, text='operator_management')
+        l.pack()
 
-    def vehicle_management(self):
-        pass
+    def operator_list(self, frame):
+        self.manager_middle_page_clear()
+        f_main = bs.Frame(frame, bootstyle='warning')
+        self.current_manager_middle_page = f_main
+        f_main.place(relx=0, rely=0, relwidth=1, relheight=1)
+        l = bs.Label(f_main, text='operator_list')
+        l.pack()
 
-    def vehicle_list(self):
-        pass
+    def vehicle_management(self, frame):
+        self.manager_middle_page_clear()
+        f_main = bs.Frame(frame, bootstyle='warning')
+        self.current_manager_middle_page = f_main
+        f_main.place(relx=0, rely=0, relwidth=1, relheight=1)
+        l = bs.Label(f_main, text='vehicle_management')
+        l.pack()
 
-    def vehicle_visualization(self):
-        pass
+    def vehicle_list(self, frame):
+        self.manager_middle_page_clear()
+        f_main = bs.Frame(frame, bootstyle='warning')
+        self.current_manager_middle_page = f_main
+        f_main.place(relx=0, rely=0, relwidth=1, relheight=1)
 
-    def order_management(self):
-        pass
+        self.style.configure('Treeview', rowheight=25)
 
-    def order_list(self):
-        pass
+        f_top = bs.Frame(f_main, bootstyle='primary')  # 上层功能区
+        f_top.place(relx=0, rely=0, relwidth=1, relheight=0.1)
+
+        l_sort = bs.Label(f_top, text='Sort:', anchor='center', bootstyle='inverse-info')
+        c_sort = bs.Combobox(f_top, values=self.pd_vehicles.columns.tolist(), bootstyle='info')
+
+        b_ascending = bs.Button(f_top, text='Ascending', bootstyle='info',
+                                command=lambda: self.vehicle_bottom_Treeview(f_bottom, c_sort.get(), True))
+        b_deascending = bs.Button(f_top, text='Deascending', bootstyle='info',
+                                  command=lambda: self.vehicle_bottom_Treeview(f_bottom, c_sort.get(), False))
+
+        l_sort.place(relx=0.4, rely=0.3, relwidth=0.1, relheight=0.4)
+        c_sort.place(relx=0.55, rely=0.3, relwidth=0.1, relheight=0.4)
+        b_ascending.place(relx=0.7, rely=0.3, relwidth=0.1, relheight=0.4)
+        b_deascending.place(relx=0.85, rely=0.3, relwidth=0.1, relheight=0.4)
+
+        def on_combobox_select(event):
+            selected_value = c_sort.get()
+
+        f_bottom = bs.Frame(f_main)  # 下层显示区
+        f_bottom.place(relx=0, rely=0.1, relwidth=1, relheight=0.9)
+
+        self.vehicle_bottom_Treeview(f_bottom, 'CarID')
+
+    def vehicle_bottom_Treeview(self, frame, sort_column, sort_type=True):
+        """
+        Treeview排序显示
+        :param f_bottom: 父框架
+        :param sort_column: 排序列
+        :param sort_type: 排序方式 True升序 False降序
+        :return:
+        """
+
+        f_main = bs.Frame(frame)
+        f_main.place(relx=0, rely=0, relwidth=1, relheight=1)
+
+        vehicle_headers = self.pd_vehicles.columns.tolist()  # 表头
+        tree = bs.Treeview(f_main, columns=vehicle_headers, show='headings', bootstyle='info')
+        tree.pack(side=tk.LEFT, fill="both", expand=True)
+        for header in vehicle_headers:  # 设置表头属性
+            tree.heading(header, text=header)
+            tree.column(header, stretch=tk.YES, anchor='center')
+
+        vehicle_data = self.pd_vehicles.sort_values(by=sort_column, ascending=sort_type).values.tolist()  # 数值
+        for data in vehicle_data:  # 插入数值
+            tree.insert('', 'end', values=data)
+        self.adjust_column_width(tree, vehicle_headers)  # 调整列宽度自适应
+
+        # 配置交替行颜色的树状视图
+        for index, child in enumerate(tree.get_children()):
+            if index % 2 == 0:
+                tree.item(child, tags=('evenrow',))
+            else:
+                tree.item(child, tags=('oddrow',))
+
+        tree.tag_configure('evenrow', background='white')
+        tree.tag_configure('oddrow', background='lightgray')
+
+        # 创建垂直滚动条
+        vsb = bs.Scrollbar(f_main, orient="vertical", command=tree.yview, bootstyle="info-round")
+        tree.configure(yscrollcommand=vsb.set)
+        vsb.pack(side=tk.RIGHT, fill=tk.Y)
+
+    def adjust_column_width(self, tree, columns):  # 调整列宽度自适应
+        for col in columns:
+            col_width = tk.font.Font().measure(col)  # 初始化为列名宽度
+            for item in tree.get_children():
+                # 每个项的宽度
+                item_width = tk.font.Font().measure(tree.item(item, 'values')[columns.index(col)])
+                if item_width > col_width:
+                    col_width = item_width
+            # 设置列宽度
+            tree.column(col, width=col_width)
+
+    def vehicle_visualization(self, frame):
+        self.manager_middle_page_clear()
+        f_main = bs.Frame(frame, bootstyle='warning')
+        self.current_manager_middle_page = f_main
+        f_main.place(relx=0, rely=0, relwidth=1, relheight=1)
+
+        f_top = bs.Frame(f_main, bootstyle='primary')  # 上层功能区
+        f_top.place(relx=0, rely=0, relwidth=1, relheight=0.1)
+
+        l_start = bs.Label(f_top, text='Start:', anchor='center', bootstyle='inverse-info')
+        l_end = bs.Label(f_top, text='End:', anchor='center', bootstyle='inverse-info')
+        d_start = bs.DateEntry(f_top, width=12, bootstyle='info')  # 起始时间选择
+        d_end = bs.DateEntry(f_top, width=12, bootstyle='info')  # 起始时间选择
+        b_vehicle_info = bs.Button(f_top, text='Vehicle Info', bootstyle='info',
+                                   command=lambda: self.vehicle_info(f_bottom))
+        b_confirm = bs.Button(f_top, text='Confirm', bootstyle='info',
+                              command=lambda: self.vehicle_confirm(f_bottom, d_start.entry.get(), d_end.entry.get()))
+
+        l_start.place(relx=0.05, rely=0.3, relwidth=0.1, relheight=0.4)
+        d_start.place(relx=0.15, rely=0.3, relwidth=0.2, relheight=0.4)
+        l_end.place(relx=0.4, rely=0.3, relwidth=0.1, relheight=0.4)
+        d_end.place(relx=0.5, rely=0.3, relwidth=0.2, relheight=0.4)
+        b_vehicle_info.place(relx=0.733, rely=0.3, relwidth=0.1, relheight=0.4)
+        b_confirm.place(relx=0.863, rely=0.3, relwidth=0.1, relheight=0.4)
+
+        f_bottom = bs.Frame(f_main)  # 下层显示区
+        f_bottom.place(relx=0, rely=0.1, relwidth=1, relheight=0.9)
+
+        self.vehicle_info(f_bottom)
+
+        # 子图赋值
+
+    def vehicle_info(self, f_bottom):
+        fig, axes = plt.subplots(2, 3, figsize=(8, 6))
+        self.vehicle_power_bar(f_bottom, axes[0][0])
+        self.vehicle_journey_bar(f_bottom, axes[0][1])
+        self.vehicle_type_price_pie(f_bottom, axes[0][2])
+        self.vehicle_state_pie(f_bottom, axes[1][0])
+        self.vehicle_location_pie(f_bottom, axes[1][1])
+        axes[1][2].axis('off')
+        fig.tight_layout()
+
+        canvas = FigureCanvasTkAgg(fig, master=f_bottom)
+        canvas_widget = canvas.get_tk_widget()
+        canvas_widget.place(relx=0, rely=0, relwidth=1, relheight=1)
+
+    def vehicle_power_bar(self, frame, ax):
+        f_main = bs.Frame(frame)
+        f_main.place(relx=0, rely=0, relwidth=1, relheight=1)
+
+        # 数据操作
+        df_vehicles_power = self.pd_vehicles['CarPower'].value_counts().to_frame('Amount').reset_index()
+        bars = df_vehicles_power.plot(kind='bar', x='CarPower', y='Amount', ax=ax, legend=False)
+        ax.set_title('Vehicle Power Bar Chart')
+        ax.set_ylabel('Amount')
+
+        # 添加数据
+        for bar in bars.patches:
+            ax.annotate(format(bar.get_height(), '.0f'),
+                        (bar.get_x() + bar.get_width() / 2,
+                         bar.get_height()), ha='center', va='center',
+                        size=10, xytext=(0, 8),
+                        textcoords='offset points')
+
+    def vehicle_journey_bar(self, frame, ax):
+        f_main = bs.Frame(frame)
+        f_main.place(relx=0, rely=0, relwidth=1, relheight=1)
+
+        df_vehicles_journey = self.pd_vehicles['CarJourney'].copy()
+
+        bins = [0, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000]
+        labels = ['0-100', '100-200', '200-300', '300-400', '400-500', '500-600', '600-700', '700-800', '800-900',
+                  '900-1000']
+        df_vehicles_journey_bins = pd.cut(df_vehicles_journey, bins=bins, labels=labels)
+
+        # 数据操作
+        df_vehicles_journey_bins = df_vehicles_journey_bins.value_counts().to_frame('Amount').reset_index()
+        df_vehicles_journey_bins.columns = ['CarJourney', 'Amount']
+
+        bars = df_vehicles_journey_bins.plot(kind='bar', x='CarJourney', y='Amount', ax=ax, legend=False)
+        ax.set_title('Vehicle Journey Bar Chart')
+        ax.set_ylabel('Amount')
+
+        for bar in bars.patches:
+            ax.annotate(format(bar.get_height(), '.0f'),
+                        (bar.get_x() + bar.get_width() / 2,
+                         bar.get_height()), ha='center', va='center',
+                        size=10, xytext=(0, 8),
+                        textcoords='offset points')
+
+    def vehicle_type_price_pie(self, frame, ax):
+        f_main = bs.Frame(frame)
+        f_main.place(relx=0, rely=0, relwidth=1, relheight=1)
+
+        df_vehicles_type_price = self.pd_vehicles['CarType'].value_counts().to_frame('Amount').reset_index()
+        df_vehicles_type_price['CarType'] = df_vehicles_type_price['CarType'].replace(
+            {'bike': 'Bike:£10/h', 'wheel': 'Wheel:£8/h'})
+        df_vehicles_type_price.columns = ['CarType/Price', 'Amount']
+        df_vehicles_type_price.set_index('CarType/Price')['Amount'].plot(kind='pie', ax=ax)
+        ax.set_title('Vehicle CarType/Price Pie Chart')
+        ax.set_ylabel('')
+        ax.get_yaxis().set_visible(False)
+
+        # 显示饼图上的百分比
+        df_vehicles_type_price.set_index('CarType/Price')['Amount'].plot(
+            kind='pie', ax=ax, autopct='%1.1f%%')
+
+    def vehicle_state_pie(self, frame, ax):
+        f_main = bs.Frame(frame)
+        f_main.place(relx=0, rely=0, relwidth=1, relheight=1)
+
+        df_vehicles_state = self.pd_vehicles['CarState'].value_counts().to_frame('Amount').reset_index()
+        df_vehicles_state.set_index('CarState')['Amount'].plot(kind='pie', ax=ax)
+        ax.set_title('Vehicle State Pie Chart')
+        ax.set_ylabel('')
+        ax.get_yaxis().set_visible(False)
+
+        # 显示饼图上的百分比
+        df_vehicles_state.set_index('CarState')['Amount'].plot(
+            kind='pie', ax=ax, autopct='%1.1f%%')
+
+    def vehicle_location_pie(self, frame, ax):
+        f_main = bs.Frame(frame)
+        f_main.place(relx=0, rely=0, relwidth=1, relheight=1)
+
+        df_vehicles_location = self.pd_vehicles['CarLocation'].value_counts().to_frame('Amount').reset_index()
+        df_vehicles_location.set_index('CarLocation')['Amount'].plot(kind='pie', ax=ax)
+        ax.set_title('Vehicle Current Location Pie Chart')
+        ax.set_ylabel('')
+        ax.get_yaxis().set_visible(False)
+
+        # 显示饼图上的百分比
+        df_vehicles_location.set_index('CarLocation')['Amount'].plot(
+            kind='pie', ax=ax, autopct='%1.1f%%')
+
+    def vehicle_confirm(self, f_bottom, start_date, end_date):
+        self.pd_orders['OrderStartTime'] = pd.to_datetime(self.pd_orders['OrderStartTime'])
+        self.pd_orders['OrderEndTime'] = pd.to_datetime(self.pd_orders['OrderEndTime'])
+
+        pd_location = \
+            self.pd_orders[
+                (self.pd_orders['OrderStartTime'] >= start_date) & (self.pd_orders['OrderEndTime'] <= end_date)][
+                ['CarStartLocation', 'CarEndLocation']].reset_index(drop=True)
+
+        print(pd_location)
+
+        fig, axes = plt.subplots(1, 2, figsize=(8, 6))
+        self.start_and_end_route(f_bottom, axes[0], pd_location)
+        self.start_to_end_route(f_bottom, axes[1], pd_location)
+        fig.tight_layout()
+
+        canvas = FigureCanvasTkAgg(fig, master=f_bottom)
+        canvas_widget = canvas.get_tk_widget()
+        canvas_widget.place(relx=0, rely=0, relwidth=1, relheight=1)
+
+    def start_and_end_route(self, frame, ax, data):
+        f_main = bs.Frame(frame)
+        f_main.place(relx=0, rely=0, relwidth=1, relheight=1)
+
+        # 对每一列进行值计数
+        start_counts = data['CarStartLocation'].value_counts()
+        end_counts = data['CarEndLocation'].value_counts()
+
+        start_and_end_count = pd.concat([start_counts, end_counts], axis=1, keys=['StartLocation', 'EndLocation']).fillna(0)
+        start_and_end_count.plot(kind='bar', stacked=False, ax=ax)
+        ax.set_title('Order Start and End Location')
+        ax.set_ylabel('Amount')
+
+        # 添加数据
+        for p in ax.patches:
+            ax.annotate(str(int(p.get_height())),
+                        (p.get_x() + p.get_width() / 2., p.get_height()),
+                        ha='center', va='center',
+                        xytext=(0, 9),
+                        textcoords='offset points')
+
+    def start_to_end_route(self, frame, ax, data):
+        f_main = bs.Frame(frame)
+        f_main.place(relx=0, rely=0, relwidth=1, relheight=1)
+
+        # 生成新列，用于显示路线
+        data['Route'] = data['CarStartLocation'] + '->' + data['CarEndLocation']
+
+        # 统计每个路线的数量
+        start_to_end_count = data['Route'].value_counts()
+        start_to_end_count = start_to_end_count.sort_values()
+        start_to_end_count.plot(kind='barh', ax=ax, x='Count', y='Route', legend=False)
+        ax.set_title('Order Start to End Location')
+
+        # 在每个条形上标注数值
+        for i, v in enumerate(start_to_end_count):
+            ax.text(v + 0.1, i, str(v), color='black', va='center')
+
+    def order_management(self, frame):
+        self.manager_middle_page_clear()
+        f_main = bs.Frame(frame, bootstyle='warning')
+        self.current_manager_middle_page = f_main
+        f_main.place(relx=0, rely=0, relwidth=1, relheight=1)
+        l = bs.Label(f_main, text='order_management')
+        l.pack()
+
+    def order_list(self, frame):
+        self.manager_middle_page_clear()
+        f_main = bs.Frame(frame, bootstyle='warning')
+        self.current_manager_middle_page = f_main
+
+        f_main.place(relx=0, rely=0, relwidth=1, relheight=1)
+        l = bs.Label(f_main, text='order_list')
+        l.pack()
 
 
-if __name__ == "__main__":
+def main():
     root = tk.Tk()  # 创建Tkinter根窗口
     app = MyApp(root)  # 创建实例
     root.mainloop()  # 保持程序运行
+
+
+if __name__ == "__main__":
+    main()

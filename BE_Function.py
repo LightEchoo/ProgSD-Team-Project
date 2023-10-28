@@ -42,7 +42,12 @@ def login(user_name, password):
         return "NoUserFalse"
     else:
         if user_info[1] == password:
-            return "LoginSuccess"
+            if user_info[2] == "customer":
+                return 0
+            elif user_info[2] == "operator":
+                return 1
+            elif user_info[2] == "manager":
+                return 2
         else:
             return "LoginFalse"
 
@@ -104,17 +109,17 @@ def rent_start(car_id, user_name, car_start_location):
 
     if user_info[3] != 0:
         connect.close()
-        return "Haven't paid deposit"
+        return "DepositError"
 
     existing_orders = SqlFunction.get_one_user_orders(user_name)
     for order in existing_orders:
         if order[6] != "end":
             connect.close()
-            return "Haven't finished exist order"
+            return "ExistError"
 
     if car_info[6] != "avaliable":
         connect.close()
-        return "This is unavaliable"
+        return "UnavaliableError"
 
     try:
         order_id = SqlFunction.generate_new_order_id()
@@ -128,7 +133,7 @@ def rent_start(car_id, user_name, car_start_location):
 
     except sqlite3.Error as e:
         print("Error in Create Order:", str(e))
-        return False
+        return "RentError"
 
 def return_car(order_id):
     '''
@@ -171,11 +176,11 @@ def return_car(order_id):
         if left_power < 20:
             SqlFunction.update_car_state(car_id, "lowpower")
 
-        return True
+        return "Successful"
 
     except sqlite3.Error as e:
         print("Error Return Car:", str(e))
-        return False
+        return "ReturnError"
 
 def repair(order_id, repair_detail):
     '''
