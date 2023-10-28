@@ -98,7 +98,7 @@ class LoginPage(tk.Frame):
         center_frame.place(relx=0.4, rely=0.4, anchor=tk.CENTER)
 
         # 错误消息标签
-        self.error_label = tk.Label(center_frame, text="", fg="red")
+        self.error_label =tk.Label(center_frame, text="", fg="red")
         self.error_label.pack()
 
         # 应用图标和标题
@@ -129,9 +129,14 @@ class LoginPage(tk.Frame):
         btn_login = ttk.Button(bottom_frame, text="登录", command=partial(self.user_login, controller))
         btn_login.grid(row=0, column=1, padx=10)
 
-    def user_login(self,controller):
+    def user_login(self, controller, login_result=None):
         username = self.entry_username.get()
         password = self.entry_password.get()
+
+        if login_result == "LoginSuccess":
+            # 登录成功，设置当前用户
+            controller.current_user = username
+            controller.show_frame(MainPage)
 
         # 检查用户名和密码是否为空
         if not username or not password:
@@ -252,16 +257,16 @@ class AccountPage(tk.Frame):
     def __init__(self, parent, controller):
         # 初始化个人账户页面
         tk.Frame.__init__(self, parent)
-        
+
         self.controller = controller  # 保存controller作为实例属性
-        
+
         # 初始化当前行为历史记录的起始行
         self.current_row = 4
 
         # 创建个人账户页面标签
         label = tk.Label(self, text="个人账户页面")
         label.grid(row=0, column=7, padx=10, pady=10, columnspan=3, sticky="n")
-        
+
         # 创建退出账户按钮
         logout_button = ttk.Button(self, text="退出账户", command=self.logout)
         logout_button.grid(row=0, column=10, padx=10, pady=10, sticky="n")
@@ -269,26 +274,26 @@ class AccountPage(tk.Frame):
         # 创建用户信息卡片
         user_info = {"username": "用户名", "account_balance": "$1000"}
         self.create_user_info_card(user_info)
-        
+
         # 创建历史订单记录卡片
         history_data = [
             {"order_number": "001", "order_status": "已完成", "vehicle_number": "12345", "payment_amount": "$10", "usage_time": "1小时"},
             {"order_number": "002", "order_status": "已取消", "vehicle_number": "54321", "payment_amount": "$5", "usage_time": "30分钟"},
         ]
-        
+
         for order_info in history_data:
             self.create_history_card(order_info)
-            
+
       # 创建返回按钮
         return_button = ttk.Button(self, text="返回", command=lambda: controller.show_frame(MainPage))
         return_button.grid(row=self.current_row + 1, column=0, padx=10, pady=10, columnspan=3)
-        
+
     def logout(self):
         # 添加退出账户逻辑，返回到登录页面
         self.controller.show_frame(LoginPage)
 
-        
-        
+
+
     def create_user_info_card(self, user_info):
         # 创建用户信息卡片的 Frame
         user_info_frame = tk.Frame(self, bd=2, relief="solid")
@@ -308,11 +313,11 @@ class AccountPage(tk.Frame):
 
         # 更新下一个历史记录的行号
         self.current_row += 2
-        
+
         # 创建历史记录标签
         label = tk.Label(history_frame, text="历史记录")
         label.grid(row=0, column=0, padx=10, pady=10)
-        
+
         # 显示历史订单信息
         order_label = tk.Label(history_frame, text=f"订单号: {order_info['order_number']}", font=("Arial", 12))
         order_label.grid(row=0, column=0, padx=10, pady=5)
@@ -329,102 +334,8 @@ class AccountPage(tk.Frame):
         time_label = tk.Label(history_frame, text=f"使用时间: {order_info['usage_time']}")
         time_label.grid(row=4, column=0, padx=10, pady=5)
 
-        
-class MapPage(tk.Frame):
-    def __init__(self, parent, controller):
-        tk.Frame.__init__(self, parent)
-        self.controller = controller
-
-        # 创建地图
-        self.create_map()
-
-        # 返回按钮，点击返回主页面
-        return_button = ttk.Button(self, text="返回", command=lambda: controller.show_frame(MainPage))
-        return_button.grid(row=0, column=0, padx=10, pady=10)
-
-   
-
-class AccountPage(tk.Frame):
-    def __init__(self, parent, controller):
-        # 初始化个人账户页面
-        tk.Frame.__init__(self, parent)
-        
-        self.controller = controller  # 保存controller作为实例属性
-        
-        # 初始化当前行为历史记录的起始行
-        self.current_row = 4
-
-        # 创建个人账户页面标签
-        label = tk.Label(self, text="个人账户页面")
-        label.grid(row=0, column=4, padx=10, pady=10, columnspan=3, sticky="n")
-        
-        # 创建退出账户按钮
-        logout_button = ttk.Button(self, text="退出账户", command=self.logout)
-        logout_button.grid(row=0, column=0, padx=10, pady=10, sticky="n")
 
 
-        # 创建用户信息卡片
-        user_info = {"username": "用户名", "account_balance": "$1000"}
-        self.create_user_info_card(user_info)
-        
-        # 创建历史订单记录卡片
-        history_data = [
-            {"order_number": "001", "order_status": "已完成", "vehicle_number": "12345", "payment_amount": "$10", "usage_time": "1小时"},
-            {"order_number": "002", "order_status": "已取消", "vehicle_number": "54321", "payment_amount": "$5", "usage_time": "30分钟"},
-        ]
-        
-        for order_info in history_data:
-            self.create_history_card(order_info)
-            
-      # 创建返回按钮
-        return_button = ttk.Button(self, text="返回", command=lambda: controller.show_frame(MainPage))
-        return_button.grid(row=self.current_row + 1, column=0, padx=10, pady=10, columnspan=3)
-        
-    def logout(self):
-        # 添加退出账户逻辑，返回到登录页面
-        self.controller.show_frame(LoginPage)
-
-        
-        
-    def create_user_info_card(self, user_info):
-        # 创建用户信息卡片的 Frame
-        user_info_frame = tk.Frame(self, bd=2, relief="solid")
-        user_info_frame.grid(row=2, column=4, padx=10, pady=10, columnspan=3, sticky="n")
-
-        # 显示用户信息
-        username_label = tk.Label(user_info_frame, text=f"用户名: {user_info['username']}", font=("Arial", 12))
-        username_label.grid(row=0, column=0, padx=10, pady=5, columnspan=3)
-
-        balance_label = tk.Label(user_info_frame, text=f"账户余额: {user_info['account_balance']}")
-        balance_label.grid(row=1, column=0, padx=10, pady=5, columnspan=3)
-
-    def create_history_card(self, order_info):
-        # 创建历史订单记录卡片的 Frame
-        history_frame = tk.Frame(self, bd=2, relief="solid")
-        history_frame.grid(row=self.current_row, column=0, padx=10, pady=10, columnspan=3)
-
-        # 更新下一个历史记录的行号
-        self.current_row += 2
-        
-        # 创建历史记录标签
-        label = tk.Label(history_frame, text="历史记录")
-        label.grid(row=0, column=0, padx=10, pady=10)
-        
-        # 显示历史订单信息
-        order_label = tk.Label(history_frame, text=f"订单号: {order_info['order_number']}", font=("Arial", 12))
-        order_label.grid(row=0, column=0, padx=10, pady=5)
-
-        status_label = tk.Label(history_frame, text=f"订单状态: {order_info['order_status']}")
-        status_label.grid(row=1, column=0, padx=10, pady=5)
-
-        vehicle_label = tk.Label(history_frame, text=f"车辆编号: {order_info['vehicle_number']}")
-        vehicle_label.grid(row=2, column=0, padx=10, pady=5)
-
-        amount_label = tk.Label(history_frame, text=f"支付金额: {order_info['payment_amount']}")
-        amount_label.grid(row=3, column=0, padx=10, pady=5)
-
-        time_label = tk.Label(history_frame, text=f"使用时间: {order_info['usage_time']}")
-        time_label.grid(row=4, column=0, padx=10, pady=5)
  
 
 
@@ -454,6 +365,11 @@ class AppManager(tk.Tk):
         # 全局用户登录状态
         self.user_logged_in = False
 
+
+
+        # 添加用于存储当前用户的用户名的属性
+        self.current_user = None
+
         # 添加页面类到字典中
         for F in (LoginPage, MainPage, AccountPage, ReservationPage, EndOrderPage, PaymentPage, RegisterPage, EndPayPage):
             frame = F(self, self)
@@ -472,49 +388,59 @@ class AppManager(tk.Tk):
             frame.set_vehicle_info(vehicle_info)
         
         frame.tkraise()
-        
-  
-        
+
+        # 添加一个方法来设置当前用户的用户名
+    def set_current_username(self, username):
+        self.current_username = username
+
+        # 添加一个方法来获取当前用户的用户名
+    def get_current_username(self):
+        return self.current_username
+
 class MainPage(tk.Frame):
     def __init__(self, parent, controller):
         # 初始化主页面
         tk.Frame.__init__(self, parent)
-        
+
+        # 获取当前登录的用户名
+        current_username = controller.current_user
+
         # Frame 1: 个人账户
         frame1 = tk.Frame(self)
         frame1.grid(row=0, column=0, padx=10, pady=10, sticky='nw')
-        
-        account_button = ttk.Button(frame1, text="个人账户", command=lambda: controller.show_frame(AccountPage), style="TButton")
+
+        account_button = ttk.Button(frame1, text="个人账户", command=lambda: controller.show_frame(AccountPage),
+                                    style="TButton")
         account_button.grid(row=0, column=0, padx=10, pady=10, sticky='nw')
-        
+
         # 中央容器，用于保持内容居中
         center_frame = tk.Frame(self)
         center_frame.place(relx=0.4, rely=0.4, anchor=tk.CENTER)
-        
+
         # 应用图标和标题
         lbl_title = tk.Label(center_frame, text="Search your vehicle", font=("Arial", 24))
         lbl_title.pack(pady=20)
 
-        # 创建多选框及其对应的BooleanVar
-        self.option_var1 = tk.BooleanVar()
-        self.option_var2 = tk.BooleanVar()
-        self.option_var3 = tk.BooleanVar()
-        self.option_var4 = tk.BooleanVar()
+        # 创建单选按钮及其对应的`StringVar`
+        self.selected_option = tk.StringVar()
 
-        option_check1 = ttk.Checkbutton(center_frame, text="选项1", variable=self.option_var1)
-        option_check2 = ttk.Checkbutton(center_frame, text="选项2", variable=self.option_var2)
-        option_check3 = ttk.Checkbutton(center_frame, text="选项3", variable=self.option_var3)
-        option_check4 = ttk.Checkbutton(center_frame, text="选项4", variable=self.option_var4)
+        option_radio1 = ttk.Radiobutton(center_frame, text="选项1", variable=self.selected_option, value="选项1")
+        option_radio2 = ttk.Radiobutton(center_frame, text="选项2", variable=self.selected_option, value="选项2")
+        option_radio3 = ttk.Radiobutton(center_frame, text="选项3", variable=self.selected_option, value="选项3")
+        option_radio4 = ttk.Radiobutton(center_frame, text="选项4", variable=self.selected_option, value="选项4")
 
-        option_check1.pack(pady=5)
-        option_check2.pack(pady=5)
-        option_check3.pack(pady=5)
-        option_check4.pack(pady=5)
+        option_radio1.pack(pady=5)
+        option_radio2.pack(pady=5)
+        option_radio3.pack(pady=5)
+        option_radio4.pack(pady=5)
+
+
 
         # 创建预约车辆按钮
-        reservation_button = ttk.Button(center_frame, text="预约车辆", command=lambda: controller.show_frame(ReservationPage))
+        reservation_button = ttk.Button(center_frame, text="预约车辆",
+                                        command=lambda: controller.show_frame(ReservationPage))
         reservation_button.pack(pady=10)
-        
+
         # 创建按钮，点击按钮进入地图页面
         map_button = ttk.Button(center_frame, text="查看地图", command=lambda: controller.show_frame(MapPage))
         map_button.pack(pady=10)
@@ -523,7 +449,7 @@ class MainPage(tk.Frame):
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(0, weight=1)
 
-        
+
 class ReservationPage(tk.Frame):
     def __init__(self, parent, controller):
         # 初始化预约车辆页面
@@ -976,10 +902,10 @@ class EndPayPage(tk.Frame):
         # 显示车辆照片
         self.display_vehicle_image(vehicle_info['image_path'])
 
-    def display_vehicle_image(self, image_path):
+    def display_vehicle_image(self, image_path='WechatIMG3255.jpg'):
         # 显示车辆照片
         try:
-            image = Image.open("../../Desktop/WechatIMG3255.jpg")
+            image = Image.open("WechatIMG3255.jpg")
             image.thumbnail((200, 200))  # 调整图像大小
             photo = ImageTk.PhotoImage(image)
 
