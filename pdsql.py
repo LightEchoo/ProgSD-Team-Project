@@ -155,7 +155,7 @@ def test_user_initialization(num_user_samples):
 
 
 def test_cars_data_initialization(num_car_samples):
-    car_types = [random.choice(['ebike', 'escooter']) for _ in range(num_car_samples)]
+    car_types = [random.choice(VEHICLE_TYPE) for _ in range(num_car_samples)]
     car_price = [10 if x == 'bike' else 7 for x in car_types]
     power = list(range(0, 100, 10))
 
