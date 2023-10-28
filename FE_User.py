@@ -18,68 +18,6 @@ import SqlFunction
 
 
 
-'''class RegisterPage(tk.Frame):
-    def __init__(self, parent, controller):
-        tk.Frame.__init__(self, parent)
-        self.controller = controller
-      
-        # 中央容器，用于保持内容居中
-        center_frame = tk.Frame(self)
-        center_frame.place(relx=0.4, rely=0.4, anchor=tk.CENTER)
-
-        # 错误消息标签
-        self.error_label = tk.Label(center_frame, text="", fg="red")
-        self.error_label.pack()
-
-        # 应用图标和标题
-        lbl_title = tk.Label(center_frame, text="Sign up", font=("Arial", 24))
-        lbl_title.pack(pady=20)
-
-        # 用户名输入框
-        self.entry_username = ttk.Entry(center_frame)
-        self.entry_username.insert(0, "输入注册的手机号码")
-        self.entry_username.bind("<FocusIn>", lambda event: self.entry_username.delete(0, tk.END))
-        self.entry_username.pack(pady=10)
-
-        # 密码输入框
-        self.entry_password = ttk.Entry(center_frame)  # 注意：这里改了变量名，避免和用户名输入框重复
-        self.entry_password.insert(0, "输入密码")
-        self.entry_password.bind("<FocusIn>", lambda event: self.entry_password.delete(0, tk.END))
-        self.entry_password.pack(pady=10)
-
-        # 底部图标
-        bottom_frame = ttk.Frame(center_frame)
-        bottom_frame.pack(pady=20)
-
-        btn_register = ttk.Button(bottom_frame, text="注册", command=partial(self.register, controller))
-        btn_register.grid(row=0, column=0, padx=10)
-
-        btn_login = ttk.Button(bottom_frame, text="登录", command=lambda: controller.show_frame(LoginPage))
-        btn_login.grid(row=0, column=1, padx=10)
-
-    def register(self,controller):
-        username = self.entry_username.get()
-        password = self.entry_password.get()
-
-        # 检查用户名和密码是否为空
-        if not username or not password:
-            self.error_label.config(text="Empty username / password", fg="red")
-
-        else:
-            register_result = BE_Function.register(username, password)
-
-            # 在这里添加检查用户名和密码是否与数据库匹配的逻辑
-            if register_result == "Successful":
-                self.error_label.config(text="Register successfully", fg="green")
-            elif register_result == "ExistFalse":
-                self.error_label.config(text="There is an exist user", fg="red")
-
-        if check_credentials(self, username, password):
-            self.error_label.config(text="Register successfully", fg="green")
-            return
-        else:
-            self.error_label.config(text="There is an exist user", fg="red")
-            return'''
 
 class LoginPage(tk.Frame):
     def __init__(self, parent, controller):
@@ -128,14 +66,9 @@ class LoginPage(tk.Frame):
         btn_login = ttk.Button(bottom_frame, text="登录", command=partial(self.user_login, controller))
         btn_login.grid(row=0, column=1, padx=10)
 
-    def user_login(self, controller, login_result=None):
+    def user_login(self,controller):
         username = self.entry_username.get()
         password = self.entry_password.get()
-
-        if login_result == "LoginSuccess":
-            # 登录成功，设置当前用户
-            controller.current_user = username
-            controller.show_frame(MainPage)
 
         # 检查用户名和密码是否为空
         if not username or not password:
@@ -359,11 +292,6 @@ class AppManager(tk.Tk):
         # 全局用户登录状态
         self.user_logged_in = False
 
-
-
-        # 添加用于存储当前用户的用户名的属性
-        self.current_user = None
-
         # 添加页面类到字典中
         for F in (LoginPage, MainPage, AccountPage, ReservationPage, EndOrderPage,PaymentPage,RegisterPage,EndPayPage):
             frame = F(self, self)
@@ -382,28 +310,18 @@ class AppManager(tk.Tk):
         
         frame.tkraise()
 
-        # 添加一个方法来设置当前用户的用户名
-    def set_current_username(self, username):
-        self.current_username = username
 
-        # 添加一个方法来获取当前用户的用户名
-    def get_current_username(self):
-        return self.current_username
 
 class MainPage(tk.Frame):
     def __init__(self, parent, controller):
         # 初始化主页面
         tk.Frame.__init__(self, parent)
 
-        # 获取当前登录的用户名
-        current_username = controller.current_user
-
         # Frame 1: 个人账户
         frame1 = tk.Frame(self)
         frame1.grid(row=0, column=0, padx=10, pady=10, sticky='nw')
 
-        account_button = ttk.Button(frame1, text="个人账户", command=lambda: controller.show_frame(AccountPage),
-                                    style="TButton")
+        account_button = ttk.Button(frame1, text="个人账户", command=lambda: controller.show_frame(AccountPage), style="TButton")
         account_button.grid(row=0, column=0, padx=10, pady=10, sticky='nw')
 
         # 中央容器，用于保持内容居中
@@ -414,24 +332,24 @@ class MainPage(tk.Frame):
         lbl_title = tk.Label(center_frame, text="Search your vehicle", font=("Arial", 24))
         lbl_title.pack(pady=20)
 
-        # 创建单选按钮及其对应的`StringVar`
-        self.selected_option = tk.StringVar()
+        # 创建多选框及其对应的BooleanVar
+        self.option_var1 = tk.BooleanVar()
+        self.option_var2 = tk.BooleanVar()
+        self.option_var3 = tk.BooleanVar()
+        self.option_var4 = tk.BooleanVar()
 
-        option_radio1 = ttk.Radiobutton(center_frame, text="选项1", variable=self.selected_option, value="选项1")
-        option_radio2 = ttk.Radiobutton(center_frame, text="选项2", variable=self.selected_option, value="选项2")
-        option_radio3 = ttk.Radiobutton(center_frame, text="选项3", variable=self.selected_option, value="选项3")
-        option_radio4 = ttk.Radiobutton(center_frame, text="选项4", variable=self.selected_option, value="选项4")
+        option_check1 = ttk.Checkbutton(center_frame, text="选项1", variable=self.option_var1)
+        option_check2 = ttk.Checkbutton(center_frame, text="选项2", variable=self.option_var2)
+        option_check3 = ttk.Checkbutton(center_frame, text="选项3", variable=self.option_var3)
+        option_check4 = ttk.Checkbutton(center_frame, text="选项4", variable=self.option_var4)
 
-        option_radio1.pack(pady=5)
-        option_radio2.pack(pady=5)
-        option_radio3.pack(pady=5)
-        option_radio4.pack(pady=5)
-
-
+        option_check1.pack(pady=5)
+        option_check2.pack(pady=5)
+        option_check3.pack(pady=5)
+        option_check4.pack(pady=5)
 
         # 创建预约车辆按钮
-        reservation_button = ttk.Button(center_frame, text="预约车辆",
-                                        command=lambda: controller.show_frame(ReservationPage))
+        reservation_button = ttk.Button(center_frame, text="预约车辆", command=lambda: controller.show_frame(ReservationPage))
         reservation_button.pack(pady=10)
 
         # 创建按钮，点击按钮进入地图页面
