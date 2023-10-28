@@ -127,18 +127,20 @@ def test_user_initialization(num_user_samples):
 
 def test_cars_data_initialization(num_car_samples):
     car_types = [random.choice(['bike', 'wheel']) for _ in range(num_car_samples)]
+    car_price = [10 if x == 'bike' else 7 for x in car_types]
     power = list(range(0, 100, 10))
 
     df_cars = pd.DataFrame({
         'CarID': range(1, num_car_samples + 1),
         'CarType': car_types,
         'CarDescription': ['This is a ' + car for car in car_types],
-        'CarPrice': [round(random.uniform(7.0, 20.0), 2) for _ in range(num_car_samples)],
+        # 'CarPrice': [round(random.uniform(7.0, 20.0), 2) for _ in range(num_car_samples)],
+        'CarPrice': car_price,
         'CarPower': [random.choice(power) for _ in range(num_car_samples)],
         'CarJourney': [random.randint(0, 1000) for _ in range(num_car_samples)],
         'CarState': [random.choices(CAR_STATE_L, weights=[20, 10, 5, 2])[0] for _ in
                      range(num_car_samples)],
-        'RepairDetail': [random.choices(['None', 'seat post', 'frames', 'tire', 'battery'], weights=[50, 1, 1, 1, 1])[0]
+        'RepairDetail': [random.choices(['None', 'seat post', 'frames', 'tire', 'battery'], weights=[20, 1, 1, 1, 1])[0]
                          for _ in range(num_car_samples)],
         'CarLocation': [random.choice(LOCATIONS) for _ in range(num_car_samples)]
     })
@@ -266,7 +268,7 @@ def test_order_data_initialization(num_cars_samples, num_order_samples):
         'CarEndLocation': [random.choice(LOCATIONS) for _ in range(num_order_samples)]
     })
 
-    print("df_orders: ", df_orders)
+    # print("df_orders: ", df_orders)
 
     connect = connect_to_database()
     df_orders.to_sql('tb_Orders', connect, if_exists='replace', index=False)
