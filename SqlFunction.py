@@ -106,8 +106,6 @@ def get_one_user_info(user_name):
     connect = connect_to_database()
     cursor = connect.cursor()
 
-    result = InitializeDatabase.list_tables_in_database()
-    print(result)
     try:
         cursor.execute("SELECT * FROM tb_Users WHERE UserName = ?", (user_name,))
         user_info = cursor.fetchone()
@@ -144,6 +142,20 @@ def get_one_user_orders(user_name):
         return user_orders
     except sqlite3.Error as e:
         print("查询用户订单时发生错误:", str(e))
+        connect.close()
+        return []
+
+def get_user_specific_order(user_name, data_state):
+    connect = connect_to_database()
+    cursor = connect.cursor()
+
+    try:
+        cursor.execute("SELECT * FROM tb_Orders WHERE UserName = ? AND OrderState = ?", (user_name, data_state))
+        order = cursor.fetchone()
+        connect.close()
+        return order
+    except sqlite3.Error as e:
+        print("查询用户某类订单时发生错误:", str(e))
         connect.close()
         return []
 
@@ -293,7 +305,7 @@ def end_one_order(order_id, order_price, order_end_time, car_end_location):
     cursor = connect.cursor()
 
     try:
-        cursor.execute("UPDATE tb_Orders SET OrderEndTime = ?, OrderPrice = ?, OrderState = ?, OrderEndLocation = ? WHERE OrderId = ?", (order_end_time, order_price, 'due', car_end_location, order_id))
+        cursor.execute("UPDATE tb_Orders SET OrderEndTime = ?, OrderPrice = ?, OrderState = ?, CarEndLocation = ? WHERE OrderId = ?", (order_end_time, order_price, 'due', car_end_location, order_id))
         connect.commit()
         connect.close()
         return True
