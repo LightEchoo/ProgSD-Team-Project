@@ -8,9 +8,12 @@ Created on Mon Oct  9 05:41:24 2023
 
 import sqlite3
 
+import InitializeDatabase
+
+
 # 连接到数据库文件
 def connect_to_database():
-    connect = sqlite3.connect('estp_database.db')
+    connect = sqlite3.connect('etsp_database.db')
     return connect
 
 # 插入新用户，用户注册
@@ -103,6 +106,8 @@ def get_one_user_info(user_name):
     connect = connect_to_database()
     cursor = connect.cursor()
 
+    result = InitializeDatabase.list_tables_in_database()
+    print(result)
     try:
         cursor.execute("SELECT * FROM tb_Users WHERE UserName = ?", (user_name,))
         user_info = cursor.fetchone()
@@ -113,7 +118,7 @@ def get_one_user_info(user_name):
         connect.close()
         return "None"
 
-def get_one_user_type(user_name):
+'''def get_one_user_type(user_name):
     connect = connect_to_database()
     cursor = connect.cursor()
 
@@ -125,7 +130,7 @@ def get_one_user_type(user_name):
     except sqlite3.Error as e:
         print("Error in Get One User Info:", str(e))
         connect.close()
-        return "None"
+        return "None"'''
 
 # 查看用户的所有订单
 def get_one_user_orders(user_name):
@@ -337,3 +342,4 @@ def generate_new_order_id():
 
     connect.close()
     return new_order_id
+
