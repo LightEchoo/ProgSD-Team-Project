@@ -242,7 +242,7 @@ def create_new_order(order_id, car_id, user_name, order_start_time, car_start_lo
     cursor = connect.cursor()
 
     try:
-        cursor.execute("INSERT INTO tb_Order (OrderId, CarId, UserName, OrderStartTime, OrderState, CarStartLocation) VALUES (?, ?, ?, ?, ?, ?)",
+        cursor.execute("INSERT INTO tb_Orders (OrderId, CarId, UserName, OrderStartTime, OrderState, CarStartLocation) VALUES (?, ?, ?, ?, ?, ?)",
                        (order_id, car_id, user_name, order_start_time, 'ongoing', car_start_location))
         connect.commit()
         connect.close()
@@ -308,7 +308,7 @@ def pay_one_order(order_id):
 
         if order_info:
             # 修改订单状态为 "end"
-            cursor.execute("UPDATE tb_Order SET OrderState = 'end' WHERE OrderID = ?", (order_id,))
+            cursor.execute("UPDATE tb_Orders SET OrderState = 'end' WHERE OrderID = ?", (order_id,))
             connect.commit()
             connect.close()
             return True
@@ -327,7 +327,7 @@ def generate_new_order_id():
     connect = connect_to_database()
     cursor = connect.cursor()
 
-    cursor.execute("SELECT MAX(OrderID) FROM tb_Order")
+    cursor.execute("SELECT MAX(OrderID) FROM tb_Orders")
     max_order_id = cursor.fetchone()[0]
 
     if max_order_id is not None:

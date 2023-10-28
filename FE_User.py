@@ -14,8 +14,9 @@ from functools import partial
 import tkinter.messagebox as messagebox
 import math
 import BE_Function
+import CommonFunction
 import SqlFunction
-
+import csv
 
 
 '''class RegisterPage(tk.Frame):
@@ -138,8 +139,13 @@ class LoginPage(tk.Frame):
         else:
             login_result = BE_Function.login(username,password)
 
-            if login_result == "LoginSuccess":
+            if login_result == 0:
+                file = open("user.csv", "w")
+                file.write(str(username))
+                file.close()
                 controller.show_frame(MainPage)
+            elif login_result == 1 or login_result == 2:
+                self.error_label.config(text="No a customer", fg="red")
             elif login_result == "NoUserFalse":
                 self.error_label.config(text="No such user", fg="red")
             elif login_result == "LoginFalse":
@@ -449,13 +455,14 @@ class AppManager(tk.Tk):
         self.user_logged_in = False
 
         # 添加页面类到字典中
-        for F in (LoginPage, MainPage, AccountPage, ReservationPage, EndOrderPage,PaymentPage,RegisterPage,EndPayPage):
+        for F in (LoginPage, MainPage, AccountPage, ReservationPage, EndOrderPage, PaymentPage, RegisterPage, EndPayPage):
             frame = F(self, self)
             self.frames[F] = frame
             frame.grid(row=0, column=0, sticky="nsew")
 
         # 显示登录页面
         self.show_frame(LoginPage)
+
 
     def show_frame(self, page_name, vehicle_info=None):
         '''Show a frame for the given page name'''
@@ -548,11 +555,11 @@ class ReservationPage(tk.Frame):
         frame2 = tk.Frame(self)
         frame2.grid(row=0, column=0, padx=10, pady=10)
 
-        button1 = ttk.Button(frame2, text="E-scooter", command=lambda: self.filter_vehicle_type("E-scooter"),
+        button1 = ttk.Button(frame2, text="escooter", command=lambda: self.filter_vehicle_type("escooter"),
                              style="TButton.Success.TButton")
         button1.grid(row=0, column=0, padx=10, pady=10, sticky='nw')
 
-        button2 = ttk.Button(frame2, text="Ebike", command=lambda: self.filter_vehicle_type("Ebike"),
+        button2 = ttk.Button(frame2, text="ebike", command=lambda: self.filter_vehicle_type("ebike"),
                              style="TButton.Info.TButton")
         button2.grid(row=0, column=1, padx=10, pady=10, sticky='nw')
 
@@ -589,51 +596,73 @@ class ReservationPage(tk.Frame):
         card_frame = tk.Frame(self.cards_container, bd=2, relief="solid")
         card_frame.grid(row=row, column=column, padx=10, pady=10)
 
-        number_label = tk.Label(card_frame, text=f"车辆编号: {vehicle_info['number']}")
+        number_label = tk.Label(card_frame, text=f"车辆编号: {vehicle_info[0]}")
         number_label.grid(row=1, column=0, padx=10, pady=5)
 
-        type_label = tk.Label(card_frame, text=f"车辆类型: {vehicle_info['type']}")
+        type_label = tk.Label(card_frame, text=f"车辆类型: {vehicle_info[1]}")
         type_label.grid(row=2, column=0, padx=10, pady=5)
 
-        battery_label = tk.Label(card_frame, text=f"电量: {vehicle_info['battery']}")
+        battery_label = tk.Label(card_frame, text=f"电量: {vehicle_info[4]}")
         battery_label.grid(row=3, column=0, padx=10, pady=5)
 
-        rental_label = tk.Label(card_frame, text=f"租金: {vehicle_info['rental_price']} ")
+        rental_label = tk.Label(card_frame, text=f"租金: {vehicle_info[3]} ")
         rental_label.grid(row=4, column=0, padx=10, pady=5)
-        
-        # 获取个人账户余额（假设为balance）
-        balance = 8  # 假设余额为8，您需要替换为实际的余额获取方式
 
         # 创建“预约”按钮，并根据余额状态添加相应的功能
-        if balance > 5:
+        '''if balance == 1:
             reserve_button_text = "预约"
-            reserve_button_command = lambda info=vehicle_info: self.show_reservation_message(info)
         else:
-            reserve_button_text = "账户余额不足"
-            reserve_button_command = None
+            reserve_button_text = "无押金"
+            reserve_button_command = None'''
 
-        reserve_button = ttk.Button(card_frame, text=reserve_button_text, command=reserve_button_command)
+        reserve_button_command = lambda info=vehicle_info: self.show_reservation_message(info)
+        reserve_button = ttk.Button(card_frame, text="预约", command=reserve_button_command)
         reserve_button.grid(row=5, column=0, padx=10, pady=5)
 
     def show_reservation_message(self, vehicle_info):
-        # 显示预约消息，检查余额并弹出相应消息
-        if self.check_balance(vehicle_info):
-            messagebox.showinfo("预约成功", "您的车辆已开锁！")
+        # 显示预约消息，检查押金并弹出相应消息
+        file = open("user.csv", "r")
+        login_user = list(file)
+        user_info = SqlFunction.get_one_user_info(login_user[0])
+        file.close()
+        car_location = "Main Building"
+
+        rent_result = BE_Function.rent_start(vehicle_info[0], user_info[1], car_location)
+        if rent_result == "DepositError":
+            # 若未付押金，则需要用户先交押金
+            messagebox.showwarning("押金不足", "账户押金不足，请及时充值。")
+            # TODO： 跳转支付页面 self.controller.show_frame(PaidPage, vehicle_info)
+        elif rent_result == "ExistError":
+            # 若存在未完成的订单，则需要用户先结束订单
+            messagebox.showwarning("订单未完成", "存在未完成订单，请先完成订单。")
+            # TODO： 跳转支付页面 self.controller.show_frame(PaidPage, vehicle_info)
+        elif rent_result == "UnavaliableError":
+            # 若车辆不可用，则换一辆车
+            messagebox.showwarning("车辆不可用", "当前车辆不可用，请重新选择。")
+            # TODO： 跳转支付页面 self.controller.show_frame(PaidPage, vehicle_info)
+        elif rent_result == "Successful":
+            # 租用成功，返回值为 order_id
+            messagebox.showinfo("租用成功", "您的车辆已开锁！")
+
             self.controller.show_frame(EndOrderPage, vehicle_info)
         else:
-            messagebox.showwarning("余额不足", "账户余额不足，请及时充值。")
-
-    def check_balance(self, vehicle_info):
-        # 模拟检查账户余额是否足够，假设账户余额在 vehicle_info 中以 "balance" 键存储
-        balance = vehicle_info.get("balance", 0)  # 默认为0，如果没有余额信息的话
-        # 根据实际情况替换此处的逻辑
-        return True  # 假设余额充足
+            # 若租用失败，则重新租用
+            messagebox.showwarning("租用失败", "租用失败，请重试。")
+            # TODO： 跳转支付页面 self.controller.show_frame(PaidPage, vehicle_info)
 
 
+    '''def check_balance(self, vehicle_info):
+        # TODO: 获取全局变量 current_user，查询个人账户押金状态
+        user_info = SqlFunction.get_one_user_info("abc")
+        balance = user_info[4]
+        if balance == 1:
+            return True
+        else:
+            return True'''
 
     def create_vehicle_cards(self):
         # 模拟获取车辆信息
-        self.vehicle_info_list = [
+        '''self.vehicle_info_list = [
             {"name": "车辆1", "number": "V001", "type": "Ebike", "battery": "80%", "rental_price": "$10/hour"},
             {"name": "车辆2", "number": "V002", "type": "E-scooter", "battery": "65%", "rental_price": "$8/hour"},
             {"name": "车辆3", "number": "V003", "type": "Ebike", "battery": "90%", "rental_price": "$12/hour"},
@@ -645,12 +674,18 @@ class ReservationPage(tk.Frame):
             {"name": "车辆6", "number": "V006", "type": "Ebike", "battery": "85%", "rental_price": "$11/hour"},
             {"name": "车辆6", "number": "V006", "type": "Ebike", "battery": "85%", "rental_price": "$11/hour"},
             {"name": "车辆6", "number": "V006", "type": "Ebike", "battery": "85%", "rental_price": "$11/hour"},
-        ]
+        ]'''
+
+        # 数据格式：(1, 'ebike', 'This is a ebike', 5, 100, 20, 'avaliable', '', 'Learning Hub')
+        self.vehicle_info_list = SqlFunction.get_all_cars()
+
+        self.vehicle_info_list = [vehicle for vehicle in self.vehicle_info_list if
+                                  vehicle[6] == "available"]
 
         # 根据选定的车辆类型筛选车辆信息
         if self.selected_vehicle_type:
             self.vehicle_info_list = [vehicle for vehicle in self.vehicle_info_list if
-                                       vehicle['type'] == self.selected_vehicle_type]
+                                       vehicle[1] == self.selected_vehicle_type]
 
         # 计算当前页的起始索引和结束索引
         start_index = (self.current_page - 1) * self.vehicles_per_page
@@ -685,7 +720,7 @@ class EndOrderPage(tk.Frame):
         label.pack()  # 默认垂直居中显示
 
         # 创建图片的缩略图
-        image = Image.open("../../Desktop/WechatIMG3255.jpg")
+        image = Image.open("images/WechatIMG3255.jpg")
         image.thumbnail((100, 100))  # 调整图像大小
         photo = ImageTk.PhotoImage(image)
 
@@ -697,7 +732,7 @@ class EndOrderPage(tk.Frame):
         self.vehicle_info_label = tk.Label(self, text="")
         self.vehicle_info_label.pack()  # 默认垂直居中显示
 
-        # 创建返回按钮，使用 controller 的 show_frame 方法返回到前一页
+        # TODO: 创建返回按钮，使用 controller 的 show_frame 方法返回到前一页
         #return_button = ttk.Button(self, text="返回", command=lambda: controller.show_frame(ReservationPage))
         #return_button.pack()  # 默认垂直居中显示
 
@@ -719,18 +754,17 @@ class EndOrderPage(tk.Frame):
 
     def set_vehicle_info(self, vehicle_info):
         self.vehicle_info = vehicle_info
-        self.vehicle_info_label.config(text=f"车辆编号: {vehicle_info['number']}\n车牌号: {vehicle_info['type']}\n电量: {vehicle_info['battery']}")
+        self.vehicle_info_label.config(text=f"车辆编号: {vehicle_info[0]}\n 电量: {vehicle_info[4]}")
+        '''车牌号: {vehicle_info['type']}\n'''
 
-
-
-    
     def confirm_payment(self):
     # 弹出确认预定的消息框，进入订单开始
+        #TODO：order =
         result = messagebox.askquestion("确认还车", "您确定要还车吗？")
-        
 
         if result == "yes":
         # 用户确认支付，跳转到PaymentPage
+            confirm_result = BE_Function.return_car(self.vehicle_info[1])
             self.controller.show_frame(PaymentPage)
     
     def pay_order(self):
@@ -847,17 +881,17 @@ class PaymentPage(tk.Frame):
     def set_payment_info(self, vehicle_info, start_time, end_time, total_amount, duration):
         # 设置订单完成页面的信息
         self.vehicle_info = vehicle_info
-        self.vehicle_number_label.config(text=f"车辆编号: {vehicle_info['number']}")
-        self.vehicle_type_label.config(text=f"车辆类型: {vehicle_info['type']}")
-        self.vehicle_battery_label.config(text=f"电量: {vehicle_info['battery']}")
+        self.vehicle_number_label.config(text=f"车辆编号: {vehicle_info[0]}")
+        self.vehicle_type_label.config(text=f"车辆类型: {vehicle_info[1]}")
+        self.vehicle_battery_label.config(text=f"电量: {vehicle_info[4]}")
         self.vehicle_duration_label.config(text=f"使用总时长: {duration} 小时")
 
         self.start_time_label.config(text=f"订单开始时间: {start_time}")
         self.end_time_label.config(text=f"订单结束时间: {end_time}")
         self.total_amount_label.config(text=f"订单总金额: {total_amount}")
 
-        # 显示车辆照片
-        self.display_vehicle_image(vehicle_info['image_path'])
+        # TODO: 显示车辆照片
+        # self.display_vehicle_image(vehicle_info['image_path'])
 
     def display_vehicle_image(self, image_path):
         # 显示车辆照片
