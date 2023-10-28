@@ -465,13 +465,10 @@ class ReservationPage(tk.Frame):
 
     def show_reservation_message(self, vehicle_info):
         # 显示预约消息，检查押金并弹出相应消息
-        file = open("user.csv", "r")
-        login_user = list(file)
-        user_info = SqlFunction.get_one_user_info(login_user[0])
-        file.close()
+        user_info = BE_Function.get_login_user()
         car_location = "Main Building"
 
-        rent_result = BE_Function.rent_start(vehicle_info[0], user_info[1], car_location)
+        rent_result = BE_Function.rent_start(vehicle_info[0], user_info[0], car_location)
         print(rent_result)
 
         if rent_result == "DepositError":
@@ -605,14 +602,21 @@ class EndOrderPage(tk.Frame):
 
     def confirm_payment(self):
     # 弹出确认预定的消息框，进入订单开始
-        #TODO：order =
+        login_user = BE_Function.get_login_user()
+        order = SqlFunction.get_user_specific_order(login_user[0], "ongoing")
         result = messagebox.askquestion("确认还车", "您确定要还车吗？")
+        print(order)
 
         if result == "yes":
         # 用户确认支付，跳转到PaymentPage
-            confirm_result = BE_Function.return_car(self.vehicle_info[1])
-            self.controller.show_frame(PaymentPage)
-    
+            confirm_result = BE_Function.return_car(order[0])
+            print(confirm_result)
+            if confirm_result == "Successful":
+                self.controller.show_frame(PaymentPage)
+            else:
+                messagebox.showwarning("归还失败", "归还失败，请重试。")
+
+
     def pay_order(self):
         # 在这里添加支付订单的逻辑，例如显示支付进度页面
         self.controller.show_frame(PaymentPage)
