@@ -1,8 +1,9 @@
-import sqlite3
-import pandas as pd
 import random
+import sqlite3
 import string
 from datetime import datetime, timedelta
+
+import pandas as pd
 
 # 车辆状态
 CAR_STATE_L = ['available', 'inrent', 'lowpower', 'repair']
@@ -71,6 +72,22 @@ def test_data_initialization():
 
 
 def test_user_initialization(num_user_samples):
+    """
+    用户初始化测试用例
+    :param num_user_samples:
+    :return:
+    """
+    # 用户测试用例
+    users_test_data = pd.DataFrame({
+        'UserName': ['111', '222', 'abc'],
+        'UserPassword': ['000', '000', 'abc'],
+        'UserType': ['manager', 'operator', 'customer'],
+        'UserDebt': [0, 0, 0],
+        'UserDeposit': [0, 0, 1],
+        'UserLocation': ['G11 6QJ', 'G11 6QJ', 'G11 6QJ']
+    })
+    num_user_samples = num_user_samples - len(users_test_data)
+
     def generate_usernames(num_usernames):
         # 列表中的名字可以根据需要更改或增加
         names = ['Alex', 'Bob', 'Charlie', 'David', 'Eva', 'Frank', 'Grace', 'Hannah', 'Ian', 'Jasmine']
@@ -115,15 +132,21 @@ def test_user_initialization(num_user_samples):
         'UserPassword': list_user_password,
         'UserType': [random.choices(['customer', 'operator', 'manager'], weights=[96, 3, 1])[0] for _ in
                      range(num_user_samples)],
-        'UserDebt': [round(random.uniform(0, 100.0), 2) for _ in range(num_user_samples)],
+        # 'UserDebt': [round(random.uniform(0, 100.0), 2) for _ in range(num_user_samples)],
+        'UserDebt': [0 for _ in range(num_user_samples)],
         'UserDeposit': [random.choice([0, 1]) for _ in range(num_user_samples)],
         'UserLocation': [random.choice(LOCATIONS) for _ in range(num_user_samples)]
     })
     # print(df_users)
 
+    df_users = pd.concat([users_test_data, df_users], ignore_index=True)
+    # print(df_users)
+
     connect = connect_to_database()
     df_users.to_sql('tb_Users', connect, if_exists='replace', index=False)
+    print('success')
     connect.close()
+
 
 def test_cars_data_initialization(num_car_samples):
     car_types = [random.choice(['bike', 'wheel']) for _ in range(num_car_samples)]
@@ -150,6 +173,7 @@ def test_cars_data_initialization(num_car_samples):
     connect = connect_to_database()
     df_cars.to_sql('tb_Cars', connect, if_exists='replace', index=False)
     connect.close()
+
 
 def test_order_data_initialization(num_cars_samples, num_order_samples):
     def generate_random_datetimes(num_datetimes, start_year=2020, end_year=2023):
@@ -221,7 +245,7 @@ def test_order_data_initialization(num_cars_samples, num_order_samples):
 
         return differences
 
-    list_car_id = [random.randint(0, num_cars_samples-1) for _ in range(num_order_samples)]
+    list_car_id = [random.randint(0, num_cars_samples - 1) for _ in range(num_order_samples)]
     # n = 0
     # for i in list_car_id:
     #     print(i, end=' ')
@@ -248,13 +272,12 @@ def test_order_data_initialization(num_cars_samples, num_order_samples):
         # print('df_cars[\'CarID\'] == list_car_id[i+1]:', df_cars['CarID'] == list_car_id[i-1])
         # print('df_cars[df_cars[\'CarID\'] == list_car_id[i+1]]:', df_cars[df_cars['CarID'] == list_car_id[i]+1])
         # print('df_cars[df_cars[\'CarID\'] == list_car_id[i+1]][\'CarPrice\']:', df_cars[df_cars['CarID'] == list_car_id[i]+1]['CarPrice'])
-        car_price = df_cars[df_cars['CarID'] == list_car_id[i]+1]['CarPrice'].iloc[0]  # get the single car price
+        car_price = df_cars[df_cars['CarID'] == list_car_id[i] + 1]['CarPrice'].iloc[0]  # get the single car price
         # print('car_price: ', car_price)
         cost = round(car_price * hours_difference, 2)
         # print('cost: ', cost)
         costs.append(cost)
     # print('costs: ', costs)
-
 
     df_orders = pd.DataFrame({
         'OrderID': range(1, num_order_samples + 1),
@@ -273,3 +296,6 @@ def test_order_data_initialization(num_cars_samples, num_order_samples):
     connect = connect_to_database()
     df_orders.to_sql('tb_Orders', connect, if_exists='replace', index=False)
     connect.close()
+
+if __name__ == "__main__":
+    test_data_initialization()
