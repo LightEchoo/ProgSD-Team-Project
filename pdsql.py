@@ -157,7 +157,47 @@ def test_user_initialization(num_user_samples):
 def test_cars_data_initialization(num_car_samples):
     car_types = [random.choice(VEHICLE_TYPE) for _ in range(num_car_samples)]
     car_price = [10 if x == 'bike' else 7 for x in car_types]
-    power = list(range(0, 100, 10))
+    # power = list(range(0, 100, 10))
+    #
+    # car_states = []
+    # repair_details = []
+    #
+    # # 只有CarState是repair情况时RepairDetail才有可能是非None的值
+    # for _ in range(num_car_samples):
+    #     car_state = random.choices(VEHICLE_STATE_L, weights=[20, 10, 5, 2])[0]
+    #     car_states.append(car_state)
+    #
+    #     if car_state == 'repair':
+    #         repair_detail = random.choices(REPAIR_TYPE, weights=[0, 1, 1, 1, 1])[0]  # 注意None的权重设为0
+    #     else:
+    #         repair_detail = 'None'
+    #
+    #     repair_details.append(repair_detail)
+
+    car_power = []
+    car_states = []
+    repair_details = []
+
+    for _ in range(num_car_samples):
+        # 生成CarPower值
+        power_value = random.choice(range(0, 100, 10))
+        car_power.append(power_value)
+
+        # 根据CarPower设置CarState,如果CarState<20,则Carstate设置为lowpower
+        if power_value < 20:
+            car_state = 'lowpower'
+        else:
+            car_state = random.choices(VEHICLE_STATE_L, weights=[20, 10, 5, 2], k=1)[0]
+
+        car_states.append(car_state)
+
+        # 只有CarState是repair情况时RepairDetail才有可能是非None的值
+        if car_state == 'repair':
+            repair_detail = random.choices(REPAIR_TYPE, weights=[0, 1, 1, 1, 1])[0]
+        else:
+            repair_detail = None
+
+        repair_details.append(repair_detail)
 
     df_cars = pd.DataFrame({
         'CarID': range(1, num_car_samples + 1),
@@ -165,13 +205,15 @@ def test_cars_data_initialization(num_car_samples):
         'CarDescription': ['This is a ' + car for car in car_types],
         # 'CarPrice': [round(random.uniform(7.0, 20.0), 2) for _ in range(num_car_samples)],
         'CarPrice': car_price,
-        'CarPower': [random.choice(power) for _ in range(num_car_samples)],
+        # 'CarPower': [random.choice(power) for _ in range(num_car_samples)],
+        'CarPower': car_power,
         'CarJourney': [random.randint(0, 1000) for _ in range(num_car_samples)],
-        'CarState': [random.choices(VEHICLE_STATE_L, weights=[20, 10, 5, 2])[0] for _ in
-                     range(num_car_samples)],
-        'RepairDetail': [random.choices(REPAIR_TYPE, weights=[20, 1, 1, 1, 1])[0]
-                         for _ in range(num_car_samples)],
-        # TODO: 关联repair and state
+        # 'CarState': [random.choices(VEHICLE_STATE_L, weights=[20, 10, 5, 2])[0] for _ in
+        #              range(num_car_samples)],
+        # 'RepairDetail': [random.choices(REPAIR_TYPE, weights=[20, 1, 1, 1, 1])[0]
+        #                  for _ in range(num_car_samples)],
+        'CarState': car_states,
+        'RepairDetail': repair_details,
         'CarLocation': [random.choice(LOCATIONS) for _ in range(num_car_samples)]
     })
 
@@ -286,14 +328,40 @@ def test_order_data_initialization(num_cars_samples, num_order_samples):
         costs.append(cost)
     # print('costs: ', costs)
 
+    user_states = {}  # 用于记录每个用户的状态
+
+    order_states = []
+    user_names = []
+
+    # 使满足条件：一个用户可以有很多已经完成只能最多有一个未付款或一个正在进行
+    for _ in range(num_order_samples):
+        user_name = random.choice(df_users['UserName'].tolist())
+        user_names.append(user_name)
+
+        # 如果用户已经有了ongoing或due状态，只能分配end状态
+        if user_states.get(user_name) in ['ongoing', 'due']:
+            order_states.append('end')
+        else:
+            # 如果用户之前没有任何状态，任意分配一个状态
+            if user_name not in user_states:
+                state = random.choice(ORDER_STATE)
+                user_states[user_name] = state
+                order_states.append(state)
+            else:
+                # 如果用户之前有end状态，有机会分配其他状态
+                state = random.choice(ORDER_STATE)
+                if state in ['ongoing', 'due'] and user_states[user_name] == 'end':
+                    user_states[user_name] = state
+                order_states.append(state)
+
     df_orders = pd.DataFrame({
         'OrderID': range(1, num_order_samples + 1),
         'CarID': list_car_id,
-        'UserName': [random.choice(df_users['UserPassword'].tolist()) for _ in range(num_order_samples)],
+        'UserName': user_names,
         'OrderStartTime': list_start_times,
         'OrderEndTime': list_end_times,
         'OrderPrice': costs,
-        'OrderState': [random.choice(ORDER_STATE) for _ in range(num_order_samples)],
+        'OrderState': order_states,
         'CarStartLocation': [random.choice(LOCATIONS) for _ in range(num_order_samples)],
         'CarEndLocation': [random.choice(LOCATIONS) for _ in range(num_order_samples)]
     })
