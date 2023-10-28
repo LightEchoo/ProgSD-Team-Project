@@ -113,6 +113,20 @@ def get_one_user_info(user_name):
         connect.close()
         return "None"
 
+def get_one_user_type(user_name):
+    connect = connect_to_database()
+    cursor = connect.cursor()
+
+    try:
+        cursor.execute("SELECT UserType FROM tb_Users WHERE UserName = ?", (user_name,))
+        user_type = cursor.fetchone()
+        connect.close()
+        return user_type
+    except sqlite3.Error as e:
+        print("Error in Get One User Info:", str(e))
+        connect.close()
+        return "None"
+
 # 查看用户的所有订单
 def get_one_user_orders(user_name):
     connect = connect_to_database()
