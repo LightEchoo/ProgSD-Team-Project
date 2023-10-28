@@ -45,7 +45,7 @@ def initialize_etsp_database():
                 CarLocation TEXT)
         ''')
 
-        # 创建tb_Order表格
+        # 创建tb_Orders表格
         cursor.execute('''
             CREATE TABLE tb_Orders (
                 OrderID INTEGER PRIMARY KEY NOT NULL,
@@ -63,7 +63,7 @@ def initialize_etsp_database():
         connect.commit()
         connect.close()
 
-        print("Database successfully initialized. Including 3 tables: tb_Users、tb_Cars and tb_Order.")
+        print("Database successfully initialized. Including 3 tables: tb_Users、tb_Cars and tb_Orders.")
 
     except sqlite3.Error as e:
         print("Error in Initialization:", str(e))
@@ -71,41 +71,62 @@ def initialize_etsp_database():
         connect.close()
 
 
-# def input_default_data():
-#     #在数据库中插入默认数据
-#     # ！！！！注意！！！！！此函数只能调用一次，否则会有主键冲突
-#
-#     connect = sqlite3.connect('etsp_database.db')
-#     cursor = connect.cursor()
-#
-#     try:
-#         # 插入初始数据到tb_Users
-#         users_default_data = [
-#             ('111', '000', 'manager', 0, 0, 'G11 6QJ'),
-#             ('222', '000', 'operator', 0, 0, 'G11 6QJ'),
-#             ('abc', 'abc', 'customer', 0, 1, 'G11 6QJ')
-#         ]
-#         cursor.executemany('INSERT INTO tb_Users VALUES (?, ?, ?, ?, ?, ?)', users_default_data)
-#
-#         # 插入初始数据到tb_Cars
-#         cars_default_data = [
-#             (1, 'bike', 'This is a bike', 5, 100, 20, 'available', '', 'G11 6QJ'),
-#             (2, 'wheel', 'This is a wheel', 2, 100, 15, 'inrent', '', 'G11 6QJ'),
-#             (3, 'bike', 'This is a bike', 5, 0, 20, 'lowpower', '', 'G11 6QJ'),
-#             (4, 'bike', 'This is a bike', 5, 50, 20, 'repair', 'body', 'G11 6QJ')
-#
-#         ]
-#         cursor.executemany('INSERT INTO tb_Cars VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)', cars_default_data)
-#
-#
-#
-#         # 提交更改并关闭连接
-#         connect.commit()
-#         connect.close()
-#
-#         print("Default data successfully inputed. Including 3 users in tb_Users, and 4 cars in tb_Cars")
-#
-#     except sqlite3.Error as e:
-#         print("Error in Input Default Data:", str(e))
-#         connect.rollback()
-#         connect.close()
+def input_default_data():
+     #在数据库中插入默认数据
+     # ！！！！注意！！！！！此函数只能调用一次，否则会有主键冲突
+
+     connect = sqlite3.connect('etsp_database.db')
+     cursor = connect.cursor()
+
+     try:
+         # 插入初始数据到tb_Users
+         users_default_data = [
+             ('111', '000', 'manager', 0, 0, 'G11 6QJ'),
+             ('222', '000', 'operator', 0, 0, 'G11 6QJ'),
+             ('abc', 'abc', 'customer', 0, 1, 'G11 6QJ')
+         ]
+         cursor.executemany('INSERT INTO tb_Users VALUES (?, ?, ?, ?, ?, ?)', users_default_data)
+
+        # 插入初始数据到tb_Cars
+         cars_default_data = [
+             (1, 'bike', 'This is a bike', 5, 100, 20, 'available', '', 'G11 6QJ'),
+             (2, 'wheel', 'This is a wheel', 2, 100, 15, 'inrent', '', 'G11 6QJ'),
+             (3, 'bike', 'This is a bike', 5, 0, 20, 'lowpower', '', 'G11 6QJ'),
+             (4, 'bike', 'This is a bike', 5, 50, 20, 'repair', 'body', 'G11 6QJ')
+
+         ]
+         cursor.executemany('INSERT INTO tb_Cars VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)', cars_default_data)
+
+
+
+         # 提交更改并关闭连接
+         connect.commit()
+         connect.close()
+
+         print("Default data successfully inputed. Including 3 users in tb_Users, and 4 cars in tb_Cars")
+
+     except sqlite3.Error as e:
+         print("Error in Input Default Data:", str(e))
+         connect.rollback()
+         connect.close()
+
+def list_tables_in_database():
+    # 连接到数据库
+    connection = sqlite3.connect('etsp_database.db')
+
+    # 创建游标对象
+    cursor = connection.cursor()
+
+    # 查询数据库中的所有表格
+    cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
+
+    # 获取查询结果
+    tables = cursor.fetchall()
+
+    # 关闭数据库连接
+    connection.close()
+
+    # 提取表格名称
+    table_names = [table[0] for table in tables]
+
+    return table_names

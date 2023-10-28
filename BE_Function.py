@@ -284,3 +284,9 @@ def opt_update_car(update_action, car_id, car_location = "Main Building"):
         print("Error Update Car:", str(e))
         return False
 
+def get_login_user():
+    file = open("user.csv", "r")
+    login_user = list(file)
+    user_info = SqlFunction.get_one_user_info(login_user[0])
+    file.close()
+    return user_info
