@@ -48,7 +48,7 @@ def login(user_name, password):
             elif user_type == "operator":
                 return 1
             elif user_type == "manager":
-                return 3
+                return 2
         else:
             return "LoginFalse"
 
