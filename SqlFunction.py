@@ -133,7 +133,7 @@ def get_one_user_orders(user_name):
     cursor = connect.cursor()
 
     try:
-        cursor.execute("SELECT * FROM tb_Order WHERE UserName = ?", (user_name,))
+        cursor.execute("SELECT * FROM tb_Orders WHERE UserName = ?", (user_name,))
         user_orders = cursor.fetchall()
         connect.close()
         return user_orders
@@ -259,7 +259,7 @@ def get_one_order_info(order_id):
     cursor = connect.cursor()
 
     try:
-        cursor.execute("SELECT * FROM tb_Order WHERE OrderId = ?", (order_id,))
+        cursor.execute("SELECT * FROM tb_Orders WHERE OrderId = ?", (order_id,))
         order_info = cursor.fetchone()
         connect.close()
         return order_info

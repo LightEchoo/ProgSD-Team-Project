@@ -472,6 +472,8 @@ class ReservationPage(tk.Frame):
         car_location = "Main Building"
 
         rent_result = BE_Function.rent_start(vehicle_info[0], user_info[1], car_location)
+        print(rent_result)
+
         if rent_result == "DepositError":
             # 若未付押金，则需要用户先交押金
             messagebox.showwarning("押金不足", "账户押金不足，请及时充值。")
@@ -484,15 +486,15 @@ class ReservationPage(tk.Frame):
             # 若车辆不可用，则换一辆车
             messagebox.showwarning("车辆不可用", "当前车辆不可用，请重新选择。")
             # TODO： 跳转支付页面 self.controller.show_frame(PaidPage, vehicle_info)
-        elif rent_result == "Successful":
+        elif rent_result == "RentError":
+            # 若租用失败，则重新租用
+            messagebox.showwarning("租用失败", "租用失败，请重试。")
+            # TODO： 跳转支付页面 self.controller.show_frame(PaidPage, vehicle_info)
+        else:
             # 租用成功，返回值为 order_id
             messagebox.showinfo("租用成功", "您的车辆已开锁！")
 
             self.controller.show_frame(EndOrderPage, vehicle_info)
-        else:
-            # 若租用失败，则重新租用
-            messagebox.showwarning("租用失败", "租用失败，请重试。")
-            # TODO： 跳转支付页面 self.controller.show_frame(PaidPage, vehicle_info)
 
 
     '''def check_balance(self, vehicle_info):
