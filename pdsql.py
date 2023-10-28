@@ -15,7 +15,7 @@ LOCATIONS = ["IKEA", "Hospital", "UofG", "St George's Square", "Glasgow City Cen
 
 REPAIR_TYPE = ['None', 'seat post', 'frames', 'tire', 'battery']
 
-ORDER_STATE = ['Orders in progress', 'Order Closed']
+ORDER_STATE = ['ongoing', 'due', 'end']
 
 pd.set_option('display.max_rows', None)
 pd.set_option('display.max_columns', None)
