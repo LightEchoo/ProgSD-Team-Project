@@ -18,7 +18,11 @@ import CommonFunction
 import SqlFunction
 import csv
 
-
+#Todo: 订单展示
+#Todo: 支付订单
+#Todo: 更新repair
+#Todo: 个人订单展示
+#Todo: 租车订单跳转
 
 class LoginPage(tk.Frame):
     def __init__(self, parent, controller):
@@ -469,6 +473,7 @@ class ReservationPage(tk.Frame):
         car_location = "Main Building"
 
         rent_result = BE_Function.rent_start(vehicle_info[0], user_info[0], car_location)
+        #TODO
         print(rent_result)
 
         if rent_result == "DepositError":
@@ -605,12 +610,10 @@ class EndOrderPage(tk.Frame):
         login_user = BE_Function.get_login_user()
         order = SqlFunction.get_user_specific_order(login_user[0], "ongoing")
         result = messagebox.askquestion("确认还车", "您确定要还车吗？")
-        print(order)
 
         if result == "yes":
         # 用户确认支付，跳转到PaymentPage
             confirm_result = BE_Function.return_car(order[0])
-            print(confirm_result)
             if confirm_result == "Successful":
                 self.controller.show_frame(PaymentPage)
             else:
@@ -725,20 +728,29 @@ class PaymentPage(tk.Frame):
         # 确认支付按钮
         confirm_button = ttk.Button(self, text="支付订单", command=self.confirm_payment)
         confirm_button.grid(row=10, column=1, padx=10, pady=10)
-  
+
+
        
 
-    def set_payment_info(self, vehicle_info, start_time, end_time, total_amount, duration):
+    def set_payment_info(self, vehicle_info):
         # 设置订单完成页面的信息
-        self.vehicle_info = vehicle_info
+        # order 格式：(1001, 1, 'user', '2023-10-28 20:44:19', '2023-10-28 20:44:26', 0.0, 'due', 'Main Building', 'Main Building')
+        login_user = BE_Function.get_login_user()
+        order = SqlFunction.get_user_specific_order(login_user[0], "due")
+        car_info = SqlFunction.get_one_car_info(order[1])
+        print(login_user)
+        print(order)
+        print(car_info)
+
+        self.vehicle_info = car_info
         self.vehicle_number_label.config(text=f"车辆编号: {vehicle_info[0]}")
         self.vehicle_type_label.config(text=f"车辆类型: {vehicle_info[1]}")
         self.vehicle_battery_label.config(text=f"电量: {vehicle_info[4]}")
-        self.vehicle_duration_label.config(text=f"使用总时长: {duration} 小时")
+        #self.vehicle_duration_label.config(text=f"使用总时长: {order[5]} 小时")
 
-        self.start_time_label.config(text=f"订单开始时间: {start_time}")
-        self.end_time_label.config(text=f"订单结束时间: {end_time}")
-        self.total_amount_label.config(text=f"订单总金额: {total_amount}")
+        self.start_time_label.config(text=f"订单开始时间: {order[3]}")
+        self.end_time_label.config(text=f"订单结束时间: {order[4]}")
+        self.total_amount_label.config(text=f"订单总金额: {order[5]}")
 
         # TODO: 显示车辆照片
         # self.display_vehicle_image(vehicle_info['image_path'])

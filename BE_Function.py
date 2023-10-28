@@ -106,8 +106,8 @@ def rent_start(car_id, user_name, car_start_location):
     # 检查租车资格
     user_info = SqlFunction.get_one_user_info(user_name)
     car_info = SqlFunction.get_one_car_info(car_id)
-    print(user_info)
-    print(car_info)
+    #print(user_info)
+    #print(car_info)
 
     if user_info[3] != 0:
         connect.close()
