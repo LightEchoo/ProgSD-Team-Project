@@ -525,7 +525,7 @@ def operatorlog():#操作员界面
     print(operator_name, operator_password)
     opt_login = BE_Function.login(operator_name, operator_password)
 
-    if opt_login == "LoginSuccess":
+    if opt_login == 1:
 
         operator_log.withdraw()  # 隐藏之前的界面
         operator_log_in=Tk()
@@ -544,6 +544,7 @@ def operatorlog():#操作员界面
 
         button3=Button(operator_log_in,text="Move",command=move)#更改位置信息（移动车辆）
         button3.place(x=130,y=80,width=70,height=25)
+    elif opt_login == 0 or opt_login == 2: info_window("Not an Operator")
     elif opt_login == "NoUserFalse": info_window("No Such Operator")
     else: info_window("Login Error")
 
@@ -653,7 +654,61 @@ def repair():#维修界面
     button=Button(repair_log,text="Repair",command=repair_car)
     button.place(relx=0.5,rely=0.04,relwidth=0.08,relheight=0.06)
 
-def move():#移动界面
+
+def move():  # 移动界面
+
+    global move_log
+
+    def hide():  # 恢复界面
+        move_log.destroy()
+        operator_log_in.deiconify()
+
+    def move_car():
+        move_car_name = box1.get()
+        move_car_location = dd1.get()
+
+        '''
+        bug:输入 car_name 的时候会同步到 car_location 里面
+        '''
+
+        move_result = BE_Function.opt_update_car("move", move_car_name, move_car_location)
+        if move_result == "MoveSuccess":
+            info_show = "Move Successfully!!! Current location of Car " + move_car_name + " is " + move_car_location
+            info_window(info_show)
+        elif move_result == "RentFalse":
+            info_window("Error: Car In Rent")
+        elif move_result == "CarFalse":
+            info_window("Error: No such car")
+        else:
+            info_window("Error: Move Failed")
+
+    operator_log_in.withdraw()  # 隐藏之前的界面
+
+    move_log = Tk()
+    move_log.geometry("800x600")
+    move_log.title("Movement ")
+    center_window(move_log, 1600, 800)
+
+    # 将恢复界面和关闭按钮连接
+    move_log.protocol("WM_DELETE_WINDOW", hide)
+
+    label1 = Label(move_log, text="Car code:", font=tkinter_font1)  # 输入操作车辆编号
+    label1.place(relx=0.1, rely=0.1)
+
+    box1 = Entry(move_log, text=0)
+    box1.place(relx=0.21, rely=0.1, relwidth=0.08, relheight=0.05)
+
+    label2 = Label(move_log, text="New location:", font=tkinter_font1)  # 输入移动车辆后的位置
+    label2.place(relx=0.1, rely=0.2)
+
+    dd1 = ttk.Combobox(move_log)  # 可选的位置
+    dd1.place(relx=0.24, rely=0.2)
+    dd1["values"] = ('Learning Hub', 'Adam Smith Building', 'Boyd Orr Building', 'Main Building')  # 可选车辆类型
+
+    button = Button(move_log, text="Move", command=move_car, font=tkinter_font1)
+    button.place(relx=0.32, rely=0.1, relwidth=0.08, relheight=0.05)
+
+'''def move():#移动界面
 
     global  move_log
     def hide():#恢复界面
@@ -664,9 +719,9 @@ def move():#移动界面
         move_car_name=box1.get()
         move_car_location=box2.get()
 
-        '''
+     
         bug:输入 car_name 的时候会同步到 car_location 里面
-        '''
+    
 
         move_result = BE_Function.opt_update_car("move", move_car_name, move_car_location)
         if move_result == "MoveSuccess":
@@ -676,13 +731,12 @@ def move():#移动界面
         elif move_result == "CarFalse": info_window("Error: No such car")
         else: info_window("Error: Move Failed")
 
-        '''
+     
         期望 box2 按照下拉列表的方式来显示所有地址，包括：
             1. main building
             2. learning hub
             3. adam smith building
-            4. boyd orr building
-        '''
+        
 
     operator_log_in.withdraw()#隐藏之前的界面
 
@@ -706,7 +760,7 @@ def move():#移动界面
     box2.place(x=110,y=50,width=100,height=50)
 
     button=Button(move_log,text="Move",command=move_car)
-    button.place(x=300,y=20,width=100,height=25)
+    button.place(x=300,y=20,width=100,height=25)'''
     
     
 #regist_interface=Tk()#注册结果页面
