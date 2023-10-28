@@ -42,12 +42,11 @@ def login(user_name, password):
         return "NoUserFalse"
     else:
         if user_info[1] == password:
-            user_type = SqlFunction.get_one_user_type(user_name)
-            if user_type == "customer":
+            if user_info[2] == "customer":
                 return 0
-            elif user_type == "operator":
+            elif user_info[2] == "operator":
                 return 1
-            elif user_type == "manager":
+            elif user_info[2] == "manager":
                 return 2
         else:
             return "LoginFalse"
@@ -130,7 +129,7 @@ def rent_start(car_id, user_name, car_start_location):
         SqlFunction.update_car_state(car_id, "inrent")
 
         connect.close()
-        return "Successful"
+        return order_id
 
     except sqlite3.Error as e:
         print("Error in Create Order:", str(e))
