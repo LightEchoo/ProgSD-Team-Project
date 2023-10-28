@@ -474,7 +474,7 @@ class ReservationPage(tk.Frame):
 
         rent_result = BE_Function.rent_start(vehicle_info[0], user_info[0], car_location)
         #TODO
-        print(rent_result)
+        #print(rent_result)
 
         if rent_result == "DepositError":
             # 若未付押金，则需要用户先交押金
@@ -768,12 +768,16 @@ class PaymentPage(tk.Frame):
             print(f"Error displaying image: {e}")
 
     def confirm_payment(self):
+        login_user = BE_Function.get_login_user()
+        order = SqlFunction.get_user_specific_order(login_user[0], "due")
+
         result = messagebox.askquestion("确认支付", "您确定要支付吗？")
-            
+
 
         if result == "yes":
             # 用户确认支付，跳转到EndPayPage
-           self.controller.show_frame(EndPayPage)
+            BE_Function.pay_order(order[0])
+            self.controller.show_frame(EndPayPage)
 
         
 class EndPayPage(tk.Frame):
