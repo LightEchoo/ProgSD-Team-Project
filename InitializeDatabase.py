@@ -89,11 +89,12 @@ def input_default_data():
 
         # 插入初始数据到tb_Cars
         cars_default_data = [
-            (1, 'bike', 'This is a bike', 5, 100, 20, 'available', '', 'G11 6QJ'),
-            (2, 'wheel', 'This is a wheel', 2, 100, 15, 'inrent', '', 'G11 6QJ'),
-            (3, 'bike', 'This is a bike', 5, 0, 20, 'lowpower', '', 'G11 6QJ'),
-            (4, 'bike', 'This is a bike', 5, 50, 20, 'repair', 'body', 'G11 6QJ')
-
+            (1, 'ebike', 'This is a bike', 5, 100, 20, 'available', '', 'G11 6QJ'),
+            (2, 'escooter', 'This is a wheel', 2, 100, 15, 'inrent', '', 'G11 6QJ'),
+            (3, 'ebike', 'This is a bike', 5, 0, 20, 'lowpower', '', 'G11 6QJ'),
+            (4, 'ebike', 'This is a bike', 5, 50, 20, 'repair', 'body', 'G11 6QJ'),
+            (5, 'ebike', 'This is a bike', 5, 100, 20, 'available', '', 'G11 6QJ'),
+            (6, 'escooter', 'This is a bike', 5, 100, 20, 'available', '', 'G11 6QJ'),
         ]
         cursor.executemany('INSERT INTO tb_Cars VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)', cars_default_data)
 
