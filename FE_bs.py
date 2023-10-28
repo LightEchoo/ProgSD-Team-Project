@@ -423,13 +423,13 @@ class ETSP:
         c_sort_by = bs.Combobox(f_condition, values=['CarPower', 'CarPrice'], bootstyle='info')
         c_sort_by.current(0)
 
-        pd_vehicle = take_pd_vehicles()
-        vehicle_no = pd_vehicle['CarID'].tolist()
-        vehicle_type = pd_vehicle['CarType'].tolist()
-        battery_lift = pd_vehicle['CarPower'].tolist()
-        rent = pd_vehicle['CarPrice'].tolist()
-        location = pd_vehicle['CarLocation'].tolist()
-        state = pd_vehicle['CarState'].tolist()
+        # pd_vehicle = take_pd_vehicles()
+        # vehicle_no = pd_vehicle['CarID'].tolist()
+        # vehicle_type = pd_vehicle['CarType'].tolist()
+        # battery_lift = pd_vehicle['CarPower'].tolist()
+        # rent = pd_vehicle['CarPrice'].tolist()
+        # location = pd_vehicle['CarLocation'].tolist()
+        # state = pd_vehicle['CarState'].tolist()
 
         l_vehicle_type.place(relx=0.05, rely=0.25, relwidth=0.07, relheight=0.5)
         c_vehicle_type.place(relx=0.12, rely=0.25, relwidth=0.1, relheight=0.5)
@@ -527,10 +527,13 @@ class ETSP:
             self.current_operator_page.place_forget()  # 如果有，删除，但保留在内存中
             print('clear')
 
+    def destroy_frame(self, frame):
+        for widget in frame.winfo_children():
+            widget.destroy()
+
     def data(self, canvas_vehicle, f_vehicle, choice_type, choice_location, choice_state, choice_sort_by):
         # self.operator_page_clear()
-        for widget in f_vehicle.winfo_children():
-            widget.destroy()
+        self.destroy_frame(f_vehicle)
         # f_vehicle = bs.Frame(canvas_vehicle)
         # # # 将Frame小部件添加到Canvas中，并配置Frame在Canvas上的位置，以及锚点在左上角（NW表示北西）。
         # canvas_vehicle.create_window((0, 0), window=f_vehicle, anchor=tk.NW)
@@ -569,50 +572,6 @@ class ETSP:
             single_vehicle_bar.pack()
             space_frame = bs.Frame(f_vehicle, width=1520, height=10, bootstyle='success')
             space_frame.pack()
-
-    # def data(self, canvas_vehicle, choice_type, choice_location, choice_state, choice_sort_by):
-    #     self.operator_page_clear()
-    #     canvas_vehicle.place_forget()
-    #     f_vehicle = bs.Frame(canvas_vehicle)
-    #
-    #     # # 将Frame小部件添加到Canvas中，并配置Frame在Canvas上的位置，以及锚点在左上角（NW表示北西）。
-    #     canvas_vehicle.create_window((0, 0), window=f_vehicle, anchor=tk.NW)
-    #
-    #     self.current_operator_page = f_vehicle
-    #
-    #     pd_vehicle = take_pd_vehicles()
-    #     # nonlocal pd_vehicle, vehicle_no, vehicle_type, battery_lift, rent, location, state, canvas_vehicle
-    #
-    #     print(choice_type, choice_location, choice_state, choice_sort_by)
-    #
-    #     # choice_type, choice_location, choice_state, choice_sort_by = 'ebike', 'Hospital', 'available', 'CarPower'
-    #     condition = (
-    #         ((pd_vehicle['CarType'] == choice_type) if choice_type != 'ALL' else pd_vehicle.index.isin(pd_vehicle.index)) &
-    #         ((pd_vehicle['CarLocation'] == choice_location) if choice_location != 'ALL' else pd_vehicle.index.isin(pd_vehicle.index)) &
-    #         ((pd_vehicle['CarState'] == choice_state) if choice_state != 'ALL' else pd_vehicle.index.isin(pd_vehicle.index))
-    #     )
-    #     choice_pd_vehicle = pd_vehicle.loc[condition].sort_values(by=choice_sort_by, ascending=False)[
-    #         ['CarID', 'CarType', 'CarPower', 'CarPrice', 'CarLocation', 'CarState']]
-    #
-    #     print(choice_pd_vehicle)
-    #
-    #     vehicle_nos = choice_pd_vehicle['CarID'].tolist()
-    #     vehicle_types = choice_pd_vehicle['CarType'].tolist()
-    #     battery_lifts = choice_pd_vehicle['CarPower'].tolist()
-    #     rents = choice_pd_vehicle['CarPrice'].tolist()
-    #     locations = choice_pd_vehicle['CarLocation'].tolist()
-    #     states = choice_pd_vehicle['CarState'].tolist()
-    #     print(vehicle_nos, vehicle_types, battery_lifts, rents, locations, states)
-    #
-    #     for vehicle_no, vehicle_type, battery_lift, rent, location, state in zip(vehicle_nos, vehicle_types,
-    #                                                                              battery_lifts, rents,
-    #                                                                              locations, states):
-    #         print(vehicle_no, vehicle_type, battery_lift, rent)
-    #         single_vehicle_bar = self.single_vehicle_bar(f_vehicle, 1, vehicle_no, vehicle_type, battery_lift,
-    #                                                      rent, location, state)
-    #         single_vehicle_bar.pack()
-    #         space_frame = bs.Frame(f_vehicle, width=1520, height=10, bootstyle='success')
-    #         space_frame.pack()
 
     def single_vehicle_bar(self, frame, flag, vehicle_no, vehicle_type, battery_lift, rent,
                            location=None, state=0):
