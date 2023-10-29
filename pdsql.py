@@ -187,7 +187,8 @@ def test_cars_data_initialization(num_car_samples):
         if power_value < 20:
             car_state = 'lowpower'
         else:
-            car_state = random.choices(VEHICLE_STATE_L, weights=[20, 10, 5, 2], k=1)[0]
+            car_state = random.choices(VEHICLE_STATE_L, weights=[20, 10, 0, 2], k=1)[0]
+            # car_state = random.choices(['available', 'inrent', 'repair'], weights=[20, 10, 2], k=1)[0]
 
         car_states.append(car_state)
 
@@ -195,7 +196,7 @@ def test_cars_data_initialization(num_car_samples):
         if car_state == 'repair':
             repair_detail = random.choices(REPAIR_TYPE, weights=[0, 1, 1, 1, 1])[0]
         else:
-            repair_detail = None
+            repair_detail = 'None'
 
         repair_details.append(repair_detail)
 
