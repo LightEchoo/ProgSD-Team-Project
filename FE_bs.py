@@ -441,34 +441,37 @@ class ETSP:
         c_sort_by.place(relx=0.75, rely=0.25, relwidth=0.1, relheight=0.5)
 
         # 选车界面 frame
-        f_select_vehicle = bs.Frame(frame, bootstyle='info')
+        f_select_vehicle = bs.Frame(frame, bootstyle='warning')
         f_select_vehicle.place(relx=0.02, rely=0.12, relwidth=0.96, relheight=0.87)
 
         # 创建一个Canvas小部件，它用于包含可滚动的内容。
-        canvas_vehicle = tk.Canvas(f_select_vehicle)
+        canvas_vehicle = tk.Canvas(f_select_vehicle, bg='yellow')
         # 将Canvas小部件放置在中部窗口中，使其在左侧占据空间，并允许其在水平和垂直方向上扩展以填满可用空间。
         canvas_vehicle.place(relx=0, rely=0, relwidth=0.99, relheight=1)
 
         # 设置滚动条风格
-        scrollbar_style = ttk.Style()
-        scrollbar_style.configure("TScrollbar",
-                                  troughcolor="lightgray",
-                                  borderwidth=5,
-                                  lightcolor="red",
-                                  darkcolor="blue",
-                                  sliderlength=30)
+        # scrollbar_style = ttk.Style()
+        # scrollbar_style.configure("TScrollbar",
+        #                           troughcolor="lightgray",
+        #                           borderwidth=5,
+        #                           lightcolor="red",
+        #                           darkcolor="blue",
+        #                           sliderlength=30)
 
         # 创建一个垂直滚动条（Scrollbar），使用ttk模块创建，与Canvas小部件关联，以便控制Canvas的垂直滚动。
-        scrollbar = ttk.Scrollbar(f_select_vehicle, orient=tk.VERTICAL, style="TScrollbar",
-                                  command=canvas_vehicle.yview)
+        # scrollbar = ttk.Scrollbar(f_select_vehicle, orient=tk.VERTICAL, style="TScrollbar",
+        #                           command=canvas_vehicle.yview)
+        scrollbar = bs.Scrollbar(f_select_vehicle, orient=tk.VERTICAL,
+                                  command=canvas_vehicle.yview, bootstyle='primary')
         # 将垂直滚动条放置在主窗口的右侧，使其占据垂直空间。
         scrollbar.place(relx=0.99, rely=0, relwidth=0.01, relheight=1)
         # 配置Canvas小部件以与垂直滚动条(scrollbar)相关联，使它能够通过滚动条进行垂直滚动。
         canvas_vehicle.configure(yscrollcommand=scrollbar.set)
         # 创建一个Frame小部件，该Frame用于包含实际的滚动内容。
-        f_vehicle = bs.Frame(canvas_vehicle)
+        f_vehicle = bs.Frame(canvas_vehicle, bootstyle='success', width=2000, height=1000)
         # # 将Frame小部件添加到Canvas中，并配置Frame在Canvas上的位置，以及锚点在左上角（NW表示北西）。
         canvas_vehicle.create_window((0, 0), window=f_vehicle, anchor=tk.NW)
+        # f_vehicle.place(relx=0, rely=0, relwidth=1, relheight=1)
         self.current_operator_page = f_vehicle
 
         def on_canvas_configure(event):  # 内置函数 配置Canvas以根据内容自动调整滚动区域
@@ -511,11 +514,10 @@ class ETSP:
         # #         space_frame.pack()
 
         b_confirm = bs.Button(f_condition, text='Confirm', bootstyle='info',
-                              command=lambda: self.data(canvas_vehicle, f_vehicle, c_vehicle_type.get(), c_vehicle_location.get(),
+                              command=lambda: self.data(f_vehicle, c_vehicle_type.get(),
+                                                        c_vehicle_location.get(),
                                                         c_vehicle_state.get(), c_sort_by.get()))
         b_confirm.place(relx=0.89, rely=0.25, relwidth=0.06, relheight=0.5)
-
-
 
     def operator_page_clear(self):
         """
@@ -531,7 +533,8 @@ class ETSP:
         for widget in frame.winfo_children():
             widget.destroy()
 
-    def data(self, canvas_vehicle, f_vehicle, choice_type, choice_location, choice_state, choice_sort_by):
+    def data(self, f_vehicle, choice_type, choice_location, choice_state, choice_sort_by):
+        info = [f_vehicle, choice_type, choice_location, choice_state, choice_sort_by]
         # self.operator_page_clear()
         self.destroy_frame(f_vehicle)
         # f_vehicle = bs.Frame(canvas_vehicle)
@@ -542,13 +545,16 @@ class ETSP:
         pd_vehicle = take_pd_vehicles()
         # nonlocal pd_vehicle, vehicle_no, vehicle_type, battery_lift, rent, location, state, canvas_vehicle
 
-        print(choice_type, choice_location, choice_state, choice_sort_by)
+        # print(choice_type, choice_location, choice_state, choice_sort_by)
 
         # choice_type, choice_location, choice_state, choice_sort_by = 'ebike', 'Hospital', 'available', 'CarPower'
         condition = (
-            ((pd_vehicle['CarType'] == choice_type) if choice_type != 'ALL' else pd_vehicle.index.isin(pd_vehicle.index)) &
-            ((pd_vehicle['CarLocation'] == choice_location) if choice_location != 'ALL' else pd_vehicle.index.isin(pd_vehicle.index)) &
-            ((pd_vehicle['CarState'] == choice_state) if choice_state != 'ALL' else pd_vehicle.index.isin(pd_vehicle.index))
+                ((pd_vehicle['CarType'] == choice_type) if choice_type != 'ALL' else pd_vehicle.index.isin(
+                    pd_vehicle.index)) &
+                ((pd_vehicle['CarLocation'] == choice_location) if choice_location != 'ALL' else pd_vehicle.index.isin(
+                    pd_vehicle.index)) &
+                ((pd_vehicle['CarState'] == choice_state) if choice_state != 'ALL' else pd_vehicle.index.isin(
+                    pd_vehicle.index))
         )
         choice_pd_vehicle = pd_vehicle.loc[condition].sort_values(by=choice_sort_by, ascending=False)[
             ['CarID', 'CarType', 'CarPower', 'CarPrice', 'CarLocation', 'CarState']]
@@ -561,22 +567,28 @@ class ETSP:
         rents = choice_pd_vehicle['CarPrice'].tolist()
         locations = choice_pd_vehicle['CarLocation'].tolist()
         states = choice_pd_vehicle['CarState'].tolist()
-        print(vehicle_nos, vehicle_types, battery_lifts, rents, locations, states)
+        # print(vehicle_nos, vehicle_types, battery_lifts, rents, locations, states)
 
         for vehicle_no, vehicle_type, battery_lift, rent, location, state in zip(vehicle_nos, vehicle_types,
                                                                                  battery_lifts, rents,
                                                                                  locations, states):
-            print(vehicle_no, vehicle_type, battery_lift, rent)
-            single_vehicle_bar = self.single_vehicle_bar(f_vehicle, 1, vehicle_no, vehicle_type, battery_lift,
+            # print(vehicle_no, vehicle_type, battery_lift, rent)
+            single_vehicle_bar = self.single_vehicle_bar(info, f_vehicle, 1, vehicle_no, vehicle_type, battery_lift,
                                                          rent, location, state)
             single_vehicle_bar.pack()
             space_frame = bs.Frame(f_vehicle, width=1520, height=10, bootstyle='success')
+            # print(f_vehicle.winfo_height())
             space_frame.pack()
+            # print(f_vehicle.winfo_height())
+        # if f_vehicle.winfo_height() < 1000:
+        frame_fill = bs.Frame(f_vehicle, width=1520, height=700, bootstyle='success')
+        frame_fill.pack()
 
-    def single_vehicle_bar(self, frame, flag, vehicle_no, vehicle_type, battery_lift, rent,
-                           location=None, state=0):
+    def single_vehicle_bar(self, info, frame, flag, vehicle_no, vehicle_type, battery_lift, rent,
+                           location=None, state=0,):
         """
         用于展示单个车辆信息条
+        :param info: 用于按钮更新
         :param flag: user/operator
         :param frame: 父框架
         :param vehicle_no: 车辆编号
@@ -626,33 +638,56 @@ class ETSP:
         frame_info.place(x=0 + l_width, y=0)
 
         padx_label, pady_label = 5, 5
-        v_vehicle_no = tk.StringVar()  # 车辆编号
-        # print("车辆编号："+str(vehicle_no))
-        v_vehicle_no.set('Vehicle No.' + str(vehicle_no))
+
+        # 车辆编号
+        v_vehicle_no = tk.StringVar()
+        # # print("车辆编号："+str(vehicle_no))
+        v_vehicle_no.set(str(vehicle_no))
         # print(v_vehicle_no.get())
         # l_vehicle_no = bs.Label(frame_info, textvariable=v_vehicle_no, bootstyle='inverse-info')
-        l_vehicle_no = tk.Label(frame_info, textvariable=v_vehicle_no, padx=padx_label, pady=pady_label)
+        l_vehicle_no = tk.Label(frame_info, text='Vehicle No.: ', padx=padx_label, pady=pady_label)
+        l_vehicle_no_value = tk.Label(frame_info, textvariable=v_vehicle_no, padx=padx_label, pady=pady_label)
+        # l_vehicle_no_value.configure(bg="SystemTransparent")
+
+        # v_vehicle_no = tk.IntVar()
+        # v_vehicle_no.set(int(vehicle_no))
+        # v_vehicle_no = str(vehicle_no)
+        # l_vehicle_no_value = bs.Floodgauge(
+        #     frame_info,
+        #     bootstyle='info',
+        #     mode='determinate',
+        #     maximum=100,
+        #     value=vehicle_no,
+        #     mask=v_vehicle_no,
+        # )
+        # update_floodgauge(vehicle_no)
+        #
+        # def update_floodgauge(vehicle_no):
+        #     l_vehicle_no_value.configure(mask=str(vehicle_no))
 
         v_vehicle_type = bs.StringVar()  # 车辆类型
         # if vehicle_type == 0:
         #     v_vehicle_type.set("Vehicle type: electric bicycle")
         # elif vehicle_type == 1:
         #     v_vehicle_type.set("Vehicle type: electric scooter")
-        v_vehicle_type.set("Vehicle type: electric scooter" + str(vehicle_type))
+        v_vehicle_type.set(str(vehicle_type))
         # l_vehicle_type = bs.Label(frame_info, textvariable=v_vehicle_type, bootstyle='inverse-info')
-        l_vehicle_type = tk.Label(frame_info, textvariable=v_vehicle_type, padx=padx_label, pady=pady_label)
+        l_vehicle_type = tk.Label(frame_info, text='Vehicle type: ', padx=padx_label, pady=pady_label)
+        l_vehicle_type_value = tk.Label(frame_info, textvariable=v_vehicle_type, padx=padx_label, pady=pady_label)
 
         v_battery_life = bs.StringVar()  # 剩余电量
         battery_lift = round(battery_lift, 2)
-        v_battery_life.set("Battery life:" + str(battery_lift) + "%")
+        v_battery_life.set(str(battery_lift))
         # l_battery_life = bs.Label(frame_info, textvariable=v_battery_life, bootstyle='inverse-info')
-        l_battery_life = tk.Label(frame_info, textvariable=v_battery_life, padx=padx_label, pady=pady_label)
+        l_battery_life = tk.Label(frame_info, text='Battery life: ', padx=padx_label, pady=pady_label)
+        l_battery_life_value = tk.Label(frame_info, textvariable=v_battery_life, padx=padx_label, pady=pady_label)
 
         v_rent = bs.StringVar()  # 租金
         rent = round(rent, 2)
-        v_rent.set("Rental cost £" + str(rent) + "%/h")
+        v_rent.set(str(rent))
         # l_rent = bs.Label(frame_info, textvariable=v_rent, bootstyle='inverse-info')
-        l_rent = tk.Label(frame_info, textvariable=v_rent, padx=padx_label, pady=pady_label)
+        l_rent = tk.Label(frame_info, text='Rental cost (£/h): ', padx=padx_label, pady=pady_label)
+        l_rent_value = tk.Label(frame_info, textvariable=v_rent, padx=padx_label, pady=pady_label)
 
         if flag == 0:  # user
             l_vehicle_no.pack()
@@ -662,22 +697,45 @@ class ETSP:
         elif flag == 1:  # operator
 
             v_location = bs.StringVar()  # 位置
-            v_location.set("Location: " + str(location))
+            v_location.set(str(location))
             # l_location = bs.Label(frame_info, textvariable=v_location, bootstyle='inverse-info')
-            l_location = tk.Label(frame_info, textvariable=v_location, padx=padx_label, pady=pady_label)
+            l_location = tk.Label(frame_info, text='Location: ', padx=padx_label, pady=pady_label)
+            l_location_value = tk.Label(frame_info, textvariable=v_location, padx=padx_label, pady=pady_label)
 
             v_state = bs.StringVar()  # 状态
-            v_state.set("State: " + str(state))
+            v_state.set(str(state))
             # l_state = bs.Label(frame_info, textvariable=v_state, bootstyle='inverse-info')
-            l_state = tk.Label(frame_info, textvariable=v_state, padx=padx_label, pady=pady_label)
+            l_state = tk.Label(frame_info, text='State: ', padx=padx_label, pady=pady_label)
+            l_state_value = tk.Label(frame_info, textvariable=v_state, padx=padx_label, pady=pady_label)
 
             bg1 = '#36a1b7'
-            l_vehicle_no.config(bg=bg1, fg='white', width=label_width)
-            l_vehicle_type.config(bg=bg1, fg='white', width=label_width)
-            l_battery_life.config(bg=bg1, fg='white', width=label_width)
-            l_rent.config(bg=bg1, fg='white', width=label_width)
-            l_location.config(bg=bg1, fg='white', width=label_width)
-            l_state.config(bg=bg1, fg='white', width=label_width)
+            l_vehicle_no.config(bg=bg1, fg='white')
+            l_vehicle_type.config(bg=bg1, fg='white')
+            l_battery_life.config(bg=bg1, fg='white')
+            l_rent.config(bg=bg1, fg='white')
+            l_location.config(bg=bg1, fg='white')
+            l_state.config(bg=bg1, fg='white')
+
+            l_vehicle_no_value.config(bg=bg1, fg='white')
+            l_vehicle_type_value.config(bg=bg1, fg='white')
+            l_battery_life_value.config(bg=bg1, fg='white')
+            l_rent_value.config(bg=bg1, fg='white')
+            l_location_value.config(bg=bg1, fg='white')
+            l_state_value.config(bg=bg1, fg='white')
+
+            # l_vehicle_no.config(bg=bg1, fg='white', width=int(label_width * 2 / 3))
+            # l_vehicle_type.config(bg=bg1, fg='white', width=int(label_width * 2 / 3))
+            # l_battery_life.config(bg=bg1, fg='white', width=int(label_width * 2 / 3))
+            # l_rent.config(bg=bg1, fg='white', width=int(label_width * 2 / 3))
+            # l_location.config(bg=bg1, fg='white', width=int(label_width * 2 / 3))
+            # l_state.config(bg=bg1, fg='white', width=int(label_width * 2 / 3))
+            #
+            # l_vehicle_no_value.config(bg=bg1, fg='white', width=int(label_width * 1 / 3))
+            # l_vehicle_type_value.config(bg=bg1, fg='white', width=int(label_width * 1 / 3))
+            # l_battery_life_value.config(bg=bg1, fg='white', width=int(label_width * 1 / 3))
+            # l_rent_value.config(bg=bg1, fg='white', width=int(label_width * 1 / 3))
+            # l_location_value.config(bg=bg1, fg='white', width=int(label_width * 1 / 3))
+            # l_state_value.config(bg=bg1, fg='white', width=int(label_width * 1 / 3))
 
             # padx, pady = 5,5
             # l_vehicle_no.grid(row=0, column=0, sticky=tk.W + tk.E, padx=padx, pady=pady)
@@ -687,12 +745,20 @@ class ETSP:
             # l_location.grid(row=1, column=1, sticky=tk.W + tk.E, padx=padx, pady=pady)
             # l_state.grid(row=2, column=1, sticky=tk.W + tk.E, padx=padx, pady=pady)
 
-            l_vehicle_no.place(relx=0.07, rely=0.025, relwidth=0.4, relheight=0.2)
-            l_vehicle_type.place(relx=0.07, rely=0.325, relwidth=0.4, relheight=0.2)
-            l_battery_life.place(relx=0.07, rely=0.625, relwidth=0.4, relheight=0.2)
-            l_rent.place(relx=0.53, rely=0.025, relwidth=0.4, relheight=0.2)
-            l_location.place(relx=0.53, rely=0.325, relwidth=0.4, relheight=0.2)
-            l_state.place(relx=0.53, rely=0.625, relwidth=0.4, relheight=0.2)
+            l_vehicle_no.place(relx=0.07, rely=0.025, relwidth=0.23, relheight=0.2)
+            l_vehicle_type.place(relx=0.07, rely=0.325, relwidth=0.23, relheight=0.2)
+            l_battery_life.place(relx=0.07, rely=0.625, relwidth=0.23, relheight=0.2)
+            l_rent.place(relx=0.53, rely=0.025, relwidth=0.23, relheight=0.2)
+            l_location.place(relx=0.53, rely=0.325, relwidth=0.23, relheight=0.2)
+            l_state.place(relx=0.53, rely=0.625, relwidth=0.23, relheight=0.2)
+
+            # l_vehicle_no_value_num.place(relx=0.32, rely=0.025, relwidth=0.15, relheight=0.2)
+            l_vehicle_no_value.place(relx=0.32, rely=0.025, relwidth=0.15, relheight=0.2)
+            l_vehicle_type_value.place(relx=0.32, rely=0.325, relwidth=0.15, relheight=0.2)
+            l_battery_life_value.place(relx=0.32, rely=0.625, relwidth=0.15, relheight=0.2)
+            l_rent_value.place(relx=0.77, rely=0.025, relwidth=0.15, relheight=0.2)
+            l_location_value.place(relx=0.77, rely=0.325, relwidth=0.15, relheight=0.2)
+            l_state_value.place(relx=0.77, rely=0.625, relwidth=0.15, relheight=0.2)
 
             # frame_info.columnconfigure(0, weight=1)
             # frame_info.columnconfigure(1, weight=1)
@@ -707,14 +773,90 @@ class ETSP:
             b_booking.place(relx=0.2, rely=0.4, relwidth=0.6, relheight=0.3)
 
         elif flag == 1:  # 管理员按钮
-            b_booking = bs.Button(frame_book, text="Charge", bootstyle='info')
+            b_booking = bs.Button(frame_book, text="Charge", bootstyle='info', command=lambda: self.charge(vehicle_no, info))
             b_booking.place(relx=0.025, rely=0.25, relwidth=0.3, relheight=0.4)
-            b_booking = bs.Button(frame_book, text="Repair", bootstyle='info')
+            b_booking = bs.Button(frame_book, text="Repair", bootstyle='info', command=lambda: self.repair(vehicle_no, info))
             b_booking.place(relx=0.35, rely=0.25, relwidth=0.3, relheight=0.4)
-            b_booking = bs.Button(frame_book, text="Move", bootstyle='info')
+            b_booking = bs.Button(frame_book, text="Move", bootstyle='info', command=lambda: self.move(vehicle_no, info))
             b_booking.place(relx=0.675, rely=0.25, relwidth=0.3, relheight=0.4)
 
         return single_frame
+
+    def charge(self, vehicle_no, info):
+        charge_info = BEF.opt_update_car('charge', vehicle_no)
+        if charge_info == 'ChargeSuccess':
+            tk.messagebox.showinfo('info', 'Charge Success')
+            self.data(info[0], info[1], info[2], info[3], info[4])
+        elif charge_info == 'CarFalse':
+            tk.messagebox.showerror('Error', 'No Such Car')
+        elif charge_info == 'RepairFalse':
+            tk.messagebox.showerror('Error', 'Need to Repair First')
+        elif charge_info == "RentFalse":
+            tk.messagebox.showerror('Error', 'Car In Rent')
+        else:
+            tk.messagebox.showerror('Error', 'Charge Failed')
+
+    def repair(self, vehicle_no, info):
+        repair_info = BEF.opt_update_car('repair', vehicle_no)
+        print(repair_info)
+        if repair_info == 'RepairSuccess':
+            tk.messagebox.showinfo('info', 'Charge Success')
+            self.data(info[0], info[1], info[2], info[3], info[4])
+        elif repair_info == 'RepairFailed':
+            tk.messagebox.showerror('Error', 'Repair Failed')
+        elif repair_info == 'RentFalse':
+            tk.messagebox.showerror('Error', 'Car In Rent')
+        elif repair_info == 'NoRepairFalse':
+            tk.messagebox.showerror('Error', 'No Need To Repair')
+        elif repair_info == 'CarFalse':
+            tk.messagebox.showerror('Error', 'No Such Car')
+        else:
+            tk.messagebox.showerror("Error', 'Repair Failed")
+
+    def move(self, vehicle_no, info):
+
+        new_window = tk.Toplevel(self.root)
+        new_window.transient(self.root)
+
+        # 设置新窗口的尺寸
+        window_width = 400
+        window_height = 40
+
+        screen_width = new_window.winfo_screenwidth()
+        screen_height = new_window.winfo_screenheight()
+
+        # 计算居中位置
+        x = (screen_width - window_width) // 2
+        y = (screen_height - window_height) // 2
+
+        # 设置窗口位置和大小
+        new_window.geometry(f'{window_width}x{window_height}+{x}+{y}')
+
+        # 在新窗口中添加一个 Label
+        label = tk.Label(new_window, text="new location: ")
+        label.place(relx=0, rely=0.2, relwidth=0.3, relheight=0.6)
+
+        # 在新窗口中添加一个 Entry
+        combobox = bs.Combobox(new_window, values=LOCATIONS, bootstyle="info")
+        combobox.place(relx=0.3, rely=0.2, relwidth=0.45, relheight=0.6)
+
+        # 在新窗口中添加一个 Button
+        button = tk.Button(new_window, text="confirm", command=lambda: self.location_confirm(vehicle_no, info, combobox.get()))
+        button.place(relx=0.8, rely=0.2, relwidth=0.15, relheight=0.6)
+
+    def location_confirm(self, vehicle_no, info, choice_location):
+        move_result = BEF.opt_update_car('move', vehicle_no, choice_location)
+        if move_result == 'MoveSuccess':
+            tk.messagebox.showinfo('info', 'Move Success')
+            self.data(info[0], info[1], info[2], info[3], info[4])
+        elif move_result == 'RentFalse':
+            tk.messagebox.showerror('Error', 'Car In Rent')
+        elif move_result == 'CarFalse':
+            tk.messagebox.showerror('Error', 'No Such Car')
+        else:
+            tk.messagebox.showerror('Error', 'Move Failed')
+
+
 
     def user_vehicle_page(self):
         pass
