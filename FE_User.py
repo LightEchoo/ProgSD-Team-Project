@@ -18,12 +18,6 @@ import CommonFunction
 import SqlFunction
 import csv
 
-#Todo: 订单展示
-#Todo: 支付订单
-#Todo: 更新repair
-#Todo: 个人订单展示
-#Todo: 租车订单跳转
-
 class LoginPage(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
@@ -209,10 +203,13 @@ class AccountPage(tk.Frame):
         logout_button.grid(row=0, column=5, padx=10, pady=10)
 
         # 创建用户信息卡片
-        user_info = {"username": "username", "account_balance": "$1000"}
+        #TODO:这里会在最开始的时候进行初始化，但在最开始的时候并不会获取到全局的数据
+        '''user_info = BE_Function.get_login_user()'''
+        user_info =  {"username": "username", "account_balance": "$1000"}
         self.create_user_info_card(user_info)
 
         # 创建历史订单记录卡片
+        '''history_data = SqlFunction.get_one_user_orders(user_info[0])'''
         history_data = [
             {"order_number": "001", "order_status": "completed", "vehicle_number": "12345", "payment_amount": "$10",
              "usage_time": "1小时"},
@@ -231,18 +228,16 @@ class AccountPage(tk.Frame):
         # 添加退出账户逻辑，返回到登录页面
         self.controller.show_frame(LoginPage)
 
-
-
     def create_user_info_card(self, user_info):
         # 创建用户信息卡片的 Frame
         user_info_frame = tk.Frame(self, bd=2, relief="solid")
         user_info_frame.grid(row=2, column=2, padx=10, pady=10, columnspan=3, sticky="n")
 
         # 显示用户信息
-        username_label = tk.Label(user_info_frame, text=f"username: {user_info['username']}", font=("Arial", 12))
+        username_label = tk.Label(user_info_frame, text=f"Username: {'username'}", font=("Arial", 12))
         username_label.grid(row=0, column=0, padx=10, pady=5, columnspan=3)
 
-        balance_label = tk.Label(user_info_frame, text=f"balance: {user_info['account_balance']}")
+        balance_label = tk.Label(user_info_frame, text=f"Deposite state: {'account_balance'}")
         balance_label.grid(row=1, column=0, padx=10, pady=5, columnspan=3)
 
     def create_history_card(self, order_info):
@@ -258,25 +253,20 @@ class AccountPage(tk.Frame):
         label.grid(row=0, column=0, padx=10, pady=10)
 
         # 显示历史订单信息
-        order_label = tk.Label(history_frame, text=f"order_number: {order_info['order_number']}", font=("Arial", 12))
+        order_label = tk.Label(history_frame, text=f"start: {order_info['order_number']}", font=("Arial", 12))
         order_label.grid(row=0, column=0, padx=10, pady=5)
 
-        status_label = tk.Label(history_frame, text=f"order_status: {order_info['order_status']}")
+        status_label = tk.Label(history_frame, text=f"end: {order_info['order_status']}")
         status_label.grid(row=1, column=0, padx=10, pady=5)
 
-        vehicle_label = tk.Label(history_frame, text=f"vehicle_number: {order_info['vehicle_number']}")
+        vehicle_label = tk.Label(history_frame, text=f"car: {order_info['vehicle_number']}")
         vehicle_label.grid(row=2, column=0, padx=10, pady=5)
 
-        amount_label = tk.Label(history_frame, text=f"payment_amount: {order_info['payment_amount']}")
+        amount_label = tk.Label(history_frame, text=f"price: {order_info['payment_amount']}")
         amount_label.grid(row=3, column=0, padx=10, pady=5)
 
-        time_label = tk.Label(history_frame, text=f"usage_time: {order_info['usage_time']}")
+        time_label = tk.Label(history_frame, text=f"state: {order_info['usage_time']}")
         time_label.grid(row=4, column=0, padx=10, pady=5)
-
-
-
- 
-
 
 class AppManager(tk.Tk):
     def __init__(self, *args, **kwargs):
@@ -324,11 +314,11 @@ class AppManager(tk.Tk):
         frame.tkraise()
 
 
-
 class MainPage(tk.Frame):
     def __init__(self, parent, controller):
         # 初始化主页面
         tk.Frame.__init__(self, parent)
+        self.controller = controller
 
         # Frame 1: 个人账户
         frame1 = tk.Frame(self)
@@ -369,7 +359,7 @@ class MainPage(tk.Frame):
 
         # 创建预约车辆按钮
         reservation_button = ttk.Button(center_frame, text="reserve",
-                                        command=lambda: controller.show_frame(ReservationPage))
+                                        command=lambda: self.get_selected_option())
         reservation_button.pack(pady=10)
 
         # 创建按钮，点击按钮进入地图页面
@@ -380,6 +370,13 @@ class MainPage(tk.Frame):
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(0, weight=1)
 
+    def get_selected_option(self):
+        value = self.selected_option.get()
+        file = open("user.csv", "a")
+        global_str = "\n" + str(value)
+        file.write(global_str)
+        file.close()
+        self.controller.show_frame(ReservationPage)
 
 class ReservationPage(tk.Frame):
     def __init__(self, parent, controller):
@@ -478,35 +475,35 @@ class ReservationPage(tk.Frame):
 
     def show_reservation_message(self, vehicle_info):
         # 显示预约消息，检查押金并弹出相应消息
-        file = open("user.csv", "r")
-        login_user = list(file)
-        user_info = SqlFunction.get_one_user_info(login_user[0])
-        file.close()
-        car_location = "Main Building"
+        user_info = BE_Function.get_login_user()
         print(user_info)
 
-        rent_result = BE_Function.rent_start(vehicle_info[0], user_info[0], car_location)
-        #TODO
-        print(rent_result)
+        rent_result = BE_Function.rent_start(vehicle_info[0], user_info[0], vehicle_info[-1])
+        #print(rent_result)
 
-        if rent_result == "DepositError":
+        '''if rent_result == "DepositError":
             # 若未付押金，则需要用户先交押金
             messagebox.showwarning("Insufficient deposit",
                                    "The account deposit is insufficient, please recharge in time")
-            # TODO： 跳转支付页面 self.controller.show_frame(PaidPage, vehicle_info)
-        elif rent_result == "ExistError":
+            # TODO： 跳转支付页面 self.controller.show_frame(PaidPage, vehicle_info)'''
+        if rent_result == "OngoingError":
             # 若存在未完成的订单，则需要用户先结束订单
             messagebox.showwarning("Order not completed",
                                    "There is an uncompleted order, please complete the order first")
-            # TODO： 跳转支付页面 self.controller.show_frame(PaidPage, vehicle_info)
+            ongoing_order = SqlFunction.get_user_specific_order(user_info[0], "ongoing")
+            vehicle_info = SqlFunction.get_one_car_info(ongoing_order[1])
+            self.controller.show_frame(EndOrderPage, vehicle_info)
+        elif rent_result == "PayError":
+            # 若存在未支付的订单，则需要用户先支付订单
+            messagebox.showwarning("Order not completed",
+                                   "There is an uncompleted order, please complete the order first")
+            self.controller.show_frame(PaymentPage)
         elif rent_result == "UnavaliableError":
             # 若车辆不可用，则换一辆车
             messagebox.showwarning("车辆不可用", "当前车辆不可用，请重新选择。")
-            # TODO： 跳转支付页面 self.controller.show_frame(PaidPage, vehicle_info)
         elif rent_result == "RentError":
             # 若租用失败，则重新租用
             messagebox.showwarning("Rental failed", "Rental failed, please try again.")
-            # TODO： 跳转支付页面 self.controller.show_frame(PaidPage, vehicle_info)
         else:
             # 租用成功，返回值为 order_id
             messagebox.showinfo("Rental successful", "Your vehicle is unlocked！")
@@ -541,8 +538,13 @@ class ReservationPage(tk.Frame):
         # 数据格式：(1, 'ebike', 'This is a ebike', 5, 100, 20, 'avaliable', '', 'Learning Hub')
         self.vehicle_info_list = SqlFunction.get_all_cars()
 
+        #Todo:此处存在一个问题：所有界面的初始化都是在用户登录之前，因此无法获取到用户选择的地址，除非在租车界面额外设置一个按钮来触发筛选
         self.vehicle_info_list = [vehicle for vehicle in self.vehicle_info_list if
                                   vehicle[6] == "available"]
+
+        print(BE_Function.get_location())
+        self.vehicle_info_list = [vehicle for vehicle in self.vehicle_info_list if
+                                  vehicle[-1] == BE_Function.get_location()]
 
         # 根据选定的车辆类型筛选车辆信息
         if self.selected_vehicle_type:
@@ -654,7 +656,7 @@ class EndOrderPage(tk.Frame):
         problem_radio1 = ttk.Radiobutton(report_frame, text="seat post", variable=selected_problem_var, value=1)
         problem_radio2 = ttk.Radiobutton(report_frame, text="frames", variable=selected_problem_var, value=2)
         problem_radio3 = ttk.Radiobutton(report_frame, text="tire", variable=selected_problem_var, value=3)
-        problem_radio4 = ttk.Radiobutton(report_frame, text="battery", variable=selected_problem_var, value=3)
+        problem_radio4 = ttk.Radiobutton(report_frame, text="battery", variable=selected_problem_var, value=4)
 
         # 放置单选按钮
         problem_radio1.pack()
@@ -669,35 +671,45 @@ class EndOrderPage(tk.Frame):
         confirm_button.pack()
 
 
-def confirm_report(self, problem_var1, problem_var2, problem_var3, problem_var4, report_frame):
-    # 处理报错确认按钮的点击事件
-    selected_problems = []
+    def confirm_report(self, problem_var, report_frame):
+        # 处理报错确认按钮的点击事件
+        login_user = BE_Function.get_login_user()
+        order = SqlFunction.get_user_specific_order(login_user[0], "ongoing")
+        value = problem_var.get()
 
-    if problem_var1.get():
-        selected_problems.append("seat post")
-    if problem_var2.get():
-        selected_problems.append("frames")
-    if problem_var3.get():
-        selected_problems.append("tire")
-    if problem_var4.get():
-        selected_problems.append("battery")
+        selected_problems = []
 
-    if selected_problems:
-        # 显示选中的问题类型
-        report_message = "Question type you selected：" + ", ".join(selected_problems)
-        # 跳转到支付页面
-        self.controller.show_frame(PaymentPage)
-    else:
-        report_message = "You have not selected any question type"
+        if value == 1:
+            selected_problems.append("seat post")
+        elif value == 2:
+            selected_problems.append("frames")
+        elif value == 3:
+            selected_problems.append("tire")
+        elif value == 4:
+            selected_problems.append("battery")
 
-    # 弹出消息框显示选中的问题类型
-    messagebox.showinfo("Error message", report_message)  # 使用messagebox模块显示消息框
+        if selected_problems:
+            report_result = BE_Function.repair(order[0], selected_problems[0])
+            if report_result == "Successful":
+                # 显示选中的问题类型
+                report_message = "Question type you selected：" + ", ".join(selected_problems)
+                # 跳转到支付页面
+                self.controller.show_frame(PaymentPage)
+            elif report_result == "OrderError":
+                report_message = "Cant find this Order"
+            else:
+                report_message = "Failed to report, try again! "
+        else:
+            report_message = "You have not selected any question type"
 
-    # 清空问题选择并隐藏报错部分
-    problem_var1.set(False)
-    problem_var2.set(False)
-    problem_var3.set(False)
-    report_frame.pack_forget()  # 隐藏报错部分
+        # 弹出消息框显示选中的问题类型
+        messagebox.showinfo("Error message", report_message)  # 使用messagebox模块显示消息框
+
+        # 清空问题选择并隐藏报错部分
+        '''problem_var1.set(False)
+        problem_var2.set(False)
+        problem_var3.set(False)'''
+        report_frame.pack_forget()  # 隐藏报错部分
 
 
     
@@ -838,7 +850,7 @@ class EndPayPage(tk.Frame):
         self.vehicle_image_label.grid(row=11, column=1, padx=10, pady=5, rowspan=5, columnspan=2)
 
         # 确认支付按钮
-        confirm_button = ttk.Button(self, text="confirm_payment", command=self.confirm_payment)
+        confirm_button = ttk.Button(self, text="finish order", command=self.confirm_payment)
         confirm_button.grid(row=10, column=1, padx=10, pady=10)
 
     def set_payment_info(self, vehicle_info, start_time, end_time, total_amount, duration):

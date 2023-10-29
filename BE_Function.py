@@ -109,15 +109,18 @@ def rent_start(car_id, user_name, car_start_location):
     #print(user_info)
     #print(car_info)
 
-    if user_info[3] != 0:
+    '''if user_info[3] != 0:
         connect.close()
-        return "DepositError"
+        return "DepositError"'''
 
     existing_orders = SqlFunction.get_one_user_orders(user_name)
     for order in existing_orders:
-        if order[6] != "end":
+        if order[6] == "ongoing":
             connect.close()
-            return "ExistError"
+            return "OngoingError"
+        elif order[6] == "due":
+            connect.close()
+            return "PayError"
 
     '''if str(car_info[6]) != 'avaliable':
         connect.close()
@@ -198,18 +201,28 @@ def repair(order_id, repair_detail):
     try:
         order_info = SqlFunction.get_one_order_info(order_id)
 
-        if order_info:
-            car_id = order_info[1]
-            SqlFunction.end_one_order(order_id, order_end_time, car_end_location)
-            SqlFunction.update_car_state(car_id, "repair")
-            SqlFunction.update_car_repair_detail(car_id, repair_detail)
-            return True
-        else:
-            return False
+        if order_info is None:
+            return "OrderError"
+
+        car_id = order_info[1]
+        order_start_time = order_info[3]
+
+        car_info = SqlFunction.get_one_car_info(car_id)
+        car_price = car_info[3]
+
+        start_time = datetime.strptime(order_start_time, "%Y-%m-%d %H:%M:%S")
+        end_time = datetime.strptime(order_end_time, "%Y-%m-%d %H:%M:%S")
+        hour = (end_time - start_time).seconds // 3600
+        order_price = int(hour * car_price)
+
+        SqlFunction.end_one_order(order_id, order_price, order_end_time, car_end_location)
+        SqlFunction.update_car_state(car_id, "repair")
+        SqlFunction.update_car_repair_detail(car_id, repair_detail)
+        return "Successful"
 
     except sqlite3.Error as e:
         print("Error Repair:", str(e))
-        return False
+        return "ReportError"
 
 def pay_order(order_id):
     '''
@@ -286,7 +299,13 @@ def opt_update_car(update_action, car_id, car_location = "Main Building"):
 
 def get_login_user():
     file = open("user.csv", "r")
-    login_user = list(file)
-    user_info = SqlFunction.get_one_user_info(login_user[0])
+    login_user = [line.strip() for line in file.readlines()]
     file.close()
+    user_info = SqlFunction.get_one_user_info(login_user[0])
     return user_info
+
+def get_location():
+    file = open("user.csv", "r")
+    global_info = list(file)
+    file.close()
+    return global_info[-1]
