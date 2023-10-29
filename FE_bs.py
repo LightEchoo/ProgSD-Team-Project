@@ -7,6 +7,7 @@ from tkinter import ttk
 import pandas as pd
 import ttkbootstrap as bs
 from PIL import Image, ImageTk
+from PIL.ImageTk import PhotoImage
 from matplotlib import pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
@@ -124,16 +125,38 @@ class ETSP:
         # l_icon = tk.Label(f_top, image=icon, borderwidth=2, relief="solid")
         l_icon = bs.Label(f_top, image=icon, bootstyle='inverse-dark')
         l_icon.image = icon  # 保持对图像的引用，以防止被垃圾回收
+        l_icon.pack(side='left')
+
+        # TODO: 返回按钮，图片显示
+        # def on_press():
+        #     b_back_icon.config(image=pressed_image)  # 按钮被按下时的图片
+        #     b_back_icon.image = pressed_image
+        #
+        # def on_release(event):
+        #     b_back_icon.config(image=normal_image)  # 按钮释放后恢复原始图片
+        #     b_back_icon.image = normal_image
+        #
+        # # 加载两种状态的图片
+        # normal_image = self.resize_image('back-button-white.png', 50, 50)  # 平常状态的图片
+        # pressed_image = self.resize_image('back-button-reverse-white.png', 50, 50)  # 按下状态的图片
+        #
+        # b_back_icon = bs.Button(f_top, text='Return', image=normal_image, bootstyle='dark')
+        # b_back_icon.image = pressed_image  # 保持对图像的引用，以防止被垃圾回收
+        # b_back_icon.pack(side='left')
+        #
+        # # 绑定鼠标按钮释放事件
+        # b_back_icon.bind('<ButtonRelease-1>', on_release)
+
+        b_back = bs.Button(f_top, text='Back to login', bootstyle='dark-outline', command=self.show_first_page)
+        b_back.place(relx=0.1, rely=0.3, relwidth=0.08, relheight=0.4)
 
         # l_name = tk.Label(f_top, text=current_page_name)
         l_name = bs.Label(f_top, text=current_page_name, bootstyle='inverse-dark',
                           font=("Arial", 30), anchor='center', justify=tk.CENTER)
-
-        l_icon.pack(side='left')
         l_name.place(relx=0.2, rely=0.2, relwidth=0.6, relheight=0.6)
 
         time_label = bs.Label(f_top, font=('Arial', 20), bootstyle='inverse-dark')
-        time_label.place(relx=0.8, rely=0.2, relwidth=0.1, relheight=0.6)
+        time_label.place(relx=0.85, rely=0.2, relwidth=0.1, relheight=0.6)
         self.update_time(f_top, time_label)
 
         return f_top
@@ -225,27 +248,27 @@ class ETSP:
         # print(username, psw)
 
         l_username = bs.Label(login_lab_frame, text='Account: ', bootstyle='inverse-info',
-                              font=("Arial", 16))
-        l_username.place(relx=0.1, rely=0.1, relwidth=0.2, relheight=0.2)
+                              font=("Arial", 16), anchor='center')
+        l_username.place(relx=0.15, rely=0.15, relwidth=0.2, relheight=0.2)
 
         e_username = bs.Entry(login_lab_frame, bootstyle='info')
-        e_username.place(relx=0.4, rely=0.1, relwidth=0.4, relheight=0.2)
+        e_username.place(relx=0.45, rely=0.15, relwidth=0.4, relheight=0.2)
         e_username.insert(0, default_username)
 
         l_psw = bs.Label(login_lab_frame, text='Password: ', bootstyle='inverse-info',
-                         font=("Arial", 16))
-        l_psw.place(relx=0.1, rely=0.5, relwidth=0.2, relheight=0.2)
+                         font=("Arial", 16), anchor='center')
+        l_psw.place(relx=0.15, rely=0.5, relwidth=0.2, relheight=0.2)
 
         e_psw = bs.Entry(login_lab_frame, bootstyle='info', show="*")
-        e_psw.place(relx=0.4, rely=0.5, relwidth=0.4, relheight=0.2)
+        e_psw.place(relx=0.45, rely=0.5, relwidth=0.4, relheight=0.2)
         e_psw.insert(0, default_password)
 
         b_login = bs.Button(login_lab_frame, text='Login', bootstyle='info-outline',
                             command=lambda: self.login_test(e_username.get(), e_psw.get()))
-        b_login.place(relx=0.2, rely=0.8, relwidth=0.2, relheight=0.2)
+        b_login.place(relx=0.2, rely=0.8, relwidth=0.2, relheight=0.15)
         b_register = bs.Button(login_lab_frame, text='Register', bootstyle='info-outline',
                                command=lambda: self.register_page(f_middle))
-        b_register.place(relx=0.6, rely=0.8, relwidth=0.2, relheight=0.2)
+        b_register.place(relx=0.6, rely=0.8, relwidth=0.2, relheight=0.15)
 
         return login_lab_frame
 
@@ -262,25 +285,25 @@ class ETSP:
         register_lab_frame.place(relx=1 / 3, rely=1 / 3, relwidth=1 / 3, relheight=1 / 3)
 
         l_username = bs.Label(register_lab_frame, text='Account: ', bootstyle='inverse-info',
-                              font=("Arial", 16))
-        l_username.place(relx=0.1, rely=0.1, relwidth=0.2, relheight=0.2)
+                              font=("Arial", 16), anchor='center')
+        l_username.place(relx=0.15, rely=0.15, relwidth=0.2, relheight=0.2)
 
         e_username = bs.Entry(register_lab_frame, bootstyle='info')
-        e_username.place(relx=0.4, rely=0.1, relwidth=0.4, relheight=0.2)
+        e_username.place(relx=0.45, rely=0.15, relwidth=0.4, relheight=0.2)
 
         l_psw = bs.Label(register_lab_frame, text='Password: ', bootstyle='inverse-info',
-                         font=("Arial", 16))
-        l_psw.place(relx=0.1, rely=0.5, relwidth=0.2, relheight=0.2)
+                         font=("Arial", 16), anchor='center')
+        l_psw.place(relx=0.15, rely=0.5, relwidth=0.2, relheight=0.2)
 
         e_psw = bs.Entry(register_lab_frame, bootstyle='info', show="*")
-        e_psw.place(relx=0.4, rely=0.5, relwidth=0.4, relheight=0.2)
+        e_psw.place(relx=0.45, rely=0.5, relwidth=0.4, relheight=0.15)
 
         b_login = bs.Button(register_lab_frame, text='Return', bootstyle='info-outline',
                             command=lambda: self.login_page(f_middle))
         b_login.place(relx=0.2, rely=0.8, relwidth=0.2, relheight=0.2)
         b_register = bs.Button(register_lab_frame, text='Register', bootstyle='info-outline',
                                command=lambda: self.register_test(f_middle, e_username.get(), e_psw.get()))
-        b_register.place(relx=0.6, rely=0.8, relwidth=0.2, relheight=0.2)
+        b_register.place(relx=0.6, rely=0.8, relwidth=0.2, relheight=0.15)
 
     def login_test(self, username, psw):
         """
@@ -343,7 +366,7 @@ class ETSP:
         """
         self.middle_page_clear()
 
-        choose_place_lab_frame = bs.Frame(f_middle, bootstyle='warning')
+        choose_place_lab_frame = bs.Frame(f_middle, bootstyle='success')
         self.current_middle_page = choose_place_lab_frame  # 将传入的page设置为当前页面
         choose_place_lab_frame.place(relx=0.1, rely=1 / 6, relwidth=0.8, relheight=2 / 3)
 
@@ -357,7 +380,7 @@ class ETSP:
 
         c_pickup = bs.Combobox(choose_place_lab_frame, textvariable=v_pickup, values=LOCATIONS, bootstyle="info")
         c_pickup.place(relx=0.2, rely=4 / 16, relwidth=0.6, relheight=1 / 8)
-        c_return = bs.Combobox(choose_place_lab_frame, textvariable=v_return, values=LOCATIONS, bootstyle='warning')
+        c_return = bs.Combobox(choose_place_lab_frame, textvariable=v_return, values=LOCATIONS, bootstyle='success')
         c_return.place(relx=0.2, rely=10 / 16, relwidth=0.6, relheight=1 / 8)
 
         b_map = bs.Button(choose_place_lab_frame, text='Map', bootstyle='dark-outline', command=self.view_map)
@@ -441,7 +464,7 @@ class ETSP:
         c_sort_by.place(relx=0.75, rely=0.25, relwidth=0.1, relheight=0.5)
 
         # 选车界面 frame
-        f_select_vehicle = bs.Frame(frame, bootstyle='warning')
+        f_select_vehicle = bs.Frame(frame, bootstyle='success')
         f_select_vehicle.place(relx=0.02, rely=0.12, relwidth=0.96, relheight=0.87)
 
         # 创建一个Canvas小部件，它用于包含可滚动的内容。
@@ -649,6 +672,7 @@ class ETSP:
         l_vehicle_no_value = tk.Label(frame_info, textvariable=v_vehicle_no, padx=padx_label, pady=pady_label)
         # l_vehicle_no_value.configure(bg="SystemTransparent")
 
+        # TODO: 换成Floodgauge显示
         # v_vehicle_no = tk.IntVar()
         # v_vehicle_no.set(int(vehicle_no))
         # v_vehicle_no = str(vehicle_no)
@@ -856,7 +880,9 @@ class ETSP:
         else:
             tk.messagebox.showerror('Error', 'Move Failed')
 
-
+    def print_PDF(self):
+        pass
+        # TODO: print to a PDF file
 
     def user_vehicle_page(self):
         pass
@@ -1016,9 +1042,9 @@ class ETSP:
         c_sort = bs.Combobox(f_top, values=pd_vehicles.columns.tolist(), bootstyle='info')
 
         b_ascending = bs.Button(f_top, text='Ascending', bootstyle='info',
-                                command=lambda: self.vehicle_bottom_Treeview(f_bottom, c_sort.get(), True))
+                                command=lambda: self.vehicle_bottom_treeview(f_bottom, c_sort.get(), True))
         b_deascending = bs.Button(f_top, text='Deascending', bootstyle='info',
-                                  command=lambda: self.vehicle_bottom_Treeview(f_bottom, c_sort.get(), False))
+                                  command=lambda: self.vehicle_bottom_treeview(f_bottom, c_sort.get(), False))
 
         l_sort.place(relx=0.4, rely=0.3, relwidth=0.1, relheight=0.4)
         c_sort.place(relx=0.55, rely=0.3, relwidth=0.1, relheight=0.4)
@@ -1031,9 +1057,9 @@ class ETSP:
         f_bottom = bs.Frame(f_main)  # 下层显示区
         f_bottom.place(relx=0, rely=0.1, relwidth=1, relheight=0.9)
 
-        self.vehicle_bottom_Treeview(f_bottom, 'CarID')
+        self.vehicle_bottom_treeview(f_bottom, 'CarID')
 
-    def vehicle_bottom_Treeview(self, frame, sort_column, sort_type=True):
+    def vehicle_bottom_treeview(self, frame, sort_column, sort_type=True):
         """
         Treeview排序显示
         :param f_bottom: 父框架
@@ -1041,7 +1067,6 @@ class ETSP:
         :param sort_type: 排序方式 True升序 False降序
         :return:
         """
-
         f_main = bs.Frame(frame)
         f_main.place(relx=0, rely=0, relwidth=1, relheight=1)
 
