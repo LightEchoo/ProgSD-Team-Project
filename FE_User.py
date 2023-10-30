@@ -17,6 +17,54 @@ import BE_Function
 import CommonFunction
 import SqlFunction
 import csv
+import random
+
+
+class AppManager(tk.Tk):
+    def __init__(self, *args, **kwargs):
+        tk.Tk.__init__(self, *args, **kwargs)
+
+        # 设置应用程序主窗口的标题
+        self.title("shared e-bikes and e-scooters")
+
+        # 设置窗口大小为 iPhone 12 的大小
+        self.geometry("400x700")
+
+        # 居中窗口
+        screen_width = self.winfo_screenwidth()
+        screen_height = self.winfo_screenheight()
+        x = (screen_width - 400) // 2
+        y = (screen_height - 700) // 2
+        self.geometry(f"+{x}+{y}")
+
+        # 使用 ttkbootstrap 主题
+        self.style = Style(theme="morph")
+
+        # 创建一个字典用于存储不同页面的框架
+        self.frames = {}
+
+        # 全局用户登录状态
+        self.user_logged_in = False
+
+        # 添加页面类到字典中
+        for F in (
+        LoginPage, MainPage, AccountPage, ReservationPage, EndOrderPage, PaymentPage, RegisterPage, EndPayPage):
+            frame = F(self, self)
+            self.frames[F] = frame
+            frame.grid(row=0, column=0, sticky="nsew")
+
+        # 显示登录页面
+        self.show_frame(LoginPage)
+
+    def show_frame(self, page_name, vehicle_info=None):
+        '''Show a frame for the given page name'''
+        frame = self.frames[page_name]
+
+        if vehicle_info:
+            frame.set_vehicle_info(vehicle_info)
+
+        frame.tkraise()
+
 
 class LoginPage(tk.Frame):
     def __init__(self, parent, controller):
@@ -29,41 +77,37 @@ class LoginPage(tk.Frame):
             "user3": "password3"
         }'''
 
-        # 中央容器，用于保持内容居中
-        center_frame = tk.Frame(self)
-        center_frame.place(relx=0.4, rely=0.4, anchor=tk.CENTER)
-
-        # 错误消息标签
-        self.error_label =tk.Label(center_frame, text="", fg="red")
-        self.error_label.pack()
-
         # 应用图标和标题
-        lbl_title = tk.Label(center_frame, text="Login", font=("Arial", 24))
-        lbl_title.pack(pady=20)
+        lbl_title = ttk.Label(self, text="Log in", font=("Didot", 30))
+        lbl_title.pack(pady=10)
 
-        # 用户名输入框
-        self.entry_username = ttk.Entry(center_frame)
+        # 中央容器，用于保持内容居中
+        center_canvas = tk.Canvas(self, width=280, height=320)  # 调整尺寸以适应界面
+        center_canvas.place(relx=0.48, rely=0.44, anchor=tk.CENTER)
+
+        # 加载并添加背景图片
+        self.background_image = Image.open("images/back11.png")
+        self.bg_image = ImageTk.PhotoImage(self.background_image)
+        center_canvas.create_image(150, 200, image=self.bg_image)  # 调整位置以居中显示
+
+        # 将其他控件放在 Canvas 上
+        self.entry_username = ttk.Entry(center_canvas)
         self.entry_username.insert(0, "Enter mobile number")
         self.entry_username.bind("<FocusIn>", lambda event: self.entry_username.delete(0, tk.END))
-        self.entry_username.pack(pady=20)
+        center_canvas.create_window(150, 100, window=self.entry_username)
 
-        # 密码输入框
-        self.entry_password = ttk.Entry(center_frame)  # 注意：这里改了变量名，避免和用户名输入框重复
+        self.entry_password = ttk.Entry(center_canvas)
         self.entry_password.insert(0, "enter password")
         self.entry_password.bind("<FocusIn>", lambda event: self.entry_password.delete(0, tk.END))
-        self.entry_password.pack(pady=20)
+        center_canvas.create_window(150, 150, window=self.entry_password)
 
-        # 底部图标
-        bottom_frame = ttk.Frame(center_frame)
-        bottom_frame.pack(pady=20)
+        # 底部按钮
+        btn_icon1 = ttk.Button(center_canvas, text="register", command=lambda: controller.show_frame(RegisterPage))
+        center_canvas.create_window(100, 300, window=btn_icon1)
 
-        btn_icon1 = ttk.Button(bottom_frame, text="register", command=lambda: controller.show_frame(RegisterPage))
-        btn_icon1.grid(row=0, column=0, padx=10)
+        btn_login = ttk.Button(center_canvas, text="Log in", command=partial(self.user_login, controller))
+        center_canvas.create_window(200, 300, window=btn_login)
 
-        # 修改登录按钮，使用 functools.partial 包装 login 方法并传递 controller 参数
-        from functools import partial
-        btn_login = ttk.Button(bottom_frame, text="Log in", command=partial(self.user_login, controller))
-        btn_login.grid(row=0, column=1, padx=10)
 
     def user_login(self, controller):
         username = self.entry_username.get()
@@ -71,7 +115,7 @@ class LoginPage(tk.Frame):
 
         # 检查用户名和密码是否为空
         if not username or not password:
-            self.error_label.config(text="Empty entry", fg="red")
+            messagebox.showerror("Error", "Empty entry")
         else:
             login_result = BE_Function.login(username, password)
 
@@ -81,27 +125,11 @@ class LoginPage(tk.Frame):
                 file.close()
                 controller.show_frame(MainPage)
             elif login_result == 1 or login_result == 2:
-                self.error_label.config(text="No a customer", fg="red")
+                messagebox.showerror("Error", "No a customer")
             elif login_result == "NoUserFalse":
-                self.error_label.config(text="No such user", fg="red")
+                messagebox.showerror("Error", "No such user")
             elif login_result == "LoginFalse":
-                self.error_label.config(text="Invaild uername / password", fg="red")
-
-        '''
-        # 在这里添加检查用户名和密码是否与数据库匹配的逻辑
-        if not self.check_credentials(username, password):
-            self.error_label.config(text="用户名或密码不正确", fg="red")
-            return
-
-       # 登录成功的逻辑
-        controller.show_frame(MainPage)
-
-    def check_credentials(self, username, password):
-        # 检查用户名是否存在于虚假的用户数据库中，并验证密码是否匹配
-        if username in self.fake_user_database and self.fake_user_database[username] == password:
-            return True  # 登录成功
-        else:
-            return False  # 登录失败'''
+                messagebox.showerror("Error", "Invaild uername / password")
 
 
 class RegisterPage(tk.Frame):
@@ -115,41 +143,37 @@ class RegisterPage(tk.Frame):
             "user3": "password3"
         }'''
 
-        # 中央容器，用于保持内容居中
-        center_frame = tk.Frame(self)
-        center_frame.place(relx=0.4, rely=0.4, anchor=tk.CENTER)
-
-        # 错误消息标签
-        self.error_label = tk.Label(center_frame, text="", fg="red")
-        self.error_label.pack()
-
         # 应用图标和标题
-        lbl_title = tk.Label(center_frame, text="Register", font=("Arial", 24))
-        lbl_title.pack(pady=20)
+        lbl_title = ttk.Label(self, text="Register", font=("Didot", 30))
+        lbl_title.pack(pady=10)
 
-        # 用户名输入框
-        self.entry_username = ttk.Entry(center_frame)
-        self.entry_username.insert(0, "enter user name")
+        # 中央容器，用于保持内容居中
+        center_canvas = tk.Canvas(self, width=280, height=320)  # 调整尺寸以适应界面
+        center_canvas.place(relx=0.48, rely=0.44, anchor=tk.CENTER)
+
+        # 加载并添加背景图片
+        self.background_image = Image.open("images/back11.png")
+        self.bg_image = ImageTk.PhotoImage(self.background_image)
+        center_canvas.create_image(150, 200, image=self.bg_image)  # 调整位置以居中显示
+
+        # 将其他控件放在 Canvas 上
+        self.entry_username = ttk.Entry(center_canvas)
+        self.entry_username.insert(0, "Enter new mobile number")
         self.entry_username.bind("<FocusIn>", lambda event: self.entry_username.delete(0, tk.END))
-        self.entry_username.pack(pady=20)
+        center_canvas.create_window(150, 100, window=self.entry_username)
 
-        # 密码输入框
-        self.entry_password = ttk.Entry(center_frame)  # 注意：这里改了变量名，避免和用户名输入框重复
+        self.entry_password = ttk.Entry(center_canvas)
         self.entry_password.insert(0, "enter password")
         self.entry_password.bind("<FocusIn>", lambda event: self.entry_password.delete(0, tk.END))
-        self.entry_password.pack(pady=20)
+        center_canvas.create_window(150, 150, window=self.entry_password)
 
-        # 底部图标
-        bottom_frame = ttk.Frame(center_frame)
-        bottom_frame.pack(pady=20)
+        # 底部按钮
 
-        btn_icon1 = ttk.Button(bottom_frame, text="reture", command=lambda: controller.show_frame(LoginPage))
-        btn_icon1.grid(row=0, column=0, padx=10)
+        btn_icon1 = ttk.Button(center_canvas, text="reture", command=lambda: controller.show_frame(LoginPage))
+        center_canvas.create_window(100, 300, window=btn_icon1)
 
-        # 修改登录按钮，使用 functools.partial 包装 login 方法并传递 controller 参数
-        from functools import partial
-        btn_login = ttk.Button(bottom_frame, text="register", command=partial(self.user_register, controller))
-        btn_login.grid(row=0, column=1, padx=10)
+        btn_login = ttk.Button(center_canvas, text="register", command=partial(self.user_register, controller))
+        center_canvas.create_window(200, 300, window=btn_login)
 
     def user_register(self, controller):
         username = self.entry_username.get()
@@ -159,17 +183,17 @@ class RegisterPage(tk.Frame):
 
         # 检查用户名和密码是否为空
         if not username or not password:
-            self.error_label.config(text="Empty entry", fg="red")
+            messagebox.showerror("Error", "Empty entry")
         else:
             register_result = BE_Function.register(username, password)
             # print("register:", register_result)
 
             if register_result == "RegisterSuccessful":
-                self.error_label.config(text="Register Successfully", fg="green")
+                messagebox.showerror("Error","Register Successfully")
             elif register_result == "ExistFalse":
-                self.error_label.config(text="User Exist, Please Login", fg="red")
+                messagebox.showerror("Error", "User Exist, Please Login")
             else:
-                self.error_label.config(text="Error in Register, try again", fg="red")
+                messagebox.showerror("Error",text="Error in Register, try again")
         
 class MapPage(tk.Frame):
     def __init__(self, parent, controller):
@@ -189,6 +213,8 @@ class AccountPage(tk.Frame):
         # 初始化个人账户页面
         tk.Frame.__init__(self, parent)
 
+        self.account_balance = 0  # 初始账户余额
+
         self.controller = controller  # 保存controller作为实例属性
 
         # 初始化当前行为历史记录的起始行
@@ -196,17 +222,25 @@ class AccountPage(tk.Frame):
 
         # 创建个人账户页面标签
         label = tk.Label(self, text="AccountPage")
-        label.grid(row=0, column=0, padx=10, pady=10, sticky="n")
+        label.grid(row=0, column=0, padx=10, pady=10, sticky="nw")
 
         # 创建退出账户按钮
         logout_button = ttk.Button(self, text="EXIT", command=self.logout)
-        logout_button.grid(row=0, column=5, padx=10, pady=10)
+        logout_button.grid(row=0, column=2, padx=10, pady=10, sticky="ne")
+
+        # 创建返回按钮
+        return_button = ttk.Button(self, text="return", command=lambda: controller.show_frame(MainPage))
+        return_button.grid(row=0, column=4, padx=10, pady=10,sticky="ne")
 
         # 创建用户信息卡片
         #TODO:这里会在最开始的时候进行初始化，但在最开始的时候并不会获取到全局的数据
         '''user_info = BE_Function.get_login_user()'''
         user_info =  {"username": "username", "account_balance": "$1000"}
         self.create_user_info_card(user_info)
+
+        # 创建历史订单页面标签
+        label = tk.Label(self, text="History order")
+        label.grid(row=3, column=0, padx=10, pady=10,columnspan=3, sticky="w")
 
         # 创建历史订单记录卡片
         '''history_data = SqlFunction.get_one_user_orders(user_info[0])'''
@@ -220,9 +254,7 @@ class AccountPage(tk.Frame):
         for order_info in history_data:
             self.create_history_card(order_info)
 
-        # 创建返回按钮
-        return_button = ttk.Button(self, text="return", command=lambda: controller.show_frame(MainPage))
-        return_button.grid(row=self.current_row + 1, column=0, padx=10, pady=10, columnspan=3)
+
 
     def logout(self):
         # 添加退出账户逻辑，返回到登录页面
@@ -231,87 +263,93 @@ class AccountPage(tk.Frame):
     def create_user_info_card(self, user_info):
         # 创建用户信息卡片的 Frame
         user_info_frame = tk.Frame(self, bd=2, relief="solid")
-        user_info_frame.grid(row=2, column=2, padx=10, pady=10, columnspan=3, sticky="n")
+        user_info_frame.grid(row=2, column=2, padx=10, pady=10)
 
         # 显示用户信息
+
+        self.balance_label = tk.Label(user_info_frame, text=f"account_balance: ${self.account_balance}")
+        self.balance_label.grid(row=1, column=0, padx=10, pady=5, columnspan=3)
+
         username_label = tk.Label(user_info_frame, text=f"Username: {'username'}", font=("Arial", 12))
         username_label.grid(row=0, column=0, padx=10, pady=5, columnspan=3)
 
-        balance_label = tk.Label(user_info_frame, text=f"Deposite state: {'account_balance'}")
-        balance_label.grid(row=1, column=0, padx=10, pady=5, columnspan=3)
+        #balance_label = tk.Label(user_info_frame, text=f"Deposite state: {'account_balance'}")
+        #balance_label.grid(row=1, column=0, padx=10, pady=5, columnspan=3)
+
+        # 添加一个充值按钮
+        recharge_button = ttk.Button(user_info_frame, text="Recharge", command=self.create_recharge_popup)
+        recharge_button.grid(row=2, column=0, padx=10, pady=10, columnspan=3)
 
     def create_history_card(self, order_info):
         # 创建历史订单记录卡片的 Frame
         history_frame = tk.Frame(self, bd=2, relief="solid")
-        history_frame.grid(row=self.current_row, column=0, padx=10, pady=10, columnspan=3)
+        history_frame.grid(row=self.current_row, column=1, padx=10, pady=10, columnspan=3)
 
         # 更新下一个历史记录的行号
-        self.current_row += 2
+        self.current_row += 1
 
         # 创建历史记录标签
-        label = tk.Label(history_frame, text="history")
-        label.grid(row=0, column=0, padx=10, pady=10)
+        #label = tk.Label(history_frame, text="history")
+        #label.grid(row=0, column=0, padx=10, pady=10)
 
         # 显示历史订单信息
         order_label = tk.Label(history_frame, text=f"start: {order_info['order_number']}", font=("Arial", 12))
-        order_label.grid(row=0, column=0, padx=10, pady=5)
+        order_label.grid(row=1, column=0, padx=10, pady=5)
 
         status_label = tk.Label(history_frame, text=f"end: {order_info['order_status']}")
-        status_label.grid(row=1, column=0, padx=10, pady=5)
+        status_label.grid(row=2, column=0, padx=10, pady=5)
 
         vehicle_label = tk.Label(history_frame, text=f"car: {order_info['vehicle_number']}")
-        vehicle_label.grid(row=2, column=0, padx=10, pady=5)
+        vehicle_label.grid(row=3, column=0, padx=10, pady=5)
 
         amount_label = tk.Label(history_frame, text=f"price: {order_info['payment_amount']}")
-        amount_label.grid(row=3, column=0, padx=10, pady=5)
+        amount_label.grid(row=4, column=0, padx=10, pady=5)
 
         time_label = tk.Label(history_frame, text=f"state: {order_info['usage_time']}")
         time_label.grid(row=4, column=0, padx=10, pady=5)
 
-class AppManager(tk.Tk):
-    def __init__(self, *args, **kwargs):
-        tk.Tk.__init__(self, *args, **kwargs)
+    def create_recharge_popup(self):
+        # 创建一个新的弹窗
+        popup = tk.Toplevel(self)
+        popup.title("Recharge")
 
-        # 设置应用程序主窗口的标题
-        self.title("shared e-bikes and e-scooters")
+        window_width = 300
+        window_height = 150
 
-        # 设置窗口大小为 iPhone 12 的大小
-        self.geometry("360x700")
+        #获取主窗口的尺寸和位置
+        position_right = int(popup.winfo_screenwidth() / 2 - window_width / 2)
+        position_down = int(popup.winfo_screenheight() / 2 - window_height / 2)
 
-        # 居中窗口
-        screen_width = self.winfo_screenwidth()
-        screen_height = self.winfo_screenheight()
-        x = (screen_width - 400) // 2
-        y = (screen_height - 700) // 2
-        self.geometry(f"+{x}+{y}")
+        # 设置窗口的大小和位置
+        popup.geometry(f"{window_width}x{window_height}+{position_right}+{position_down}")
 
-        # 使用 ttkbootstrap 主题
-        self.style = Style(theme="morph")
+        # 添加一个标签
+        label = tk.Label(popup, text="Enter Recharge Amount")
+        label.pack(pady=10)
 
-        # 创建一个字典用于存储不同页面的框架
-        self.frames = {}
+        # 添加一个输入框
+        self.recharge_amount_entry = tk.Entry(popup)
+        self.recharge_amount_entry.pack()
 
-        # 全局用户登录状态
-        self.user_logged_in = False
+        # 添加一个确认按钮
+        confirm_button = ttk.Button(popup, text="Confirm", command=self.confirm_recharge)
+        confirm_button.pack(pady=20)
 
-        # 添加页面类到字典中
-        for F in (LoginPage, MainPage, AccountPage, ReservationPage, EndOrderPage, PaymentPage, RegisterPage, EndPayPage):
-            frame = F(self, self)
-            self.frames[F] = frame
-            frame.grid(row=0, column=0, sticky="nsew")
+    def confirm_recharge(self):
+        # 这里添加充值的逻辑
+        amount = self.recharge_amount_entry.get()
+        try:
+            # 将输入的金额转换为数字
+            amount = float(amount)
+            # 更新账户余额
+            self.account_balance += amount
+            # 更新余额显示
+            self.balance_label.config(text=f"account_balance: ${self.account_balance}")
+            print(f"Recharge Amount: {amount}, New Balance: {self.account_balance}")
+        except ValueError:
+            print("Invalid input. Please enter a numeric value.")
+        # TODO: 添加充值逻辑，比如更新账户余额等
 
-        # 显示登录页面
-        self.show_frame(LoginPage)
-
-
-    def show_frame(self, page_name, vehicle_info=None):
-        '''Show a frame for the given page name'''
-        frame = self.frames[page_name]
-        
-        if vehicle_info:
-            frame.set_vehicle_info(vehicle_info)
-        
-        frame.tkraise()
 
 
 class MainPage(tk.Frame):
@@ -332,24 +370,38 @@ class MainPage(tk.Frame):
         map_button = ttk.Button(frame1, text="map", command=lambda: controller.show_frame(MapPage))
         map_button.grid(row=0, column=6, padx=10, pady=10)
 
+
         # 中央容器，用于保持内容居中
-        center_frame = tk.Frame(self)
-        center_frame.place(relx=0.4, rely=0.4, anchor=tk.CENTER)
+        center_frame = tk.Frame(self, width=280, height=320)
+        center_frame.place(relx=0.50, rely=0.4, anchor=tk.CENTER)
+
+        # 在背景图片上方放置 "search your vehicle"
+        # search_label = tk.Label(center_frame, text="search your vehicle", font=("Arial", 14))
+        # search_label.pack(pady=10, anchor=tk.N)
+
+        # 加载并添加背景图片
+        self.background_image = Image.open("images/back10.jpg")
+        self.bg_image = ImageTk.PhotoImage(self.background_image)
+
+        # 在center_frame上放置背景图像
+        bg_label = tk.Label(center_frame, image=self.bg_image)
+        bg_label.place(x=0, y=0, relwidth=1, relheight=1)
+        bg_label.lower()  # 确保背景位于底层
 
         # 应用图标和标题
-        lbl_title = tk.Label(center_frame, text="Search your vehicle", font=("Arial", 24))
-        lbl_title.pack(pady=10)
+        lbl_title = tk.Label(center_frame, text="Select pickup location", font=("Arial", 20))
+        lbl_title.pack(pady=20)
 
         # 创建单选按钮及其对应的`StringVar`
         self.selected_option = tk.StringVar()
 
-        option_radio1 = ttk.Radiobutton(center_frame, text="IKEA", variable=self.selected_option, value="IKEA",
+        option_radio1 = ttk.Radiobutton(center_frame, text="         IKEA                                   ", variable=self.selected_option, value="IKEA",
                                         compound="left")
-        option_radio2 = ttk.Radiobutton(center_frame, text="UofG", variable=self.selected_option, value="UofG",
+        option_radio2 = ttk.Radiobutton(center_frame, text="         UofG                                   ", variable=self.selected_option, value="UofG",
                                         compound="left")
-        option_radio3 = ttk.Radiobutton(center_frame, text="Hospital", variable=self.selected_option, value="Hospital",
+        option_radio3 = ttk.Radiobutton(center_frame, text="         Hospital                              ", variable=self.selected_option, value="Hospital",
                                         compound="left")
-        option_radio4 = ttk.Radiobutton(center_frame, text="Glasgow City Center", variable=self.selected_option,
+        option_radio4 = ttk.Radiobutton(center_frame, text="         Glasgow City Center                 ", variable=self.selected_option,
                                         value="Glasgow City Center", compound="left")
 
         option_radio1.pack(pady=10, anchor="w")
@@ -362,9 +414,6 @@ class MainPage(tk.Frame):
                                         command=lambda: self.get_selected_option())
         reservation_button.pack(pady=10)
 
-        # 创建按钮，点击按钮进入地图页面
-        map_button = ttk.Button(center_frame, text="map", command=lambda: controller.show_frame(MapPage))
-        map_button.pack(pady=10)
 
         # 设置行和列的权重，使其自适应
         self.grid_rowconfigure(0, weight=1)
@@ -579,22 +628,25 @@ class EndOrderPage(tk.Frame):
 
         self.vehicle_info = None
 
+
+
         # 创建车辆详情页面标签
-        label = tk.Label(self, text="Order in progress")
-        label.pack()  # 默认垂直居中显示
+        label = tk.Label(self, text="Order in progress", font=("Arial", 26))
+        label.pack(pady=10)  # 默认垂直居中显示
+
 
         # 创建图片的缩略图
-        image = Image.open("images/WechatIMG3255.jpg")
+        image = Image.open("images/ebike2.png")
         image.thumbnail((100, 100))  # 调整图像大小
         photo = ImageTk.PhotoImage(image)
 
         image_label = tk.Label(self, image=photo)
         image_label.image = photo
-        image_label.pack()  # 默认垂直居中显示
+        image_label.pack(pady=10)  # 默认垂直居中显示
 
         # 创建车辆信息标签
-        self.vehicle_info_label = tk.Label(self, text="")
-        self.vehicle_info_label.pack()  # 默认垂直居中显示
+        self.vehicle_info_label = tk.Label(self, text="vehicle_info")
+        self.vehicle_info_label.pack(pady=10)  # 默认垂直居中显示
 
         # TODO: 创建返回按钮，使用 controller 的 show_frame 方法返回到前一页
         # return_button = ttk.Button(self, text="return", command=lambda: controller.show_frame(ReservationPage))
@@ -610,14 +662,15 @@ class EndOrderPage(tk.Frame):
 
         # 创建还车按钮
         pay_button = ttk.Button(button_frame, text="return car", command=self.confirm_payment)
-        pay_button.pack(side=tk.LEFT, padx=10)  # 左对齐并添加间距
+        pay_button.pack(side=tk.LEFT, padx=10,pady=10)  # 左对齐并添加间距
 
         # 创建report订单按钮
         report_button = ttk.Button(button_frame, text="report", command=self.report_order)
-        report_button.pack(side=tk.LEFT, padx=10)  # 左对齐并添加间距
+        report_button.pack(side=tk.LEFT, padx=10,pady=10)  # 左对齐并添加间距
 
     def set_vehicle_info(self, vehicle_info):
         self.vehicle_info = vehicle_info
+
         self.vehicle_info_label.config(text=f"vehicle number: {vehicle_info[0]}\n Power: {vehicle_info[4]}")
         '''number_plate: {vehicle_info['type']}\n'''
 
@@ -643,11 +696,13 @@ class EndOrderPage(tk.Frame):
     def report_order(self):
         # 处理报错按钮的点击事件
         report_frame = tk.Frame(self)
-        report_frame.pack()  # 默认垂直居中显示
+        report_frame.pack(pady=10)  # 默认垂直居中显示
+
+
 
         # 添加多选功能的文本显示
-        report_label = ttk.Label(report_frame, text="Please select question type:")
-        report_label.pack()  # 默认垂直居中显示
+        report_label = ttk.Label(report_frame, text="Please select question type:", style="TLabel")
+        report_label.pack(pady=10)  # 默认垂直居中显示
 
         # 定义一个Tkinter整数变量用于存储选择
         selected_problem_var = tk.IntVar()
@@ -659,16 +714,16 @@ class EndOrderPage(tk.Frame):
         problem_radio4 = ttk.Radiobutton(report_frame, text="battery", variable=selected_problem_var, value=4)
 
         # 放置单选按钮
-        problem_radio1.pack()
-        problem_radio2.pack()
-        problem_radio3.pack()
-        problem_radio4.pack()
+        problem_radio1.pack(pady=5)
+        problem_radio2.pack(pady=5)
+        problem_radio3.pack(pady=5)
+        problem_radio4.pack(pady=5)
 
         # 创建确定按钮
         # 注意这里将命令函数改为self.confirm_report(selected_problem_var, report_frame)
         confirm_button = ttk.Button(report_frame, text="Sure",
                                     command=lambda: self.confirm_report(selected_problem_var, report_frame))
-        confirm_button.pack()
+        confirm_button.pack(pady=10)
 
 
     def confirm_report(self, problem_var, report_frame):
@@ -718,38 +773,38 @@ class PaymentPage(tk.Frame):
         tk.Frame.__init__(self, parent)
         self.controller = controller
 
-        label = tk.Label(self, text="Pay order", font=("Arial", 18))
+        label = tk.Label(self, text="Pay order", font=("Arial", 26))
         label.grid(row=0, column=1, padx=10, pady=10)
 
         # 车辆信息区域
         vehicle_info_label = tk.Label(self, text=" vehicle_info", font=("Arial", 18))
-        vehicle_info_label.grid(row=1, column=0, padx=10, pady=5, sticky="w")
+        vehicle_info_label.grid(row=1, column=0, padx=10, pady=20, sticky="w")
 
         self.vehicle_info = None
         self.vehicle_number_label = tk.Label(self, text="vehicle_number: ", font=("Arial", 12))
-        self.vehicle_number_label.grid(row=2, column=0, padx=10, pady=5, sticky="w")
+        self.vehicle_number_label.grid(row=2, column=0, padx=10, pady=10, sticky="w")
 
         self.vehicle_type_label = tk.Label(self, text="vehicle_type: ", font=("Arial", 12))
-        self.vehicle_type_label.grid(row=3, column=0, padx=10, pady=5, sticky="w")
+        self.vehicle_type_label.grid(row=3, column=0, padx=10, pady=10, sticky="w")
 
         self.vehicle_battery_label = tk.Label(self, text="battery: ", font=("Arial", 12))
-        self.vehicle_battery_label.grid(row=4, column=0, padx=10, pady=5, sticky="w")
+        self.vehicle_battery_label.grid(row=4, column=0, padx=10, pady=10, sticky="w")
 
         self.vehicle_duration_label = tk.Label(self, text="vehicle_duration: ", font=("Arial", 12))
-        self.vehicle_duration_label.grid(row=5, column=0, padx=10, pady=5, sticky="w")
+        self.vehicle_duration_label.grid(row=5, column=0, padx=10, pady=10, sticky="w")
 
         # 订单信息区域
         order_info_label = tk.Label(self, text="order_info", font=("Arial", 18))
-        order_info_label.grid(row=6, column=0, padx=10, pady=5, sticky="w")
+        order_info_label.grid(row=6, column=0, padx=10, pady=20, sticky="w")
 
         self.start_time_label = tk.Label(self, text="order_start_time: ", font=("Arial", 12))
-        self.start_time_label.grid(row=7, column=0, padx=10, pady=5, sticky="w")
+        self.start_time_label.grid(row=7, column=0, padx=10, pady=10, sticky="w")
 
         self.end_time_label = tk.Label(self, text="order_end_time: ", font=("Arial", 12))
-        self.end_time_label.grid(row=8, column=0, padx=10, pady=5, sticky="w")
+        self.end_time_label.grid(row=8, column=0, padx=10, pady=10, sticky="w")
 
         self.total_amount_label = tk.Label(self, text="total_amount: ", font=("Arial", 12))
-        self.total_amount_label.grid(row=9, column=0, padx=10, pady=5, sticky="w")
+        self.total_amount_label.grid(row=9, column=0, padx=10, pady=10, sticky="w")
 
         # 车辆照片
         self.vehicle_image_label = tk.Label(self)
@@ -758,6 +813,10 @@ class PaymentPage(tk.Frame):
         # 确认支付按钮
         confirm_button = ttk.Button(self, text="confirm payment", command=self.confirm_payment)
         confirm_button.grid(row=10, column=1, padx=10, pady=10)
+
+        # 创建返回按钮
+        return_button = ttk.Button(self, text="return", command=lambda: controller.show_frame(MainPage))
+        return_button.grid(row=10, column=2, padx=10, pady=10)
 
     def set_payment_info(self, vehicle_info, start_time, end_time, total_amount, duration):
         # 设置订单完成页面的信息
@@ -770,14 +829,14 @@ class PaymentPage(tk.Frame):
         print(car_info)
 
         self.vehicle_info = car_info
-        self.vehicle_number_label.config(text=f"车辆编号: {vehicle_info[0]}")
-        self.vehicle_type_label.config(text=f"车辆类型: {vehicle_info[1]}")
-        self.vehicle_battery_label.config(text=f"电量: {vehicle_info[4]}")
+        self.vehicle_number_label.config(text=f"vehicle_number: {vehicle_info[0]}")
+        self.vehicle_type_label.config(text=f"vehicle_type: {vehicle_info[1]}")
+        self.vehicle_battery_label.config(text=f"vehicle_battery: {vehicle_info[4]}")
         #self.vehicle_duration_label.config(text=f"使用总时长: {order[5]} 小时")
 
-        self.start_time_label.config(text=f"订单开始时间: {order[3]}")
-        self.end_time_label.config(text=f"订单结束时间: {order[4]}")
-        self.total_amount_label.config(text=f"订单总金额: {order[5]}")
+        self.start_time_label.config(text=f"order_start_time: {order[3]}")
+        self.end_time_label.config(text=f"order_end_time: {order[4]}")
+        self.total_amount_label.config(text=f"order_total_amount: {order[5]}")
 
         # TODO: 显示车辆照片
         # self.display_vehicle_image(vehicle_info['image_path'])
@@ -785,7 +844,7 @@ class PaymentPage(tk.Frame):
     def display_vehicle_image(self, image_path):
         # 显示车辆照片
         try:
-            image = Image.open("../../Desktop/WechatIMG3255.jpg")
+            image = Image.open("images/ebike2.png")
             image.thumbnail((200, 200))  # 调整图像大小
             photo = ImageTk.PhotoImage(image)
 
@@ -798,7 +857,7 @@ class PaymentPage(tk.Frame):
         login_user = BE_Function.get_login_user()
         order = SqlFunction.get_user_specific_order(login_user[0], "due")
 
-        result = messagebox.askquestion("确认支付", "您确定要支付吗？")
+        result = messagebox.askquestion("confirm payment", "Are you sure you want to pay?？")
 
 
         if result == "yes":
@@ -806,52 +865,58 @@ class PaymentPage(tk.Frame):
             BE_Function.pay_order(order[0])
             self.controller.show_frame(EndPayPage)
 
-        
+
+
+
 class EndPayPage(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
         self.controller = controller
 
-        label = tk.Label(self, text="Complete order", font=("Arial", 18))
-        label.grid(row=0, column=1, padx=10, pady=10)
+        label = tk.Label(self, text="Complete order", font=("Arial", 26))
+        label.grid(row=0, column=1, padx=10, pady=20)
 
         # 车辆信息区域
         vehicle_info_label = tk.Label(self, text="vehicle_info", font=("Arial", 18))
-        vehicle_info_label.grid(row=1, column=0, padx=10, pady=5, sticky="w")
+        vehicle_info_label.grid(row=1, column=0, padx=10, pady=10, sticky="w")
 
         self.vehicle_info = None
         self.vehicle_number_label = tk.Label(self, text="vehicle_number: ", font=("Arial", 12))
-        self.vehicle_number_label.grid(row=2, column=0, padx=10, pady=5, sticky="w")
+        self.vehicle_number_label.grid(row=2, column=0, padx=10, pady=10, sticky="w")
 
         self.vehicle_type_label = tk.Label(self, text="vehicle_type: ", font=("Arial", 12))
-        self.vehicle_type_label.grid(row=3, column=0, padx=10, pady=5, sticky="w")
+        self.vehicle_type_label.grid(row=3, column=0, padx=10, pady=10, sticky="w")
 
         self.vehicle_battery_label = tk.Label(self, text="battery: ", font=("Arial", 12))
-        self.vehicle_battery_label.grid(row=4, column=0, padx=10, pady=5, sticky="w")
+        self.vehicle_battery_label.grid(row=4, column=0, padx=10, pady=10, sticky="w")
 
         self.vehicle_duration_label = tk.Label(self, text="vehicle_duration: ", font=("Arial", 12))
-        self.vehicle_duration_label.grid(row=5, column=0, padx=10, pady=5, sticky="w")
+        self.vehicle_duration_label.grid(row=5, column=0, padx=10, pady=10, sticky="w")
 
         # 订单信息区域
         order_info_label = tk.Label(self, text=" order_info", font=("Arial", 18))
-        order_info_label.grid(row=6, column=0, padx=10, pady=5, sticky="w")
+        order_info_label.grid(row=6, column=0, padx=10, pady=20, sticky="w")
 
         self.start_time_label = tk.Label(self, text="order_start_time: ", font=("Arial", 12))
-        self.start_time_label.grid(row=7, column=0, padx=10, pady=5, sticky="w")
+        self.start_time_label.grid(row=7, column=0, padx=10, pady=10, sticky="w")
 
         self.end_time_label = tk.Label(self, text="order_end_time: ", font=("Arial", 12))
-        self.end_time_label.grid(row=8, column=0, padx=10, pady=5, sticky="w")
+        self.end_time_label.grid(row=8, column=0, padx=10, pady=10, sticky="w")
 
         self.total_amount_label = tk.Label(self, text="total_amount: ", font=("Arial", 12))
-        self.total_amount_label.grid(row=9, column=0, padx=10, pady=5, sticky="w")
+        self.total_amount_label.grid(row=9, column=0, padx=10, pady=10, sticky="w")
 
         # 车辆照片
         self.vehicle_image_label = tk.Label(self)
-        self.vehicle_image_label.grid(row=11, column=1, padx=10, pady=5, rowspan=5, columnspan=2)
+        self.vehicle_image_label.grid(row=11, column=1, padx=10, pady=10, rowspan=5, columnspan=2)
 
         # 确认支付按钮
         confirm_button = ttk.Button(self, text="finish order", command=self.confirm_payment)
         confirm_button.grid(row=10, column=1, padx=10, pady=10)
+
+        # 创建返回按钮
+        return_button = ttk.Button(self, text="reture", command=lambda: controller.show_frame(MainPage))
+        return_button.grid(row=10, column=2, padx=10, pady=10)
 
     def set_payment_info(self, vehicle_info, start_time, end_time, total_amount, duration):
         # 设置订单完成页面的信息
@@ -868,10 +933,10 @@ class EndPayPage(tk.Frame):
         # 显示车辆照片
         self.display_vehicle_image(vehicle_info['image_path'])
 
-    def display_vehicle_image(self, image_path='WechatIMG3255.jpg'):
+    def display_vehicle_image(self, image_path='ebike2.png'):
         # 显示车辆照片
         try:
-            image = Image.open("WechatIMG3255.jpg")
+            image = Image.open("images/ebike2.png")
             image.thumbnail((200, 200))  # 调整图像大小
             photo = ImageTk.PhotoImage(image)
 
