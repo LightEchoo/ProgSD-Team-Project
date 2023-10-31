@@ -25,6 +25,7 @@ This software system is designed to support an electric vehicle share program. I
 
 ## Installation
 There are several libraries should be installed before using this software:
+* os
 * random
 * sqlite3
 * string
@@ -34,6 +35,7 @@ There are several libraries should be installed before using this software:
 * math
 * PIL
 * matplotlib
+
 
 * pathlib
 * ttkbootstrap
