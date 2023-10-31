@@ -254,11 +254,11 @@ def pay_order(order_id):
         order_info = SqlFunction.get_one_order_info(order_id)
         SqlFunction.pay_one_order(order_id)
         SqlFunction.update_user_debt(order_info[3], 0)
+        return True
 
     except sqlite3.Error as e:
         print("Error Pay Car:", str(e))
         return False
-
 
 #### 用于 Operator_F›E 运营员界面的函数 ####
 def opt_update_car(update_action, car_id, car_location = "Main Building"):
