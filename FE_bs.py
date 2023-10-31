@@ -2,17 +2,16 @@ import tkinter as tk
 from datetime import datetime
 from pathlib import Path
 from tkinter import messagebox
-from tkinter import ttk
 
 import pandas as pd
 import ttkbootstrap as bs
 from PIL import Image, ImageTk
-from PIL.ImageTk import PhotoImage
 from matplotlib import pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 import BE_Function as BEF
 import pdsql
+import SqlFunction as SQF
 
 IMG_PATH = Path(__file__).parent / 'images'
 # 车辆类型
@@ -21,10 +20,32 @@ VEHICLE_TYPE = ['ebike', 'escooter']
 # 车辆状态
 VEHICLE_STATE_L = ['available', 'inrent', 'lowpower', 'repair']
 
-LOCATIONS = ["IKEA", "Hospital", "UofG", "St George's Square", "Glasgow City Center"]
+LOCATIONS = ["IKEA", "Hospital", "UofG", "Square", "City Center"]
 
-default_username = 'operator'
+default_username = 'user'
 default_password = '000'
+
+ttkbootstrap_themes = [
+    "morph",
+    "cosmo",
+    "flatly",
+    "journal",
+    "litera",
+    "lumen",
+    "minty",
+    "pulse",
+    "sandstone",
+    "united",
+    "yeti",
+    "simplex",
+    "cerculean",
+
+    "solar",
+    "superhero",
+    "darkly",
+    "cyborg",
+    "vapor"
+]
 
 
 # page_flag = 1
@@ -61,6 +82,8 @@ class ETSP:
         """
         # Styles.apply_styles()  # 风格初始化
 
+        self.father_middle_frame = None
+        self.current_middle_frame = None
         self.root = root  # 传入的根窗口存储在类的属性root
         self.root.title("Electric Transportation Sharing Program")
         self.root.geometry('1600x800')
@@ -76,22 +99,32 @@ class ETSP:
         self.show_first_page()
         self.style = bs.Style()
 
+        self.style = bs.Style(theme=ttkbootstrap_themes[0])
+
         # self.font_button = tk.font.Font(family='Arial', size=20, weight='bold')
         # self.font_title = tk.font.Font(family="Arial", size=20)
         # self.font_label = tk.font.Font(family="Arial", size=16)
+        self.user_info = None
+        self.middle_frame = None
 
     def show_first_page(self):
         """
         初次显示页面
-        :return: None
         """
+        self.root.geometry('1600x800')
         f_main = bs.Frame(self.root, bootstyle='dark')
         f_main.place(relx=0, rely=0, relwidth=1, relheight=1)
         top = self.frame_top(f_main, 'Welcome to Electric Transportation Sharing Program !')
-        middle = self.frame_middle(f_main, 1)
-        self.choice_custom_or_company_page(middle)
+        middle = self.frame_middle(f_main, 0)
+        self.login_page(middle)
+        # self.choice_custom_or_company_page(middle)
 
     def choice_custom_or_company_page(self, frame):
+        """
+        创建customer or company页面
+        :param frame: 主框架
+        :return: None
+        """
         self.middle_page_clear()
 
         choice_lab_frame = bs.LabelFrame(frame, text='Choice', bootstyle='info')
@@ -106,62 +139,97 @@ class ETSP:
         b_company.place(relx=0.6, rely=0.4, relwidth=0.15, relheight=0.2)
 
     def show_custom(self):
-        pass  # TODO: 显示custom页面
+        """
+        调用FE_user 创建Customer界面
+        :return: None
+        """
+        self.user_main_page()
+        # self.icon = None
+        # self.vehicle = None
+        # app = FE_User.AppManager()
+        # app.mainloop()
 
-    def frame_top(self, frame, current_page_name='electric transportation sharing', icon_file_name='bike.png'):
+    def frame_top(self, frame, current_page_name='electric transportation sharing', flag=1, icon_file_name='bike.png'):
         """
         顶部导航栏
+        customer 会去掉logo
+        :param flag: customer: 0; operator/manager: 1
         :param frame: 父frame
         :param icon_file_name: 图标
         :param current_page_name: 当前页面名称
         :return: f_top
         """
-        # f_top = ttk.Frame(frame, style='Custom1.TFrame')
-        f_top = bs.Frame(frame, bootstyle='dark')
-        f_top.place(relx=0, rely=0, relwidth=1, relheight=0.1)
+        if flag == 0:  # customer
 
-        icon = self.resize_image(icon_file_name, 120, 75)
+            f_top = bs.Frame(frame, bootstyle='dark')
+            f_top.place(relx=0, rely=0, relwidth=1, relheight=0.1)
 
-        # l_icon = tk.Label(f_top, image=icon, borderwidth=2, relief="solid")
-        l_icon = bs.Label(f_top, image=icon, bootstyle='inverse-dark')
-        l_icon.image = icon  # 保持对图像的引用，以防止被垃圾回收
-        l_icon.pack(side='left')
+            # b_back = bs.Button(f_top, text='Back', bootstyle='dark-outline', command=self.test)
+            b_back = bs.Button(f_top, text='Back', bootstyle='dark-outline')
+            b_back.place(relx=0.02, rely=0.3, relwidth=0.2, relheight=0.4)
 
-        # TODO: 返回按钮，图片显示
-        # def on_press():
-        #     b_back_icon.config(image=pressed_image)  # 按钮被按下时的图片
-        #     b_back_icon.image = pressed_image
-        #
-        # def on_release(event):
-        #     b_back_icon.config(image=normal_image)  # 按钮释放后恢复原始图片
-        #     b_back_icon.image = normal_image
-        #
-        # # 加载两种状态的图片
-        # normal_image = self.resize_image('back-button-white.png', 50, 50)  # 平常状态的图片
-        # pressed_image = self.resize_image('back-button-reverse-white.png', 50, 50)  # 按下状态的图片
-        #
-        # b_back_icon = bs.Button(f_top, text='Return', image=normal_image, bootstyle='dark')
-        # b_back_icon.image = pressed_image  # 保持对图像的引用，以防止被垃圾回收
-        # b_back_icon.pack(side='left')
-        #
-        # # 绑定鼠标按钮释放事件
-        # b_back_icon.bind('<ButtonRelease-1>', on_release)
+            # l_name = tk.Label(f_top, text=current_page_name)
+            l_name = bs.Label(f_top, text=current_page_name, bootstyle='inverse-dark',
+                              font=("Arial", 30), anchor='center', justify=tk.CENTER)
+            l_name.place(relx=0.3, rely=0.2, relwidth=0.4, relheight=0.6)
 
-        b_back = bs.Button(f_top, text='Back to login', bootstyle='dark-outline', command=self.show_first_page)
-        b_back.place(relx=0.1, rely=0.3, relwidth=0.08, relheight=0.4)
+            time_label = bs.Label(f_top, font=('Arial', 20), bootstyle='inverse-dark')
+            time_label.place(relx=0.7, rely=0.2, relwidth=0.3, relheight=0.6)
+            self.update_time(f_top, time_label)
 
-        # l_name = tk.Label(f_top, text=current_page_name)
-        l_name = bs.Label(f_top, text=current_page_name, bootstyle='inverse-dark',
-                          font=("Arial", 30), anchor='center', justify=tk.CENTER)
-        l_name.place(relx=0.2, rely=0.2, relwidth=0.6, relheight=0.6)
+        elif flag == 1:  # operator
+            # f_top = ttk.Frame(frame, style='Custom1.TFrame')
+            f_top = bs.Frame(frame, bootstyle='dark')
+            f_top.place(relx=0, rely=0, relwidth=1, relheight=0.1)
 
-        time_label = bs.Label(f_top, font=('Arial', 20), bootstyle='inverse-dark')
-        time_label.place(relx=0.85, rely=0.2, relwidth=0.1, relheight=0.6)
-        self.update_time(f_top, time_label)
+            icon = self.resize_image(icon_file_name, 120, 75)
+
+            # l_icon = tk.Label(f_top, image=icon, borderwidth=2, relief="solid")
+            l_icon = bs.Label(f_top, image=icon, bootstyle='inverse-dark')
+            l_icon.image = icon  # 保持对图像的引用，以防止被垃圾回收
+            l_icon.pack(side='left')
+
+            # TODO: 返回按钮，图片显示
+            # def on_press():
+            #     b_back_icon.config(image=pressed_image)  # 按钮被按下时的图片
+            #     b_back_icon.image = pressed_image
+            #
+            # def on_release(event):
+            #     b_back_icon.config(image=normal_image)  # 按钮释放后恢复原始图片
+            #     b_back_icon.image = normal_image
+            #
+            # # 加载两种状态的图片
+            # normal_image = self.resize_image('back-button-white.png', 50, 50)  # 平常状态的图片
+            # pressed_image = self.resize_image('back-button-reverse-white.png', 50, 50)  # 按下状态的图片
+            #
+            # b_back_icon = bs.Button(f_top, text='Return', image=normal_image, bootstyle='dark')
+            # b_back_icon.image = pressed_image  # 保持对图像的引用，以防止被垃圾回收
+            # b_back_icon.pack(side='left')
+            #
+            # # 绑定鼠标按钮释放事件
+            # b_back_icon.bind('<ButtonRelease-1>', on_release)
+
+            b_back = bs.Button(f_top, text='Back to login', bootstyle='dark-outline')
+            b_back.place(relx=0.1, rely=0.3, relwidth=0.08, relheight=0.4)
+
+            # l_name = tk.Label(f_top, text=current_page_name)
+            l_name = bs.Label(f_top, text=current_page_name, bootstyle='inverse-dark',
+                              font=("Arial", 30), anchor='center', justify=tk.CENTER)
+            l_name.place(relx=0.2, rely=0.2, relwidth=0.6, relheight=0.6)
+
+            time_label = bs.Label(f_top, font=('Arial', 20), bootstyle='inverse-dark')
+            time_label.place(relx=0.85, rely=0.2, relwidth=0.1, relheight=0.6)
+            self.update_time(f_top, time_label)
 
         return f_top
 
     def update_time(self, f_top, time_label):
+        """
+        更新当前时间
+        :param f_top: 父框架
+        :param time_label:  用于显示时间的Label
+        :return:
+        """
         current_time = datetime.now().strftime('%H:%M:%S')
         time_label.config(text=current_time)
         f_top.after(1000, lambda: self.update_time(f_top, time_label))
@@ -237,6 +305,7 @@ class ETSP:
         :param f_middle: 父frame，中部框架
         :return: Nome
         """
+
         self.middle_page_clear()
 
         login_lab_frame = bs.LabelFrame(f_middle, text='Login', bootstyle='info')
@@ -315,8 +384,11 @@ class ETSP:
         # flag = page_flag
         flag = BEF.login(username, psw)
 
+        # FFF查找
         if flag == 0:  # 用户界面
             self.user_main_page()
+            self.user_info = SQF.get_one_user_info(username)
+            # print(self.user_info)
         elif flag == 1:  # 操作员界面
             self.operator_main_page()
         elif flag == 2:  # 管理员界面
@@ -347,128 +419,190 @@ class ETSP:
 
     def user_main_page(self):
         """
-        用户主界面
+        用户主界面框架
         :return: None
         """
-        self.root.geometry("400x800")
+        # 获取屏幕尺寸和窗口尺寸
+        screen_width = self.root.winfo_screenwidth()
+        screen_height = self.root.winfo_screenheight()
+        window_width = 400
+        window_height = 800
+
+        # 计算 x 和 y 坐标
+        x = (screen_width // 2) - (window_width // 2)
+        y = (screen_height // 2) - (window_height // 2)
+
+        # 设置窗口的尺寸和位置
+        self.root.geometry(f'{window_width}x{window_height}+{x}+{y}')
+
         f_main = bs.Frame(self.root, bootstyle='dark')
         f_main.place(relx=0, rely=0, relwidth=1, relheight=1)
-        top = self.frame_top(f_main)
+        top = self.frame_top(f_main, 'User!', 0)
         middle = self.frame_middle(f_main)
         self.user_place_page(middle)
         bottom = self.frame_bottom(f_main, middle)
 
     def user_place_page(self, f_middle):
         """
-        位置选择界面
+        用户主界面-位置选择界面
         :param f_middle: 中部框架
         :return:
         """
         self.middle_page_clear()
 
-        choose_place_lab_frame = bs.Frame(f_middle, bootstyle='success')
+        choose_place_lab_frame = bs.Frame(f_middle, bootstyle='info')
         self.current_middle_page = choose_place_lab_frame  # 将传入的page设置为当前页面
-        choose_place_lab_frame.place(relx=0.1, rely=1 / 6, relwidth=0.8, relheight=2 / 3)
+        choose_place_lab_frame.place(relx=0.1, rely=1 / 3, relwidth=0.8, relheight=1 / 3)
 
-        l_pickup = bs.Label(choose_place_lab_frame, text='Pickup Location: ', bootstyle='inverse-danger')
-        l_pickup.place(relx=0.2, rely=1 / 16, relwidth=0.6, relheight=1 / 8)
-        l_return = bs.Label(choose_place_lab_frame, text='Return Location: ', bootstyle='inverse-danger')
-        l_return.place(relx=0.2, rely=7 / 16, relwidth=0.6, relheight=1 / 8)
+        l_pickup = bs.Label(choose_place_lab_frame, text='Pickup Location: ', bootstyle='inverse-info')
+        l_pickup.place(relx=0.2, rely=4 / 16, relwidth=0.6, relheight=1 / 8)
+        # l_return = bs.Label(choose_place_lab_frame, text='Return Location: ', bootstyle='inverse-danger')
+        # l_return.place(relx=0.2, rely=7 / 16, relwidth=0.6, relheight=1 / 8)
 
         v_pickup = tk.StringVar()  # 用户选择的出发位置
-        v_return = tk.StringVar()  # 用户选择的到达位置
+        # v_return = tk.StringVar()  # 用户选择的到达位置
 
         c_pickup = bs.Combobox(choose_place_lab_frame, textvariable=v_pickup, values=LOCATIONS, bootstyle="info")
-        c_pickup.place(relx=0.2, rely=4 / 16, relwidth=0.6, relheight=1 / 8)
-        c_return = bs.Combobox(choose_place_lab_frame, textvariable=v_return, values=LOCATIONS, bootstyle='success')
-        c_return.place(relx=0.2, rely=10 / 16, relwidth=0.6, relheight=1 / 8)
+        c_pickup.place(relx=0.2, rely=6 / 16, relwidth=0.6, relheight=1 / 8)
+        # c_return = bs.Combobox(choose_place_lab_frame, textvariable=v_return, values=LOCATIONS, bootstyle='success')
+        # c_return.place(relx=0.2, rely=10 / 16, relwidth=0.6, relheight=1 / 8)
 
-        b_map = bs.Button(choose_place_lab_frame, text='Map', bootstyle='dark-outline', command=self.view_map)
-        b_map.place(relx=0.2, rely=13 / 16, relwidth=0.2, relheight=1 / 8)
-        b_booking = bs.Button(choose_place_lab_frame, text='Booking', bootstyle='dark-outline',
-                              command=lambda: self.booking_page(f_middle))
-        b_booking.place(relx=0.6, rely=13 / 16, relwidth=0.2, relheight=1 / 8)
+        b_map = bs.Button(choose_place_lab_frame, text='Map', bootstyle='primary-outline', command=self.view_map)
+        b_map.place(relx=0.2, rely=12 / 16, relwidth=0.2, relheight=2 / 10)
+        b_booking = bs.Button(choose_place_lab_frame, text='Booking', bootstyle='primary-outline',
+                              command=lambda: self.booking_page(f_middle, c_pickup.get()))
+        b_booking.place(relx=0.6, rely=12 / 16, relwidth=0.2, relheight=2 / 10)
 
     def view_map(self):
         """
         跳出新界面显示一个静态的地图，上面有各个位置选项的信息
         :return: None
         """
-        pass
+        scale = 5
+        new_window = self.create_new_window(256 * scale, 146 * scale)
 
-    def location_test(self):
-        pass  # 用户输入信息正确检测
+        map_image = self.resize_image('map.png', 256 * scale, 146 * scale)
 
-    def booking_page(self, f_middle):
+        label = bs.Label(new_window, image=map_image, bootstyle='inverse-dark')
+        label.image = map_image  # 保持对图像的引用，以防止被垃圾回收
+        label.pack()
+
+    def booking_page(self, f_middle, location):
         """
         选车页面
-        :param f_middle:
+        :param f_middle: 父框架
+        :param location: 用户选择的location
         :return: None
         """
-        self.location_test()
-
         self.middle_page_clear()
 
         f_main = bs.Frame(f_middle, bootstyle='info')
-        self.current_middle_page = f_main
+        self.current_middle_frame = f_main
+        # self.father_middle_frame = f_middle
+        # self.middle_frame = f_main
         f_main.place(relx=0, rely=0, relwidth=1, relheight=1)
 
-        self.sort_vehicle_frame(f_main, 0)
+        self.sort_vehicle_frame(f_main, 0, location)
 
-    def resize_image(self, image_name, x, y):
+    def test(self):
+        if self.middle_frame.winfo_viewable():
+            self.middle_frame.place_forget()
+        else:
+            self.middle_frame.place(relx=0, rely=0, relwidth=1, relheight=1)
+
+    def resize_image(self, image_name, width, height):
+        """
+        重新修改图片大小并返回可以被label接受的ImageTk.PhotoImage对象
+        :param image_name:
+        :param width: new width
+        :param height: new height
+        :return:
+        """
         image = Image.open(IMG_PATH / image_name)
-        image = image.resize((x, y), Image.Resampling.LANCZOS)
+        image = image.resize((width, height), Image.Resampling.LANCZOS)
         image = ImageTk.PhotoImage(image)
         return image
 
-    def sort_vehicle_frame(self, frame, flag):
+    def sort_vehicle_frame(self, frame, flag=1, location=None):
         """
-        滑动框
-        :param frame:
+        用于显示筛选过后的车辆列表的界面
+        customer: 可以根据车辆类型、车辆位置进行筛选，默认通过剩余电量进行逆序排序
+        operator: 可以根据车辆类型、车辆位置、车辆状态进行筛选，可以选择车辆剩余电量或车辆价格进行排序
+        :param flag: 0 - customer, 1 - operator
+        :param frame: 父框架
         :return:
         """
-        # 上层车辆状态筛选条件 和 根据电量/价格排序 frame
-        f_condition = bs.Frame(frame, bootstyle='primary')
-        f_condition.place(relx=0.02, rely=0.01, relwidth=0.96, relheight=0.1)
+        if flag == 0:  # customer
+            # 上层车辆类型\状态筛选条件frame
+            f_condition = bs.Frame(frame, bootstyle='primary')
+            f_condition.place(relx=0.02, rely=0.01, relwidth=0.96, relheight=0.1)
 
-        # 筛选：vehicle type(下拉框：all、ebike、escooter)、location(下拉框: all、LOCATIONS)、state(下拉框：all、STATE) 排序：(下拉框：剩余电量/价格)
-        l_vehicle_type = bs.Label(f_condition, text='Vehicle Type:', bootstyle
-        ='inverse-info', anchor='center')
-        c_vehicle_type = bs.Combobox(f_condition, values=['ALL'] + VEHICLE_TYPE, bootstyle='info')
-        c_vehicle_type.current(0)
-        l_vehicle_location = bs.Label(f_condition, text='Pickup Location:', bootstyle='inverse-info', anchor='center')
-        c_vehicle_location = bs.Combobox(f_condition, values=['ALL'] + LOCATIONS, bootstyle='info')
-        c_vehicle_location.current(0)
-        l_vehicle_state = bs.Label(f_condition, text='State:', bootstyle='inverse-info', anchor='center')
-        c_vehicle_state = bs.Combobox(f_condition, values=['ALL'] + VEHICLE_STATE_L, bootstyle='info')
-        c_vehicle_state.current(0)
-        l_sort_by = bs.Label(f_condition, text='Sort By:', bootstyle='inverse-info', anchor='center')
-        c_sort_by = bs.Combobox(f_condition, values=['CarPower', 'CarPrice'], bootstyle='info')
-        c_sort_by.current(0)
+            # 筛选：vehicle type(下拉框：all、ebike、escooter)
+            l_vehicle_type = bs.Label(f_condition, text='Type', bootstyle
+            ='inverse-info', anchor='center')
+            c_vehicle_type = bs.Combobox(f_condition, values=['ALL'] + VEHICLE_TYPE, bootstyle='info')
+            c_vehicle_type.current(0)
 
-        # pd_vehicle = take_pd_vehicles()
-        # vehicle_no = pd_vehicle['CarID'].tolist()
-        # vehicle_type = pd_vehicle['CarType'].tolist()
-        # battery_lift = pd_vehicle['CarPower'].tolist()
-        # rent = pd_vehicle['CarPrice'].tolist()
-        # location = pd_vehicle['CarLocation'].tolist()
-        # state = pd_vehicle['CarState'].tolist()
+            # location(下拉框: all、LOCATIONS)
+            l_vehicle_location = bs.Label(f_condition, text='Start', bootstyle='inverse-info',
+                                          anchor='center')
+            c_vehicle_location = bs.Combobox(f_condition, values=['ALL'] + LOCATIONS, bootstyle='info')
+            if location == '':
+                c_vehicle_location.current(0)
+            else:
+                c_vehicle_location.current(LOCATIONS.index(location))
 
-        l_vehicle_type.place(relx=0.05, rely=0.25, relwidth=0.07, relheight=0.5)
-        c_vehicle_type.place(relx=0.12, rely=0.25, relwidth=0.1, relheight=0.5)
-        l_vehicle_location.place(relx=0.26, rely=0.25, relwidth=0.07, relheight=0.5)
-        c_vehicle_location.place(relx=0.33, rely=0.25, relwidth=0.1, relheight=0.5)
-        l_vehicle_state.place(relx=0.47, rely=0.25, relwidth=0.07, relheight=0.5)
-        c_vehicle_state.place(relx=0.54, rely=0.25, relwidth=0.1, relheight=0.5)
-        l_sort_by.place(relx=0.68, rely=0.25, relwidth=0.07, relheight=0.5)
-        c_sort_by.place(relx=0.75, rely=0.25, relwidth=0.1, relheight=0.5)
+            # TODO: 默认电量逆序
+
+            l_vehicle_type.place(relx=0.04, rely=0.25, relwidth=0.15, relheight=0.5)
+            c_vehicle_type.place(relx=0.19, rely=0.25, relwidth=0.2, relheight=0.5)
+            l_vehicle_location.place(relx=0.44, rely=0.25, relwidth=0.15, relheight=0.5)
+            c_vehicle_location.place(relx=0.59, rely=0.25, relwidth=0.2, relheight=0.5)
+
+        elif flag == 1:  # operator
+            # 上层车辆车辆类型\状态筛选 和 根据电量/价格排序 frame
+            f_condition = bs.Frame(frame, bootstyle='primary')
+            f_condition.place(relx=0.02, rely=0.01, relwidth=0.96, relheight=0.1)
+
+            # 筛选：vehicle type(下拉框：all、ebike、escooter)、location(下拉框: all、LOCATIONS)、state(下拉框：all、STATE) 排序：(下拉框：剩余电量/价格)
+            l_vehicle_type = bs.Label(f_condition, text='Vehicle Type:', bootstyle
+            ='inverse-info', anchor='center')
+            c_vehicle_type = bs.Combobox(f_condition, values=['ALL'] + VEHICLE_TYPE, bootstyle='info')
+            c_vehicle_type.current(1)
+            l_vehicle_location = bs.Label(f_condition, text='Pickup Location:', bootstyle='inverse-info',
+                                          anchor='center')
+            c_vehicle_location = bs.Combobox(f_condition, values=['ALL'] + LOCATIONS, bootstyle='info')
+            c_vehicle_location.current(1)
+            l_vehicle_state = bs.Label(f_condition, text='State:', bootstyle='inverse-info', anchor='center')
+            c_vehicle_state = bs.Combobox(f_condition, values=['ALL'] + VEHICLE_STATE_L, bootstyle='info')
+            c_vehicle_state.current(1)
+            l_sort_by = bs.Label(f_condition, text='Sort By:', bootstyle='inverse-info', anchor='center')
+            c_sort_by = bs.Combobox(f_condition, values=['CarPower', 'CarPrice'], bootstyle='info')
+            c_sort_by.current(0)
+
+            # pd_vehicle = take_pd_vehicles()
+            # vehicle_no = pd_vehicle['CarID'].tolist()
+            # vehicle_type = pd_vehicle['CarType'].tolist()
+            # battery_lift = pd_vehicle['CarPower'].tolist()
+            # rent = pd_vehicle['CarPrice'].tolist()
+            # location = pd_vehicle['CarLocation'].tolist()
+            # state = pd_vehicle['CarState'].tolist()
+
+            l_vehicle_type.place(relx=0.05, rely=0.25, relwidth=0.07, relheight=0.5)
+            c_vehicle_type.place(relx=0.12, rely=0.25, relwidth=0.1, relheight=0.5)
+            l_vehicle_location.place(relx=0.26, rely=0.25, relwidth=0.07, relheight=0.5)
+            c_vehicle_location.place(relx=0.33, rely=0.25, relwidth=0.1, relheight=0.5)
+            l_vehicle_state.place(relx=0.47, rely=0.25, relwidth=0.07, relheight=0.5)
+            c_vehicle_state.place(relx=0.54, rely=0.25, relwidth=0.1, relheight=0.5)
+            l_sort_by.place(relx=0.68, rely=0.25, relwidth=0.07, relheight=0.5)
+            c_sort_by.place(relx=0.75, rely=0.25, relwidth=0.1, relheight=0.5)
 
         # 选车界面 frame
-        f_select_vehicle = bs.Frame(frame, bootstyle='success')
+        f_select_vehicle = bs.Frame(frame, bootstyle='primary')
         f_select_vehicle.place(relx=0.02, rely=0.12, relwidth=0.96, relheight=0.87)
 
         # 创建一个Canvas小部件，它用于包含可滚动的内容。
-        canvas_vehicle = tk.Canvas(f_select_vehicle, bg='yellow')
+        canvas_vehicle = tk.Canvas(f_select_vehicle)
         # 将Canvas小部件放置在中部窗口中，使其在左侧占据空间，并允许其在水平和垂直方向上扩展以填满可用空间。
         canvas_vehicle.place(relx=0, rely=0, relwidth=0.99, relheight=1)
 
@@ -482,19 +616,16 @@ class ETSP:
         #                           sliderlength=30)
 
         # 创建一个垂直滚动条（Scrollbar），使用ttk模块创建，与Canvas小部件关联，以便控制Canvas的垂直滚动。
-        # scrollbar = ttk.Scrollbar(f_select_vehicle, orient=tk.VERTICAL, style="TScrollbar",
-        #                           command=canvas_vehicle.yview)
         scrollbar = bs.Scrollbar(f_select_vehicle, orient=tk.VERTICAL,
-                                  command=canvas_vehicle.yview, bootstyle='primary')
+                                 command=canvas_vehicle.yview, bootstyle='primary')
         # 将垂直滚动条放置在主窗口的右侧，使其占据垂直空间。
         scrollbar.place(relx=0.99, rely=0, relwidth=0.01, relheight=1)
         # 配置Canvas小部件以与垂直滚动条(scrollbar)相关联，使它能够通过滚动条进行垂直滚动。
         canvas_vehicle.configure(yscrollcommand=scrollbar.set)
         # 创建一个Frame小部件，该Frame用于包含实际的滚动内容。
-        f_vehicle = bs.Frame(canvas_vehicle, bootstyle='success', width=2000, height=1000)
+        f_vehicle = bs.Frame(canvas_vehicle, bootstyle='info', width=2000, height=1000)
         # # 将Frame小部件添加到Canvas中，并配置Frame在Canvas上的位置，以及锚点在左上角（NW表示北西）。
         canvas_vehicle.create_window((0, 0), window=f_vehicle, anchor=tk.NW)
-        # f_vehicle.place(relx=0, rely=0, relwidth=1, relheight=1)
         self.current_operator_page = f_vehicle
 
         def on_canvas_configure(event):  # 内置函数 配置Canvas以根据内容自动调整滚动区域
@@ -509,6 +640,7 @@ class ETSP:
         # 绑定鼠标滚轮事件
         canvas_vehicle.bind_all("<MouseWheel>", on_mousewheel)
 
+        # test values
         # vehicle_no = range(10)
         # vehicle_type = [random.randint(0, 1) for _ in range(10)]
         # battery_lift = [random.uniform(0, 1) * 100 for _ in range(10)]
@@ -516,31 +648,20 @@ class ETSP:
         # location = [random.choice(LOCATIONS) for _ in range(10)]
         # state = [random.choice(VEHICLE_STATE_L) for _ in range(10)]
 
-        # if flag == 0:  # user
-        #     for vehicle_no, vehicle_type, battery_lift, rent in zip(vehicle_no, vehicle_type, battery_lift, rent):
-        #         # print(vehicle_no, vehicle_type, battery_lift, rent)
-        #         single_vehicle_bar = self.single_vehicle_bar(f_vehicle, flag, vehicle_no, vehicle_type, battery_lift,
-        #                                                      rent)
-        #         single_vehicle_bar.pack()
-        #         space_frame = bs.Frame(f_vehicle, width=1520, height=10, bootstyle='success')
-        #         space_frame.pack()
-        #
-        # # elif flag == 1:  # operator
-        # #     for vehicle_no, vehicle_type, battery_lift, rent, location, state in zip(vehicle_no, vehicle_type,
-        # #                                                                              battery_lift, rent,
-        # #                                                                              location, state):
-        # #         # print(vehicle_no, vehicle_type, battery_lift, rent)
-        # #         single_vehicle_bar = self.single_vehicle_bar(f_vehicle, flag, vehicle_no, vehicle_type, battery_lift,
-        # #                                                      rent, location, state)
-        # #         single_vehicle_bar.pack()
-        # #         space_frame = bs.Frame(f_vehicle, width=1520, height=10, bootstyle='success')
-        # #         space_frame.pack()
+        if flag == 0:  # customer
+            b_confirm = bs.Button(f_condition, text='Do', bootstyle='info',
+                                  command=lambda: self.data(flag, f_vehicle, c_vehicle_type.get(),
+                                                            c_vehicle_location.get()))
+            b_confirm.place(relx=0.82, rely=0.25, relwidth=0.14, relheight=0.5)
+            self.data(flag, f_vehicle, c_vehicle_type.get(), c_vehicle_location.get())
 
-        b_confirm = bs.Button(f_condition, text='Confirm', bootstyle='info',
-                              command=lambda: self.data(f_vehicle, c_vehicle_type.get(),
-                                                        c_vehicle_location.get(),
-                                                        c_vehicle_state.get(), c_sort_by.get()))
-        b_confirm.place(relx=0.89, rely=0.25, relwidth=0.06, relheight=0.5)
+        elif flag == 1:  # operator
+            b_confirm = bs.Button(f_condition, text='Confirm', bootstyle='info',
+                                  command=lambda: self.data(flag, f_vehicle, c_vehicle_type.get(),
+                                                            c_vehicle_location.get(),
+                                                            c_vehicle_state.get(), c_sort_by.get()))
+            b_confirm.place(relx=0.89, rely=0.25, relwidth=0.06, relheight=0.5)
+            self.data(flag, f_vehicle, c_vehicle_type.get(), c_vehicle_location.get(), c_vehicle_state.get(), c_sort_by.get())
 
     def operator_page_clear(self):
         """
@@ -553,10 +674,29 @@ class ETSP:
             print('clear')
 
     def destroy_frame(self, frame):
+        """
+        摧毁传入的框架
+        :param frame:
+        :return:
+        """
         for widget in frame.winfo_children():
             widget.destroy()
 
-    def data(self, f_vehicle, choice_type, choice_location, choice_state, choice_sort_by):
+    def data(self, flag, f_vehicle, choice_type, choice_location, choice_state='available', choice_sort_by='CarPower'):
+        """
+        进行信息展示操作
+        :param flag:
+        :param f_vehicle:
+        :param choice_type:
+        :param choice_location:
+        :param choice_state:
+        :param choice_sort_by:
+        :return:
+        """
+        if flag == 0:  # user
+            single_width = 380
+        elif flag == 1:  # operator
+            single_width = 1520
         info = [f_vehicle, choice_type, choice_location, choice_state, choice_sort_by]
         # self.operator_page_clear()
         self.destroy_frame(f_vehicle)
@@ -596,19 +736,19 @@ class ETSP:
                                                                                  battery_lifts, rents,
                                                                                  locations, states):
             # print(vehicle_no, vehicle_type, battery_lift, rent)
-            single_vehicle_bar = self.single_vehicle_bar(info, f_vehicle, 1, vehicle_no, vehicle_type, battery_lift,
+            single_vehicle_bar = self.single_vehicle_bar(info, f_vehicle, flag, vehicle_no, vehicle_type, battery_lift,
                                                          rent, location, state)
             single_vehicle_bar.pack()
-            space_frame = bs.Frame(f_vehicle, width=1520, height=10, bootstyle='success')
+            space_frame = bs.Frame(f_vehicle, width=single_width, height=10, bootstyle='info')
             # print(f_vehicle.winfo_height())
             space_frame.pack()
             # print(f_vehicle.winfo_height())
         # if f_vehicle.winfo_height() < 1000:
-        frame_fill = bs.Frame(f_vehicle, width=1520, height=700, bootstyle='success')
+        frame_fill = bs.Frame(f_vehicle, width=single_width, height=700, bootstyle='info')
         frame_fill.pack()
 
     def single_vehicle_bar(self, info, frame, flag, vehicle_no, vehicle_type, battery_lift, rent,
-                           location=None, state=0,):
+                           location=None, state=0, ):
         """
         用于展示单个车辆信息条
         :param info: 用于按钮更新
@@ -623,11 +763,121 @@ class ETSP:
         :return: single_frame 总框架
         """
         if flag == 0:  # user
-            main_width = 360
+            main_width = 380
             main_height = 100
             l_width = 100
             m_width = 200
-            r_width = 60
+            r_width = 80
+
+            single_frame = bs.Frame(frame, width=main_width, height=main_height, style='primary',
+                                    padding=((2, 5)))  # 主框架
+            # single_frame = tk.Frame(frame, relief='groove', bd=1)
+            # single_frame.place(relx=0, rely=0, relwidth=1, relheight=1)
+
+            frame_image = bs.Frame(single_frame, width=l_width, height=main_height, padding=((2, 2)))  # 最左侧图像框架
+            frame_image.place(x=0, y=0)
+            if vehicle_type == 'ebike':
+                image_file_name = 'ebike.png'
+            else:
+                image_file_name = 'escooter.png'
+            vehicle = self.resize_image(image_file_name, 100, 100)
+            l_icon = bs.Label(frame_image, image=vehicle, bootstyle='info')
+            l_icon.image = vehicle  # 保持对图像的引用，以防止被垃圾回收
+            # l_icon.pack(side='left')
+            l_icon.place(relx=0, rely=0, relwidth=1, relheight=1, bordermode='outside')
+
+            frame_info = bs.Frame(single_frame, width=m_width, height=main_height, bootstyle='primary')  # 中部信息框架
+            frame_info.place(x=0 + l_width, y=0)
+
+            padx_label, pady_label = 5, 5
+
+            # 车辆编号
+            v_vehicle_no = tk.StringVar()
+            # # print("车辆编号："+str(vehicle_no))
+            v_vehicle_no.set('No.'+ str(vehicle_no))
+            # print(v_vehicle_no.get())
+            # l_vehicle_no = bs.Label(frame_info, textvariable=v_vehicle_no, bootstyle='inverse-info')
+            l_vehicle_no = tk.Label(frame_info, text='Vehicle No.: ', padx=padx_label, pady=pady_label)
+            l_vehicle_no_value = tk.Label(frame_info, textvariable=v_vehicle_no, padx=padx_label, pady=pady_label)
+            # l_vehicle_no_value.configure(bg="SystemTransparent")
+
+            # TODO: 换成Floodgauge显示
+            # v_vehicle_no = tk.IntVar()
+            # v_vehicle_no.set(int(vehicle_no))
+            # v_vehicle_no = str(vehicle_no)
+            # l_vehicle_no_value = bs.Floodgauge(
+            #     frame_info,
+            #     bootstyle='info',
+            #     mode='determinate',
+            #     maximum=100,
+            #     value=vehicle_no,
+            #     mask=v_vehicle_no,
+            # )
+            # update_floodgauge(vehicle_no)
+            #
+            # def update_floodgauge(vehicle_no):
+            #     l_vehicle_no_value.configure(mask=str(vehicle_no))
+
+            v_rent = bs.StringVar()  # 租金
+            rent = round(rent, 2)
+            v_rent.set('£' + str(rent) + '/h')
+            # l_rent = bs.Label(frame_info, textvariable=v_rent, bootstyle='inverse-info')
+            l_rent = tk.Label(frame_info, text='Rental cost (£/h): ', padx=padx_label, pady=pady_label)
+            l_rent_value = tk.Label(frame_info, textvariable=v_rent, padx=padx_label, pady=pady_label)
+
+            v_battery_life = bs.StringVar()  # 剩余电量
+            battery_lift = round(battery_lift, 2)
+            v_battery_life.set(str(battery_lift) + '%')
+            # l_battery_life = bs.Label(frame_info, textvariable=v_battery_life, bootstyle='inverse-info')
+            l_battery_life = tk.Label(frame_info, text='Battery life: ', padx=padx_label, pady=pady_label)
+            l_battery_life_value = tk.Label(frame_info, textvariable=v_battery_life, padx=padx_label, pady=pady_label)
+
+            v_vehicle_type = bs.StringVar()  # 车辆类型
+            # if vehicle_type == 0:
+            #     v_vehicle_type.set("Vehicle type: electric bicycle")
+            # elif vehicle_type == 1:
+            #     v_vehicle_type.set("Vehicle type: electric scooter")
+            v_vehicle_type.set(str(vehicle_type))
+            # l_vehicle_type = bs.Label(frame_info, textvariable=v_vehicle_type, bootstyle='inverse-info')
+            l_vehicle_type = tk.Label(frame_info, text='Vehicle type: ', padx=padx_label, pady=pady_label)
+            l_vehicle_type_value = tk.Label(frame_info, textvariable=v_vehicle_type, padx=padx_label, pady=pady_label)
+
+            v_location = bs.StringVar()  # 位置
+            v_location.set(str(location))
+            # l_location = bs.Label(frame_info, textvariable=v_location, bootstyle='inverse-info')
+            l_location = tk.Label(frame_info, text='Location: ', padx=padx_label, pady=pady_label)
+            l_location_value = tk.Label(frame_info, textvariable=v_location, padx=padx_label, pady=pady_label)
+
+            v_state = bs.StringVar()  # 状态
+            v_state.set(str(state))
+            # l_state = bs.Label(frame_info, textvariable=v_state, bootstyle='inverse-info')
+            l_state = tk.Label(frame_info, text='State: ', padx=padx_label, pady=pady_label)
+            l_state_value = tk.Label(frame_info, textvariable=v_state, padx=padx_label, pady=pady_label)
+
+            bg1 = '#36a1b7'
+            l_vehicle_no_value.config(bg=bg1, fg='white')
+            l_rent_value.config(bg=bg1, fg='white')
+            l_battery_life_value.config(bg=bg1, fg='white')
+            l_vehicle_type_value.config(bg=bg1, fg='white')
+            l_location_value.config(bg=bg1, fg='white')
+            l_state_value.config(bg=bg1, fg='white')
+
+            l_vehicle_no_value.place(relx=0.07, rely=0.05, relwidth=0.3, relheight=0.2)
+            l_rent_value.place(relx=0.07, rely=0.65, relwidth=0.3, relheight=0.2)
+            l_battery_life_value.place(relx=0.07, rely=0.35, relwidth=0.3, relheight=0.2)
+            l_vehicle_type_value.place(relx=0.43, rely=0.05, relwidth=0.5, relheight=0.2)
+            l_location_value.place(relx=0.43, rely=0.35, relwidth=0.5, relheight=0.2)
+            l_state_value.place(relx=0.43, rely=0.65, relwidth=0.5, relheight=0.2)
+
+            # frame_info.columnconfigure(0, weight=1)
+            # frame_info.columnconfigure(1, weight=1)
+
+            frame_book = bs.Frame(single_frame, width=r_width, height=main_height, bootstyle='primary')  # 右侧预定按钮框架
+            frame_book.place(x=0 + l_width + m_width, y=0)
+
+            b_booking = bs.Button(frame_book, text="Book", bootstyle='info', command=lambda: self.booking(vehicle_no, info))
+            b_booking.place(relx=0, rely=0.25, relwidth=0.9, relheight=0.4)
+
         elif flag == 1:  # operator
             main_width = 1520
             main_height = 100
@@ -635,90 +885,82 @@ class ETSP:
             m_width = 1100
             r_width = 320
             label_width = 80
-
         # style = ttk.Style()
         # style.configure('Custom11.TFrame', bg='dark', borderwidth=5, relief='groove')
 
-        single_frame = bs.Frame(frame, width=main_width, height=main_height, style='primary',
-                                padding=((2, 5)))  # 主框架
-        # single_frame = tk.Frame(frame, relief='groove', bd=1)
-        # single_frame.place(relx=0, rely=0, relwidth=1, relheight=1)
+            single_frame = bs.Frame(frame, width=main_width, height=main_height, style='primary',
+                                    padding=((0, 5)))  # 主框架
+            # single_frame = tk.Frame(frame, relief='groove', bd=1)
+            # single_frame.place(relx=0, rely=0, relwidth=1, relheight=1)
 
-        frame_image = bs.Frame(single_frame, width=l_width, height=main_height, padding=((2, 2)))  # 最左侧图像框架
-        frame_image.place(x=0, y=0)
-        if vehicle_type == 'ebike':
-            image_file_name = 'ebike.png'
-        else:
-            image_file_name = 'escooter.png'
-        vehicle = self.resize_image(image_file_name, 100, 100)
-        l_icon = bs.Label(frame_image, image=vehicle, bootstyle='info')
-        l_icon.image = vehicle  # 保持对图像的引用，以防止被垃圾回收
-        # l_icon.pack(side='left')
-        l_icon.place(relx=0, rely=0, relwidth=1, relheight=1, bordermode='outside')
+            frame_image = bs.Frame(single_frame, width=l_width, height=main_height, padding=((2, 2)))  # 最左侧图像框架
+            frame_image.place(x=0, y=0)
+            if vehicle_type == 'ebike':
+                image_file_name = 'ebike.png'
+            else:
+                image_file_name = 'escooter.png'
+            vehicle = self.resize_image(image_file_name, 100, 100)
+            l_icon = bs.Label(frame_image, image=vehicle, bootstyle='info')
+            l_icon.image = vehicle  # 保持对图像的引用，以防止被垃圾回收
+            # l_icon.pack(side='left')
+            l_icon.place(relx=0, rely=0, relwidth=1, relheight=1, bordermode='outside')
 
-        frame_info = bs.Frame(single_frame, width=m_width, height=main_height, bootstyle='primary',
-                              padding=((2, 2)))  # 中部信息框架
-        frame_info.place(x=0 + l_width, y=0)
+            frame_info = bs.Frame(single_frame, width=m_width, height=main_height, bootstyle='primary',
+                                  padding=((2, 2)))  # 中部信息框架
+            frame_info.place(x=0 + l_width, y=0)
 
-        padx_label, pady_label = 5, 5
+            padx_label, pady_label = 0, 5
 
-        # 车辆编号
-        v_vehicle_no = tk.StringVar()
-        # # print("车辆编号："+str(vehicle_no))
-        v_vehicle_no.set(str(vehicle_no))
-        # print(v_vehicle_no.get())
-        # l_vehicle_no = bs.Label(frame_info, textvariable=v_vehicle_no, bootstyle='inverse-info')
-        l_vehicle_no = tk.Label(frame_info, text='Vehicle No.: ', padx=padx_label, pady=pady_label)
-        l_vehicle_no_value = tk.Label(frame_info, textvariable=v_vehicle_no, padx=padx_label, pady=pady_label)
-        # l_vehicle_no_value.configure(bg="SystemTransparent")
+            # 车辆编号
+            v_vehicle_no = tk.StringVar()
+            # # print("车辆编号："+str(vehicle_no))
+            v_vehicle_no.set(str(vehicle_no))
+            # print(v_vehicle_no.get())
+            # l_vehicle_no = bs.Label(frame_info, textvariable=v_vehicle_no, bootstyle='inverse-info')
+            l_vehicle_no = tk.Label(frame_info, text='Vehicle No.: ', padx=padx_label, pady=pady_label)
+            l_vehicle_no_value = tk.Label(frame_info, textvariable=v_vehicle_no, padx=padx_label, pady=pady_label)
+            # l_vehicle_no_value.configure(bg="SystemTransparent")
 
-        # TODO: 换成Floodgauge显示
-        # v_vehicle_no = tk.IntVar()
-        # v_vehicle_no.set(int(vehicle_no))
-        # v_vehicle_no = str(vehicle_no)
-        # l_vehicle_no_value = bs.Floodgauge(
-        #     frame_info,
-        #     bootstyle='info',
-        #     mode='determinate',
-        #     maximum=100,
-        #     value=vehicle_no,
-        #     mask=v_vehicle_no,
-        # )
-        # update_floodgauge(vehicle_no)
-        #
-        # def update_floodgauge(vehicle_no):
-        #     l_vehicle_no_value.configure(mask=str(vehicle_no))
+            # TODO: 换成Floodgauge显示
+            # v_vehicle_no = tk.IntVar()
+            # v_vehicle_no.set(int(vehicle_no))
+            # v_vehicle_no = str(vehicle_no)
+            # l_vehicle_no_value = bs.Floodgauge(
+            #     frame_info,
+            #     bootstyle='info',
+            #     mode='determinate',
+            #     maximum=100,
+            #     value=vehicle_no,
+            #     mask=v_vehicle_no,
+            # )
+            # update_floodgauge(vehicle_no)
+            #
+            # def update_floodgauge(vehicle_no):
+            #     l_vehicle_no_value.configure(mask=str(vehicle_no))
 
-        v_vehicle_type = bs.StringVar()  # 车辆类型
-        # if vehicle_type == 0:
-        #     v_vehicle_type.set("Vehicle type: electric bicycle")
-        # elif vehicle_type == 1:
-        #     v_vehicle_type.set("Vehicle type: electric scooter")
-        v_vehicle_type.set(str(vehicle_type))
-        # l_vehicle_type = bs.Label(frame_info, textvariable=v_vehicle_type, bootstyle='inverse-info')
-        l_vehicle_type = tk.Label(frame_info, text='Vehicle type: ', padx=padx_label, pady=pady_label)
-        l_vehicle_type_value = tk.Label(frame_info, textvariable=v_vehicle_type, padx=padx_label, pady=pady_label)
+            v_vehicle_type = bs.StringVar()  # 车辆类型
+            # if vehicle_type == 0:
+            #     v_vehicle_type.set("Vehicle type: electric bicycle")
+            # elif vehicle_type == 1:
+            #     v_vehicle_type.set("Vehicle type: electric scooter")
+            v_vehicle_type.set(str(vehicle_type))
+            # l_vehicle_type = bs.Label(frame_info, textvariable=v_vehicle_type, bootstyle='inverse-info')
+            l_vehicle_type = tk.Label(frame_info, text='Vehicle type: ', padx=padx_label, pady=pady_label)
+            l_vehicle_type_value = tk.Label(frame_info, textvariable=v_vehicle_type, padx=padx_label, pady=pady_label)
 
-        v_battery_life = bs.StringVar()  # 剩余电量
-        battery_lift = round(battery_lift, 2)
-        v_battery_life.set(str(battery_lift))
-        # l_battery_life = bs.Label(frame_info, textvariable=v_battery_life, bootstyle='inverse-info')
-        l_battery_life = tk.Label(frame_info, text='Battery life: ', padx=padx_label, pady=pady_label)
-        l_battery_life_value = tk.Label(frame_info, textvariable=v_battery_life, padx=padx_label, pady=pady_label)
+            v_rent = bs.StringVar()  # 租金
+            rent = round(rent, 2)
+            v_rent.set(str(rent))
+            # l_rent = bs.Label(frame_info, textvariable=v_rent, bootstyle='inverse-info')
+            l_rent = tk.Label(frame_info, text='Rental cost (£/h): ', padx=padx_label, pady=pady_label)
+            l_rent_value = tk.Label(frame_info, textvariable=v_rent, padx=padx_label, pady=pady_label)
 
-        v_rent = bs.StringVar()  # 租金
-        rent = round(rent, 2)
-        v_rent.set(str(rent))
-        # l_rent = bs.Label(frame_info, textvariable=v_rent, bootstyle='inverse-info')
-        l_rent = tk.Label(frame_info, text='Rental cost (£/h): ', padx=padx_label, pady=pady_label)
-        l_rent_value = tk.Label(frame_info, textvariable=v_rent, padx=padx_label, pady=pady_label)
-
-        if flag == 0:  # user
-            l_vehicle_no.pack()
-            l_vehicle_type.pack()
-            l_battery_life.pack()
-            l_rent.pack()
-        elif flag == 1:  # operator
+            v_battery_life = bs.StringVar()  # 剩余电量
+            battery_lift = round(battery_lift, 2)
+            v_battery_life.set(str(battery_lift))
+            # l_battery_life = bs.Label(frame_info, textvariable=v_battery_life, bootstyle='inverse-info')
+            l_battery_life = tk.Label(frame_info, text='Battery life: ', padx=padx_label, pady=pady_label)
+            l_battery_life_value = tk.Label(frame_info, textvariable=v_battery_life, padx=padx_label, pady=pady_label)
 
             v_location = bs.StringVar()  # 位置
             v_location.set(str(location))
@@ -734,40 +976,18 @@ class ETSP:
 
             bg1 = '#36a1b7'
             l_vehicle_no.config(bg=bg1, fg='white')
+            l_rent.config(bg=bg1, fg='white')
             l_vehicle_type.config(bg=bg1, fg='white')
             l_battery_life.config(bg=bg1, fg='white')
-            l_rent.config(bg=bg1, fg='white')
             l_location.config(bg=bg1, fg='white')
             l_state.config(bg=bg1, fg='white')
 
             l_vehicle_no_value.config(bg=bg1, fg='white')
+            l_rent_value.config(bg=bg1, fg='white')
             l_vehicle_type_value.config(bg=bg1, fg='white')
             l_battery_life_value.config(bg=bg1, fg='white')
-            l_rent_value.config(bg=bg1, fg='white')
             l_location_value.config(bg=bg1, fg='white')
             l_state_value.config(bg=bg1, fg='white')
-
-            # l_vehicle_no.config(bg=bg1, fg='white', width=int(label_width * 2 / 3))
-            # l_vehicle_type.config(bg=bg1, fg='white', width=int(label_width * 2 / 3))
-            # l_battery_life.config(bg=bg1, fg='white', width=int(label_width * 2 / 3))
-            # l_rent.config(bg=bg1, fg='white', width=int(label_width * 2 / 3))
-            # l_location.config(bg=bg1, fg='white', width=int(label_width * 2 / 3))
-            # l_state.config(bg=bg1, fg='white', width=int(label_width * 2 / 3))
-            #
-            # l_vehicle_no_value.config(bg=bg1, fg='white', width=int(label_width * 1 / 3))
-            # l_vehicle_type_value.config(bg=bg1, fg='white', width=int(label_width * 1 / 3))
-            # l_battery_life_value.config(bg=bg1, fg='white', width=int(label_width * 1 / 3))
-            # l_rent_value.config(bg=bg1, fg='white', width=int(label_width * 1 / 3))
-            # l_location_value.config(bg=bg1, fg='white', width=int(label_width * 1 / 3))
-            # l_state_value.config(bg=bg1, fg='white', width=int(label_width * 1 / 3))
-
-            # padx, pady = 5,5
-            # l_vehicle_no.grid(row=0, column=0, sticky=tk.W + tk.E, padx=padx, pady=pady)
-            # l_vehicle_type.grid(row=1, column=0, sticky=tk.W + tk.E, padx=padx, pady=pady)
-            # l_battery_life.grid(row=2, column=0, sticky=tk.W + tk.E, padx=padx, pady=pady)
-            # l_rent.grid(row=0, column=1, sticky=tk.W + tk.E, padx=padx, pady=pady)
-            # l_location.grid(row=1, column=1, sticky=tk.W + tk.E, padx=padx, pady=pady)
-            # l_state.grid(row=2, column=1, sticky=tk.W + tk.E, padx=padx, pady=pady)
 
             l_vehicle_no.place(relx=0.07, rely=0.025, relwidth=0.23, relheight=0.2)
             l_vehicle_type.place(relx=0.07, rely=0.325, relwidth=0.23, relheight=0.2)
@@ -787,24 +1007,332 @@ class ETSP:
             # frame_info.columnconfigure(0, weight=1)
             # frame_info.columnconfigure(1, weight=1)
 
-        frame_book = bs.Frame(single_frame, width=r_width, height=main_height, bootstyle='primary')  # 右侧预定按钮框架
-        frame_book.place(x=0 + l_width + m_width, y=0)
-        # frame_book = tk.Frame(single_frame)  # 右侧预定按钮框架
-        # frame_book.place(relx=300/360, rely=0, relwidth=60/360, relheight=1)
+            frame_book = bs.Frame(single_frame, width=r_width, height=main_height, bootstyle='primary')  # 右侧预定按钮框架
+            frame_book.place(x=0 + l_width + m_width, y=0)
+            # frame_book = tk.Frame(single_frame)  # 右侧预定按钮框架
+            # frame_book.place(relx=300/360, rely=0, relwidth=60/360, relheight=1)
 
-        if flag == 0:
-            b_booking = bs.Button(frame_book, text="Book", bootstyle='info')
-            b_booking.place(relx=0.2, rely=0.4, relwidth=0.6, relheight=0.3)
-
-        elif flag == 1:  # 管理员按钮
-            b_booking = bs.Button(frame_book, text="Charge", bootstyle='info', command=lambda: self.charge(vehicle_no, info))
+            b_booking = bs.Button(frame_book, text="Charge", bootstyle='info',
+                                  command=lambda: self.charge(vehicle_no, info))
             b_booking.place(relx=0.025, rely=0.25, relwidth=0.3, relheight=0.4)
-            b_booking = bs.Button(frame_book, text="Repair", bootstyle='info', command=lambda: self.repair(vehicle_no, info))
+            b_booking = bs.Button(frame_book, text="Repair", bootstyle='info',
+                                  command=lambda: self.repair(vehicle_no, info))
             b_booking.place(relx=0.35, rely=0.25, relwidth=0.3, relheight=0.4)
-            b_booking = bs.Button(frame_book, text="Move", bootstyle='info', command=lambda: self.move(vehicle_no, info))
+            b_booking = bs.Button(frame_book, text="Move", bootstyle='info',
+                                  command=lambda: self.move(vehicle_no, info))
             b_booking.place(relx=0.675, rely=0.25, relwidth=0.3, relheight=0.4)
 
         return single_frame
+
+    def booking(self, vehicle_no, info):
+        """
+        若用户存在未支付订单，则不能预定，会跳转到页面complete_order_page
+        若用户可以预定，则跳转到order_in_progress页面
+        :param vehicle_no:
+        :param info:
+        :return:
+        """
+        if self.user_info[3] == 0:
+            self.order_in_progress(vehicle_no)
+        else:  # 如果用户还存在未支付的订单
+            tk.messagebox.showerror('Order not completed',
+                                    'There is an uncompleted order, please complete the order first.')
+            self.complete_order_page()
+
+        # f_main = bs.Frame(self.father_middle_frame, bootstyle='info')
+        # self.middle_frame.place_forget()
+        # if self.user_info[3] != 0:
+        #     self.payorder_page()
+        # else:
+        #     f_main = bs.Frame(self.father_middle_frame, bootstyle='info')
+        #     f_main.place(relx=0, rely=0, relwidth=1, relheight=1)
+        #     pass
+            #
+            #
+            # l_image
+            # if vehicle_type == 'ebike':
+            #     image_file_name = 'ebike.png'
+            # else:
+            #     image_file_name = 'escooter.png'
+            # vehicle = self.resize_image(image_file_name, 100, 100)
+            # l_icon = bs.Label(frame_image, image=vehicle, bootstyle='info')
+            # l_icon.image = vehicle  # 保持对图像的引用，以防止被垃圾回收
+            # # l_icon.pack(side='left')
+            # l_icon.place(relx=0, rely=0, relwidth=1, relheight=1, bordermode='outside')
+    def order_in_progress(self, vehicle_no):
+        """
+        用户book成功后跳转至当前页面，用于显示正在进行中的订单信息
+        :param vehicle_no:
+        :return:
+        """
+        tk.messagebox.showinfo('info', 'Your Vehicle is unlocked!')
+
+        w_order_in_progress = self.create_new_window(400, 400)
+
+        f_main = bs.Frame(w_order_in_progress, bootstyle='primary')
+        f_main.place(relx=0, rely=0, relwidth=1, relheight=1)
+
+        pd_vehicles = take_pd_vehicles()  # vehicle info
+        vehicle_info = pd_vehicles[pd_vehicles['CarID'] == vehicle_no]
+        print(vehicle_info)
+        print(vehicle_info['CarType'])
+
+        if str(vehicle_info['CarType']) == 'ebike':
+            image_file_name = 'ebike.png'
+        else:
+            image_file_name = 'escooter.png'
+
+        f_order_in_progress = bs.Frame(f_main, bootstyle='info')
+        f_order_in_progress.place(relx=0, rely=0, relwidth=1, relheight=0.1)
+        l_order_in_progress = bs.Label(f_order_in_progress, text='Order in progress', bootstyle='inverse-warning')
+        l_order_in_progress.place(relx=0.2, rely=0.1, relwidth=0.6, relheight=0.8)
+
+        f_order_info = bs.Frame(f_main, bootstyle='warning')
+        f_order_info.place(relx=0, rely=0.1, relwidth=1, relheight=0.8)
+
+
+        vehicle_image = self.resize_image(image_file_name, 200, 200)
+        l_icon = bs.Label(f_order_info, image=vehicle_image, bootstyle='info')
+        l_icon.image = vehicle_image  # 保持对图像的引用，以防止被垃圾回收
+        l_icon.place(relx=0.25, rely=0.08, relwidth=0.5, relheight=5/8, bordermode='outside')
+
+        f_vehicle_info = bs.Frame(f_order_info, bootstyle='info') # vehicle info
+        f_vehicle_info.place(relx=0, rely=0.705, relwidth=1, relheight=0.295, bordermode='outside')
+
+        v_vehicle_no_value = bs.StringVar()  # vehicle no
+        v_vehicle_no_value.set('test_vehicle_no')
+        # l_vehicle_no = bs.Label(f_vehicle, textvariable=v_vehicle_no_value, bootstyle='info')
+        l_vehicle_no = bs.Label(f_vehicle_info, text='test_vehicle_no', bootstyle='info')
+
+
+        v_vehicle_type_value = bs.StringVar()  # vehicle type
+        v_vehicle_type_value.set('test_vehicle_type')
+        # l_vehicle_type = bs.Label(f_vehicle, textvariable=v_vehicle_type_value, bootstyle='info')
+        l_vehicle_type = bs.Label(f_vehicle_info, text='test_vehicle_type', bootstyle='info')
+
+
+        v_vehicle_power_value = bs.StringVar()  # vehicle power
+        v_vehicle_power_value.set('test_vehicle_power')
+        # l_vehicle_power = bs.Label(f_vehicle, textvariable=v_vehicle_power_value, bootstyle='info')
+        l_vehicle_power = bs.Label(f_vehicle_info, text='test_vehicle_power', bootstyle='info')
+
+
+        v_vehicle_duration_value = bs.StringVar()  # vehicle duration
+        v_vehicle_duration_value.set('test_vehicle_duration')
+        # l_vehicle_duration = bs.Label(f_vehicle, textvariable=v_vehicle_duration_value, bootstyle='info')
+        l_vehicle_duration = bs.Label(f_vehicle_info, text='test_vehicle_duration', bootstyle='info')
+
+        l_vehicle_no.place(relx=0.05, rely=0.05, relwidth=0.4, relheight=0.4)
+        l_vehicle_type.place(relx=0.05, rely=0.55, relwidth=0.4, relheight=0.4)
+        l_vehicle_power.place(relx=0.55, rely=0.05, relwidth=0.4, relheight=0.4)
+        l_vehicle_duration.place(relx=0.55, rely=0.55, relwidth=0.4, relheight=0.4)
+
+        f_button = bs.Frame(f_main, bootstyle='primary')  # button frame
+        f_button.place(relx=0, rely=0.9, relwidth=1, relheight=0.1)
+
+        b_pay = bs.Button(f_button, text="Return", bootstyle='light',
+                          command=lambda: self.return_vehicle(w_order_in_progress))
+        b_pay.place(relx=0.2, rely=0.1, relwidth=0.2, relheight=0.8)
+
+        b_back = bs.Button(f_button, text="Back", bootstyle='light',
+                           command=lambda: w_order_in_progress.destroy())
+        b_back.place(relx=0.6, rely=0.1, relwidth=0.2, relheight=0.8)
+
+    def return_vehicle(self, w_order_in_progress):
+        """
+        用户归还车辆，确认后还车，并跳转到pay/report界面
+        :param w_order_in_progress:
+        :return:
+        """
+        # TODO return vehicle
+        result = tk.messagebox.askquestion(title="Confirm", message="Are you sure you want to return the car?")
+        if result == 'yes':
+            tk.messagebox.showinfo('info', 'Your vehicle is returned!')
+            w_order_in_progress.destroy()
+            self.complete_order_page()
+
+    def complete_order_page(self):
+        """
+        当预定是用户存在未支付订单，或正常结束订单还车后，会跳转到此界面
+        :return:
+        """
+        w_complete_order = self.create_new_window(400, 400)
+
+        f_main = bs.Frame(w_complete_order, bootstyle='primary')
+        f_main.place(relx=0, rely=0, relwidth=1, relheight=1)
+
+        f_pay = bs.Frame(f_main, bootstyle='info')  # pay frame
+        f_pay.place(relx=0, rely=0, relwidth=1, relheight=0.1)
+        l_pay = bs.Label(f_pay, text='Complete Order', bootstyle='inverse-success')
+        l_pay.place(relx=0.2, rely=0.1, relwidth=0.6, relheight=0.8)
+
+        # TODO: 车辆信息获取
+        f_vehicle = bs.Frame(f_main, bootstyle='warning')  # vehicle frame
+        f_vehicle.place(relx=0, rely=0.1, relwidth=1, relheight=0.35)
+
+        l_vehicle_info = bs.Label(f_vehicle, text='Vehicle Info', bootstyle='danger')  # vehicle info frame
+        l_vehicle_info.place(relx=0.2, rely=0, relwidth=0.6, relheight=0.2)
+
+        v_vehicle_no_value = bs.StringVar()  # vehicle no
+        v_vehicle_no_value.set('test_vehicle_no')
+        # l_vehicle_no = bs.Label(f_vehicle, textvariable=v_vehicle_no_value, bootstyle='info')
+        l_vehicle_no = bs.Label(f_vehicle, text='test_vehicle_no', bootstyle='info')
+        l_vehicle_no.place(relx=0.2, rely=0.2, relwidth=0.6, relheight=0.2)
+
+        v_vehicle_type_value = bs.StringVar()  # vehicle type
+        v_vehicle_type_value.set('test_vehicle_type')
+        # l_vehicle_type = bs.Label(f_vehicle, textvariable=v_vehicle_type_value, bootstyle='info')
+        l_vehicle_type = bs.Label(f_vehicle, text='test_vehicle_type', bootstyle='info')
+        l_vehicle_type.place(relx=0.2, rely=0.4, relwidth=0.6, relheight=0.2)
+
+        v_vehicle_power_value = bs.StringVar()  # vehicle power
+        v_vehicle_power_value.set('test_vehicle_power')
+        # l_vehicle_power = bs.Label(f_vehicle, textvariable=v_vehicle_power_value, bootstyle='info')
+        l_vehicle_power = bs.Label(f_vehicle, text='test_vehicle_power', bootstyle='info')
+        l_vehicle_power.place(relx=0.2, rely=0.6, relwidth=0.6, relheight=0.2)
+
+        v_vehicle_duration_value = bs.StringVar()  # vehicle duration
+        v_vehicle_duration_value.set('test_vehicle_duration')
+        # l_vehicle_duration = bs.Label(f_vehicle, textvariable=v_vehicle_duration_value, bootstyle='info')
+        l_vehicle_duration = bs.Label(f_vehicle, text='test_vehicle_duration', bootstyle='info')
+        l_vehicle_duration.place(relx=0.2, rely=0.8, relwidth=0.6, relheight=0.2)
+
+        # TODO: 订单信息获取
+        f_order = bs.Frame(f_main, bootstyle='warning')  # order frame
+        f_order.place(relx=0, rely=0.55, relwidth=1, relheight=0.35)
+
+        l_order_info = bs.Label(f_order, text='Order Info', bootstyle='danger')  # order info frame
+        l_order_info.place(relx=0.2, rely=0, relwidth=0.6, relheight=0.2)
+
+        v_order_start_time_value = bs.StringVar()  # order_start_time
+        v_order_start_time_value.set('test_vehicle_no')
+        # l_order_start_time = bs.Label(f_vehicle, textvariable=v_order_start_time_value, bootstyle='info')
+        l_order_start_time = bs.Label(f_order, text='test_vehicle_no', bootstyle='info')
+        l_order_start_time.place(relx=0.2, rely=0.2, relwidth=0.6, relheight=0.2)
+
+        v_order_end_time_value = bs.StringVar()  # order_end_time
+        v_order_end_time_value.set('test_vehicle_type')
+        # l_order_end_time = bs.Label(f_vehicle, textvariable=v_order_end_time_value, bootstyle='info')
+        l_order_end_time = bs.Label(f_order, text='test_vehicle_type', bootstyle='info')
+        l_order_end_time.place(relx=0.2, rely=0.4, relwidth=0.6, relheight=0.2)
+
+        v_total_amount_value = bs.StringVar()  # total_amount
+        v_total_amount_value.set('test_vehicle_power')
+        # l_total_amount = bs.Label(f_vehicle, textvariable=v_total_amount_value, bootstyle='info')
+        l_total_amount = bs.Label(f_order, text='test_vehicle_power', bootstyle='info')
+        l_total_amount.place(relx=0.2, rely=0.6, relwidth=0.6, relheight=0.2)
+
+        f_button = bs.Frame(f_main, bootstyle='primary')  # button frame
+        f_button.place(relx=0, rely=0.9, relwidth=1, relheight=0.1)
+
+        b_pay = bs.Button(f_button, text="Return", bootstyle='light',
+                          command=lambda: self.pay_order_page())
+        b_pay.place(relx=1/7, rely=0.1, relwidth=1/7, relheight=0.8)
+
+        b_report = bs.Button(f_button, text="Report", bootstyle='light',
+                          command=lambda: self.report())
+        b_report.place(relx=3/7, rely=0.1, relwidth=1/7, relheight=0.8)
+
+        b_back = bs.Button(f_button, text="Back", bootstyle='light',
+                           command=lambda: w_complete_order.destroy())
+        b_back.place(relx=5/7, rely=0.1, relwidth=1/7, relheight=0.8)
+
+    def pay_order_page(self):
+        # f_main = bs.Frame(self.current_middle_page, bootstyle='info')
+        # self.middle_page_clear()
+        # self.current_middle_page = f_main
+        w_pay_order = self.create_new_window(400, 400)
+
+        f_main = bs.Frame(w_pay_order, bootstyle='primary')
+        f_main.place(relx=0, rely=0, relwidth=1, relheight=1)
+
+        f_pay = bs.Frame(f_main, bootstyle='info')  # pay frame
+        f_pay.place(relx=0, rely=0, relwidth=1, relheight=0.1)
+        l_pay = bs.Label(f_pay, text='Pay Order', bootstyle='inverse-success')
+        l_pay.place(relx=0.2, rely=0.1, relwidth=0.6, relheight=0.8)
+
+        # TODO: 车辆信息获取
+        f_vehicle = bs.Frame(f_main, bootstyle='warning')  # vehicle frame
+        f_vehicle.place(relx=0, rely=0.1, relwidth=1, relheight=0.35)
+
+        l_vehicle_info = bs.Label(f_vehicle, text='Vehicle Info', bootstyle='danger')  # vehicle info frame
+        l_vehicle_info.place(relx=0.2, rely=0, relwidth=0.6, relheight=0.2)
+
+        v_vehicle_no_value = bs.StringVar()  # vehicle no
+        v_vehicle_no_value.set('test_vehicle_no')
+        # l_vehicle_no = bs.Label(f_vehicle, textvariable=v_vehicle_no_value, bootstyle='info')
+        l_vehicle_no = bs.Label(f_vehicle, text='test_vehicle_no', bootstyle='info')
+        l_vehicle_no.place(relx=0.2, rely=0.2, relwidth=0.6, relheight=0.2)
+
+        v_vehicle_type_value = bs.StringVar()  # vehicle type
+        v_vehicle_type_value.set('test_vehicle_type')
+        # l_vehicle_type = bs.Label(f_vehicle, textvariable=v_vehicle_type_value, bootstyle='info')
+        l_vehicle_type = bs.Label(f_vehicle, text='test_vehicle_type', bootstyle='info')
+        l_vehicle_type.place(relx=0.2, rely=0.4, relwidth=0.6, relheight=0.2)
+
+        v_vehicle_power_value = bs.StringVar()  # vehicle power
+        v_vehicle_power_value.set('test_vehicle_power')
+        # l_vehicle_power = bs.Label(f_vehicle, textvariable=v_vehicle_power_value, bootstyle='info')
+        l_vehicle_power = bs.Label(f_vehicle, text='test_vehicle_power', bootstyle='info')
+        l_vehicle_power.place(relx=0.2, rely=0.6, relwidth=0.6, relheight=0.2)
+
+        v_vehicle_duration_value = bs.StringVar()  # vehicle duration
+        v_vehicle_duration_value.set('test_vehicle_duration')
+        # l_vehicle_duration = bs.Label(f_vehicle, textvariable=v_vehicle_duration_value, bootstyle='info')
+        l_vehicle_duration = bs.Label(f_vehicle, text='test_vehicle_duration', bootstyle='info')
+        l_vehicle_duration.place(relx=0.2, rely=0.8, relwidth=0.6, relheight=0.2)
+
+
+        # TODO: 订单信息获取
+        f_order = bs.Frame(f_main, bootstyle='warning')  # order frame
+        f_order.place(relx=0, rely=0.55, relwidth=1, relheight=0.35)
+
+        l_order_info = bs.Label(f_order, text='Order Info', bootstyle='danger')  # order info frame
+        l_order_info.place(relx=0.2, rely=0, relwidth=0.6, relheight=0.2)
+
+        v_order_start_time_value = bs.StringVar()  # order_start_time
+        v_order_start_time_value.set('test_vehicle_no')
+        # l_order_start_time = bs.Label(f_vehicle, textvariable=v_order_start_time_value, bootstyle='info')
+        l_order_start_time = bs.Label(f_order, text='test_vehicle_no', bootstyle='info')
+        l_order_start_time.place(relx=0.2, rely=0.2, relwidth=0.6, relheight=0.2)
+
+        v_order_end_time_value = bs.StringVar()  # order_end_time
+        v_order_end_time_value.set('test_vehicle_type')
+        # l_order_end_time = bs.Label(f_vehicle, textvariable=v_order_end_time_value, bootstyle='info')
+        l_order_end_time = bs.Label(f_order, text='test_vehicle_type', bootstyle='info')
+        l_order_end_time.place(relx=0.2, rely=0.4, relwidth=0.6, relheight=0.2)
+
+        v_total_amount_value = bs.StringVar()  # total_amount
+        v_total_amount_value.set('test_vehicle_power')
+        # l_total_amount = bs.Label(f_vehicle, textvariable=v_total_amount_value, bootstyle='info')
+        l_total_amount = bs.Label(f_order, text='test_vehicle_power', bootstyle='info')
+        l_total_amount.place(relx=0.2, rely=0.6, relwidth=0.6, relheight=0.2)
+
+        f_button = bs.Frame(f_main, bootstyle='primary')  # button frame
+        f_button.place(relx=0, rely=0.9, relwidth=1, relheight=0.1)
+
+        b_pay = bs.Button(f_button, text="Return", bootstyle='light',
+                          command=lambda: self.return_vehicle(w_pay_order))
+        b_pay.place(relx=0.2, rely=0.1, relwidth=0.2, relheight=0.8)
+
+        b_back = bs.Button(f_button, text="Back", bootstyle='light',
+                           command=lambda: w_pay_order.destroy())
+        b_back.place(relx=0.6, rely=0.1, relwidth=0.2, relheight=0.8)
+
+    def report(self):
+        pass
+
+    def pay_order(self):
+        # TODO: 将tb_user中相应数值调整
+        pass
+        tk.messagebox.showinfo('info', 'Pay Order Success')
+
+    def back(self):
+        # TODO: 返回上一层
+        pass
+        # # self.last_middle_page.place(relx=0, rely=0, relwidth=1, relheight=1)
+        # # self.curent_middle_page = self.last_middle_page
+        # self.middle_frame.place(relx=0, rely=0, relwidth=1, relheight=1)
 
     def charge(self, vehicle_no, info):
         charge_info = BEF.opt_update_car('charge', vehicle_no)
@@ -837,14 +1365,12 @@ class ETSP:
         else:
             tk.messagebox.showerror("Error', 'Repair Failed")
 
-    def move(self, vehicle_no, info):
-
+    def create_new_window(self, width, height):
         new_window = tk.Toplevel(self.root)
         new_window.transient(self.root)
 
-        # 设置新窗口的尺寸
-        window_width = 400
-        window_height = 40
+        window_width = width
+        window_height = height
 
         screen_width = new_window.winfo_screenwidth()
         screen_height = new_window.winfo_screenheight()
@@ -856,6 +1382,12 @@ class ETSP:
         # 设置窗口位置和大小
         new_window.geometry(f'{window_width}x{window_height}+{x}+{y}')
 
+        return new_window
+
+    def move(self, vehicle_no, info):
+
+        new_window = self.create_new_window(400, 40)
+
         # 在新窗口中添加一个 Label
         label = tk.Label(new_window, text="new location: ")
         label.place(relx=0, rely=0.2, relwidth=0.3, relheight=0.6)
@@ -865,7 +1397,8 @@ class ETSP:
         combobox.place(relx=0.3, rely=0.2, relwidth=0.45, relheight=0.6)
 
         # 在新窗口中添加一个 Button
-        button = tk.Button(new_window, text="confirm", command=lambda: self.location_confirm(vehicle_no, info, combobox.get()))
+        button = tk.Button(new_window, text="confirm",
+                           command=lambda: self.location_confirm(vehicle_no, info, combobox.get()))
         button.place(relx=0.8, rely=0.2, relwidth=0.15, relheight=0.6)
 
     def location_confirm(self, vehicle_no, info, choice_location):
@@ -904,7 +1437,7 @@ class ETSP:
     def operator_sort_page(self, f_middle):
         self.middle_page_clear()
 
-        choose_vehicle_frame = bs.Frame(f_middle, bootstyle='success')
+        choose_vehicle_frame = bs.Frame(f_middle, bootstyle='info')
         self.current_middle_page = choose_vehicle_frame
         choose_vehicle_frame.place(relx=0, rely=0, relwidth=1, relheight=1)
 
@@ -1338,7 +1871,12 @@ def main():
     root = tk.Tk()  # 创建Tkinter根窗口
     app = ETSP(root)  # 创建实例
     root.mainloop()  # 保持程序运行
-    exit()
+    # app.root.protocol("WM_DELETE_WINDOW", on_close)
+    # def on_close():
+    #
+    # # exit()
+    # app = FE_User.AppManager()
+    # app.mainloop()
 
 
 if __name__ == "__main__":
