@@ -227,9 +227,14 @@ def repair(order_id, repair_detail, car_end_location):
         end_time = datetime.strptime(order_end_time, "%Y-%m-%d %H:%M:%S")
         hour = (end_time - start_time).seconds // 3600
         hour = max(1, hour)
-        order_price = int(hour * car_price)
 
+        car_power = car_info[4]
+        left_power = max(car_power - hour * 10, 0)
+        SqlFunction.update_car_power(car_id, left_power)
+
+        order_price = int(hour * car_price)
         SqlFunction.end_one_order(order_id, order_price, order_end_time, car_end_location)
+
         SqlFunction.update_car_state(car_id, "repair")
         SqlFunction.update_car_repair_detail(car_id, repair_detail)
         SqlFunction.update_user_debt(user_id, order_price)
