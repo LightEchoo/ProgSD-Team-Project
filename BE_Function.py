@@ -151,7 +151,7 @@ def rent_start(car_id, user_name):
         print("Error in Create Order:", str(e))
         return "RentError"
 
-def return_car(order_id):
+def return_car(order_id, car_end_location):
     '''
     Customer 还车函数。包含以下逻辑：
     1. 根据对应的order_id获取订单信息，包括 car_id，user_id，order_start_time
@@ -164,7 +164,6 @@ def return_car(order_id):
     7. 函数返回值为 boolean
     '''
     order_end_time = CommonFunction.get_current_time()
-    car_end_location = CommonFunction.generate_end_location()
     try:
         order_info = SqlFunction.get_one_order_info(order_id)
 
@@ -201,7 +200,7 @@ def return_car(order_id):
         print("Error Return Car:", str(e))
         return "ReturnError"
 
-def repair(order_id, repair_detail):
+def repair(order_id, repair_detail, car_end_location):
     '''
     Customer 报修函数。包含以下逻辑：
     1. 根据对应的order_id获取订单信息，包括 car_id，user_id，order_start_time
@@ -210,7 +209,6 @@ def repair(order_id, repair_detail):
     4. 函数返回值为 boolean
     '''
     order_end_time = CommonFunction.get_current_time()
-    car_end_location = CommonFunction.generate_end_location()
 
     try:
         order_info = SqlFunction.get_one_order_info(order_id)
