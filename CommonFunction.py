@@ -40,14 +40,5 @@ def time_to_hours(str_time):
 
 #生成一个随机地址，返回值为 String 类型，postcode 格式
 def generate_end_location():
-
-    randomnum = random.randint(1, 4)
-
-    if randomnum == 1:
-        return "Learning Hub"
-    elif randomnum == 2:
-        return "Adam Smith Building"
-    elif randomnum == 3:
-        return "Main Building"
-    elif randomnum == 4:
-        return "Boyd Orr Building"
+    locations = ["IKEA", "Hospital", "UofG", "Square", "City Center"]
+    return random.choice(locations)
