@@ -135,7 +135,7 @@ def rent_start(car_id, user_name):
 
     if str(car_info[6]) != 'available':
         connect.close()
-        return "UnavaliableError"
+        return "UnavailableError"
 
     try:
         order_id = SqlFunction.generate_new_order_id()
