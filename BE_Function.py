@@ -133,7 +133,7 @@ def rent_start(car_id, user_name):
             connect.close()
             return "PayError"
 
-    if str(car_info[6]) != 'avaliable':
+    if str(car_info[6]) != 'available':
         connect.close()
         return "UnavaliableError"
 
