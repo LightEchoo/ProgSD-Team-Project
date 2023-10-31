@@ -308,4 +308,7 @@ def get_location():
     file = open("user.csv", "r")
     global_info = list(file)
     file.close()
-    return global_info[-1]
+    if len(global_info) > 1:
+        return global_info[-1]
+    else:
+        return "NoLocation"

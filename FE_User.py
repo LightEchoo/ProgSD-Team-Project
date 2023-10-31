@@ -593,8 +593,12 @@ class ReservationPage(tk.Frame):
 
         # 根据选定的车辆类型筛选车辆信息
         if self.selected_vehicle_type:
-            self.vehicle_info_list = [vehicle for vehicle in self.vehicle_info_list if
-                                      vehicle[-1] == BE_Function.get_location() and vehicle[1] == self.selected_vehicle_type]
+            if BE_Function.get_location() == "NoLocation":
+                self.vehicle_info_list = [vehicle for vehicle in self.vehicle_info_list if
+                                          vehicle[1] == self.selected_vehicle_type]
+            else:
+                self.vehicle_info_list = [vehicle for vehicle in self.vehicle_info_list if
+                                          vehicle[-1] == BE_Function.get_location() and vehicle[1] == self.selected_vehicle_type]
 
         # 计算当前页的起始索引和结束索引
         start_index = (self.current_page - 1) * self.vehicles_per_page
