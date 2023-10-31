@@ -101,7 +101,7 @@ def save_loaction(user_name, location):
     else:
         return "SaveError"
 
-def rent_start(car_id, user_name, car_start_location):
+def rent_start(car_id, user_name):
     '''
     Customer 租车函数（创建新订单）。包含以下逻辑：
         1. 根据输入的信息查询是否符合租车资格
@@ -141,11 +141,11 @@ def rent_start(car_id, user_name, car_start_location):
         order_id = SqlFunction.generate_new_order_id()
         order_start_time = CommonFunction.get_current_time()
 
-        SqlFunction.create_new_order(order_id, car_id, user_name, order_start_time, car_start_location)
+        SqlFunction.create_new_order(order_id, car_id, user_name, order_start_time, user_info[5])
         SqlFunction.update_car_state(car_id, "inrent")
 
         connect.close()
-        return order_id
+        return order_id, order_start_time
 
     except sqlite3.Error as e:
         print("Error in Create Order:", str(e))
