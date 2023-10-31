@@ -90,6 +90,20 @@ def filter_car(filter, index):
         connect.close()
         return []
 
+def save_loaction(user_name, location):
+    '''
+    将用户当前地址存到 tb_Users 当前用户的 location 字段中：
+    1. 若存储成功，返回 “Successful”
+    2. 若失败，则返回 “SaveError”
+    '''
+    connect = SqlFunction.connect_to_database()
+
+    try:
+        SqlFunction.update_car_location(user_name, location)
+        return "Successful"
+    except:
+        return "SaveError"
+
 def rent_start(car_id, user_name, car_start_location):
     '''
     Customer 租车函数（创建新订单）。包含以下逻辑：
@@ -99,7 +113,7 @@ def rent_start(car_id, user_name, car_start_location):
             iii. 若车辆状态不是 “avaliable”，则提示 “该车辆不可租用”
         2. 若可以租用，则在 tb_Orders 表中创建新订单
         3. 同时，将 car_id 对应的车辆 CarState 改为 “inrent”
-        4. 函数返回值为 boolean
+        4. 函数返回值为 String 字段
     '''
     connect = SqlFunction.connect_to_database()
 
@@ -109,9 +123,9 @@ def rent_start(car_id, user_name, car_start_location):
     #print(user_info)
     #print(car_info)
 
-    '''if user_info[3] != 0:
+    if user_info[3] != 0:
         connect.close()
-        return "DepositError"'''
+        return "DepositError"
 
     existing_orders = SqlFunction.get_one_user_orders(user_name)
     for order in existing_orders:
@@ -122,9 +136,9 @@ def rent_start(car_id, user_name, car_start_location):
             connect.close()
             return "PayError"
 
-    '''if str(car_info[6]) != 'avaliable':
+    if str(car_info[6]) != 'avaliable':
         connect.close()
-        return "UnavaliableError"'''
+        return "UnavaliableError"
 
     try:
         order_id = SqlFunction.generate_new_order_id()
@@ -160,6 +174,7 @@ def return_car(order_id):
         if order_info is None:
             return False
 
+        user_id = order_info[2]
         car_id = order_info[1]
         order_start_time = order_info[3]
 
@@ -177,6 +192,7 @@ def return_car(order_id):
         left_power = max(car_power - hour * 10, 0)
 
         SqlFunction.update_car_power(car_id,left_power)
+        SqlFunction.update_user_debt(user_id, order_price)
 
         if left_power < 20:
             SqlFunction.update_car_state(car_id, "lowpower")
@@ -205,6 +221,7 @@ def repair(order_id, repair_detail):
             return "OrderError"
 
         car_id = order_info[1]
+        user_id = order_info[2]
         order_start_time = order_info[3]
 
         car_info = SqlFunction.get_one_car_info(car_id)
@@ -218,6 +235,7 @@ def repair(order_id, repair_detail):
         SqlFunction.end_one_order(order_id, order_price, order_end_time, car_end_location)
         SqlFunction.update_car_state(car_id, "repair")
         SqlFunction.update_car_repair_detail(car_id, repair_detail)
+        SqlFunction.update_user_debt(user_id, order_price)
         return "Successful"
 
     except sqlite3.Error as e:
@@ -231,14 +249,16 @@ def pay_order(order_id):
     3. 函数返回值为 boolean
     '''
     try:
+        order_info = SqlFunction.get_one_order_info(order_id)
         SqlFunction.pay_one_order(order_id)
+        SqlFunction.update_user_debt(order_info[3], 0)
 
     except sqlite3.Error as e:
         print("Error Pay Car:", str(e))
         return False
 
 
-#### 用于 Operator_FE 运营员界面的函数 ####
+#### 用于 Operator_F›E 运营员界面的函数 ####
 def opt_update_car(update_action, car_id, car_location = "Main Building"):
     '''
     Operator 用于更新车辆状态的方法。包含以下逻辑：
@@ -297,7 +317,7 @@ def opt_update_car(update_action, car_id, car_location = "Main Building"):
         print("Error Update Car:", str(e))
         return False
 
-def get_login_user():
+'''def get_login_user():
     file = open("user.csv", "r")
     login_user = [line.strip() for line in file.readlines()]
     file.close()
@@ -311,4 +331,4 @@ def get_location():
     if len(global_info) > 1:
         return global_info[-1]
     else:
-        return "NoLocation"
+        return "NoLocation"'''
