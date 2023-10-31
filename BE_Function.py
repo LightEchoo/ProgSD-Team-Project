@@ -96,12 +96,9 @@ def save_loaction(user_name, location):
     1. 若存储成功，返回 “Successful”
     2. 若失败，则返回 “SaveError”
     '''
-    connect = SqlFunction.connect_to_database()
-
-    try:
-        SqlFunction.update_car_location(user_name, location)
+    if SqlFunction.update_user_location(user_name, location):
         return "Successful"
-    except:
+    else:
         return "SaveError"
 
 def rent_start(car_id, user_name, car_start_location):
