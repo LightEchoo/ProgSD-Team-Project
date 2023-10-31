@@ -591,14 +591,10 @@ class ReservationPage(tk.Frame):
         self.vehicle_info_list = [vehicle for vehicle in self.vehicle_info_list if
                                   vehicle[6] == "available"]
 
-        print(BE_Function.get_location())
-        self.vehicle_info_list = [vehicle for vehicle in self.vehicle_info_list if
-                                  vehicle[-1] == BE_Function.get_location()]
-
         # 根据选定的车辆类型筛选车辆信息
         if self.selected_vehicle_type:
             self.vehicle_info_list = [vehicle for vehicle in self.vehicle_info_list if
-                                      vehicle[1] == self.selected_vehicle_type]
+                                      vehicle[-1] == BE_Function.get_location() and vehicle[1] == self.selected_vehicle_type]
 
         # 计算当前页的起始索引和结束索引
         start_index = (self.current_page - 1) * self.vehicles_per_page
