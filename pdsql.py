@@ -11,7 +11,7 @@ VEHICLE_TYPE = ['ebike', 'escooter']
 VEHICLE_STATE_L = ['available', 'inrent', 'lowpower', 'repair']
 
 # 地点位置list
-LOCATIONS = ["IKEA", "Hospital", "UofG", "St George's Square", "Glasgow City Center"]
+LOCATIONS = ["IKEA", "Hospital", "UofG", "Square", "City Center"]
 
 REPAIR_TYPE = ['None', 'seat post', 'frames', 'tire', 'battery']
 
@@ -20,6 +20,14 @@ ORDER_STATE = ['ongoing', 'due', 'end']
 pd.set_option('display.max_rows', None)
 pd.set_option('display.max_columns', None)
 
+USER_TEST_DATA = {
+        'UserName': ['manager', 'operator', 'user', 'user1'],
+        'UserPassword': ['000', '000', '000', '000'],
+        'UserType': ['manager', 'operator', 'customer', 'customer'],
+        'UserDebt': [0, 0, 0, 1],
+        'UserDeposit': [0, 0, 1, 1],
+        'UserLocation': ['None', 'None', 'IKEA']
+    }
 
 # 创建数据库连接
 def connect_to_database():
@@ -82,14 +90,7 @@ def test_user_initialization(num_user_samples):
     :return:
     """
     # 用户测试用例
-    users_test_data = pd.DataFrame({
-        'UserName': ['manager', 'operator', 'user'],
-        'UserPassword': ['000', '000', '000'],
-        'UserType': ['manager', 'operator', 'customer'],
-        'UserDebt': [0, 0, 0],
-        'UserDeposit': [0, 0, 1],
-        'UserLocation': ['None', 'None', 'IKEA']
-    })
+    users_test_data = pd.DataFrame(USER_TEST_DATA)
     num_user_samples = num_user_samples - len(users_test_data)
     # print(users_test_data)
 
