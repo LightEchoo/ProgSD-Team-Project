@@ -380,7 +380,7 @@ class MainPage(tk.Frame):
         # search_label.pack(pady=10, anchor=tk.N)
 
         # 加载并添加背景图片
-        self.background_image = Image.open("images/back10.jpg")
+        self.background_image = Image.open("images/back10.png")
         self.bg_image = ImageTk.PhotoImage(self.background_image)
 
         # 在center_frame上放置背景图像
@@ -633,7 +633,6 @@ class EndOrderPage(tk.Frame):
         # 创建车辆详情页面标签
         label = tk.Label(self, text="Order in progress", font=("Arial", 26))
         label.pack(pady=10)  # 默认垂直居中显示
-
 
         # 创建图片的缩略图
         image = Image.open("images/ebike2.png")
