@@ -120,18 +120,18 @@ def rent_start(car_id, user_name):
     #print(user_info)
     #print(car_info)
 
-    '''if user_info[3] != 0:
+    if user_info[3] != 0:
         connect.close()
-        return "DepositError"'''
+        return "DepositError"
 
     existing_orders = SqlFunction.get_one_user_orders(user_name)
     for order in existing_orders:
         if order[6] == "ongoing":
             connect.close()
             return "OngoingError"
-        elif order[6] == "due":
+        '''elif order[6] == "due":
             connect.close()
-            return "PayError"
+            return "PayError"'''
 
     if str(car_info[6]) != 'available':
         connect.close()
