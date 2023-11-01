@@ -532,7 +532,7 @@ class ETSP:
 
         # for list in list_order:
         for _ in range(10):
-            single_order_bar = self.single_order_bar(f_vehicle, list)
+            single_order_bar = self.single_order_bar(f_vehicle)
             single_order_bar.pack()
             space_frame = bs.Frame(f_vehicle, width=380, height=10, bootstyle='primary')
             space_frame.pack()
