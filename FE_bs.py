@@ -475,40 +475,142 @@ class ETSP:
         f_main.place(relx=0, rely=0, relwidth=1, relheight=1)
         top = self.frame_top(f_main, 'Order!', 0)
         middle = self.frame_middle(f_main)
-        # self.user_place_page(middle)
+        self.user_order(middle)
         bottom = self.frame_bottom(f_main, middle)
 
-        # f_main = bs.Frame(frame)
-        # f_main.place(relx=0, rely=0, relwidth=1, relheight=1)
-        #
-        # pd_vehicles = take_pd_vehicles()
-        # vehicle_headers = pd_vehicles.columns.tolist()  # 表头
-        # tree = bs.Treeview(f_main, columns=vehicle_headers, show='headings', bootstyle='info')
-        # tree.pack(side=tk.LEFT, fill="both", expand=True)
-        # for header in vehicle_headers:  # 设置表头属性
-        #     tree.heading(header, text=header)
-        #     tree.column(header, stretch=tk.YES, anchor='center')
-        #
-        # pd_vehicles = take_pd_vehicles()
-        # vehicle_data = pd_vehicles.sort_values(by=sort_column, ascending=sort_type).values.tolist()  # 数值
-        # for data in vehicle_data:  # 插入数值
-        #     tree.insert('', 'end', values=data)
-        # self.adjust_column_width(tree, vehicle_headers)  # 调整列宽度自适应
-        #
-        # # 配置交替行颜色的树状视图
-        # for index, child in enumerate(tree.get_children()):
-        #     if index % 2 == 0:
-        #         tree.item(child, tags=('evenrow',))
-        #     else:
-        #         tree.item(child, tags=('oddrow',))
-        #
-        # tree.tag_configure('evenrow', background='white')
-        # tree.tag_configure('oddrow', background='lightgray')
-        #
-        # # 创建垂直滚动条
-        # vsb = bs.Scrollbar(f_main, orient="vertical", command=tree.yview, bootstyle="info-round")
-        # tree.configure(yscrollcommand=vsb.set)
-        # vsb.pack(side=tk.RIGHT, fill=tk.Y)
+    def user_order(self, frame):
+        print(self.user_info[0])
+        list_order = SQF.get_one_user_orders(self.user_info[0])
+        # TODO: 返回值不充足，只有最后一个订单
+        print(list_order)
+
+        # 选车界面 frame
+        f_order = bs.Frame(frame, bootstyle='primary')
+        f_order.place(relx=0.02, rely=0.02, relwidth=0.96, relheight=0.96)
+
+        # 创建一个Canvas小部件，它用于包含可滚动的内容。
+        canvas_vehicle = tk.Canvas(f_order)
+        # 将Canvas小部件放置在中部窗口中，使其在左侧占据空间，并允许其在水平和垂直方向上扩展以填满可用空间。
+        canvas_vehicle.place(relx=0, rely=0, relwidth=0.99, relheight=1)
+
+        # 设置滚动条风格
+        # scrollbar_style = ttk.Style()
+        # scrollbar_style.configure("TScrollbar",
+        #                           troughcolor="lightgray",
+        #                           borderwidth=5,
+        #                           lightcolor="red",
+        #                           darkcolor="blue",
+        #                           sliderlength=30)
+
+        # 创建一个垂直滚动条（Scrollbar），使用ttk模块创建，与Canvas小部件关联，以便控制Canvas的垂直滚动。
+        scrollbar = bs.Scrollbar(f_order, orient=tk.VERTICAL,
+                                 command=canvas_vehicle.yview, bootstyle='primary')
+        # 将垂直滚动条放置在主窗口的右侧，使其占据垂直空间。
+        scrollbar.place(relx=0.99, rely=0, relwidth=0.01, relheight=1)
+        # 配置Canvas小部件以与垂直滚动条(scrollbar)相关联，使它能够通过滚动条进行垂直滚动。
+        canvas_vehicle.configure(yscrollcommand=scrollbar.set)
+        # 创建一个Frame小部件，该Frame用于包含实际的滚动内容。
+        f_vehicle = bs.Frame(canvas_vehicle, bootstyle='info', width=2000, height=1000)
+        # # 将Frame小部件添加到Canvas中，并配置Frame在Canvas上的位置，以及锚点在左上角（NW表示北西）。
+        canvas_vehicle.create_window((0, 0), window=f_vehicle, anchor=tk.NW)
+        self.current_operator_page = f_vehicle
+
+        def on_canvas_configure(event):  # 内置函数 配置Canvas以根据内容自动调整滚动区域
+            canvas_vehicle.configure(scrollregion=canvas_vehicle.bbox("all"))
+
+        # 绑定一个事件处理函数，当Frame的配置发生变化时，将调用on_canvas_configure函数来自动调整Canvas的滚动区域。
+        f_vehicle.bind("<Configure>", on_canvas_configure)
+
+        def on_mousewheel(event):
+            canvas_vehicle.yview_scroll(-1 * (event.delta // 120), "units")
+
+        # 绑定鼠标滚轮事件
+        canvas_vehicle.bind_all("<MouseWheel>", on_mousewheel)
+
+        # l_test = tk.Label(f_vehicle, text='Order No.\n')
+        # l_test.pack()
+
+        # for list in list_order:
+        for _ in range(10):
+            single_order_bar = self.single_order_bar(f_vehicle, list)
+            single_order_bar.pack()
+            space_frame = bs.Frame(f_vehicle, width=380, height=10, bootstyle='primary')
+            space_frame.pack()
+        frame_fill = bs.Frame(f_vehicle, width=380, height=700, bootstyle='primary')
+        frame_fill.pack()
+
+    def single_order_bar(self, frame,
+                         list=[61, 11, 'Alex17', '2022-04-29 20:20:07', '2022-04-29 21:20:07', 7, 'ongoing', 'IKEA',
+                               'Square']):
+        single_order_frame = bs.Frame(frame, width=380, height=200, bootstyle='primary')  # 主框架
+        list = [61, 11, 'Alex17', '2022-04-29 20:20:07', '2022-04-29 21:20:07', 7, 'ongoing', 'IKEA',
+                'Square']
+        # OrderID; UserName, OrderState; CarID, OrderPrice; OrderStartTime, OrderEndTime; CarStartLocation, CarEndLocation;
+
+        # OrderID
+        v_order_id = tk.StringVar()
+        v_order_id.set('Order\nNo.' + str(list[0]))
+        l_order_id = tk.Label(single_order_frame, textvariable=v_order_id)
+
+        # UserName
+        v_user_name = tk.StringVar()
+        v_user_name.set('UserName:\n' + str(list[2]))
+        l_user_name = tk.Label(single_order_frame, textvariable=v_user_name)
+
+        # OrderState
+        v_order_state = tk.StringVar()
+        v_order_state.set('Order State:\n' + str(list[6]))
+        l_order_state = tk.Label(single_order_frame, textvariable=v_order_state)
+
+        # CarID
+        v_car_id = tk.StringVar()
+        v_car_id.set('Car ID:\n' + str(list[1]))
+        l_car_id = tk.Label(single_order_frame, textvariable=v_car_id)
+
+        # OrderPrice
+        v_order_price = tk.StringVar()
+        v_order_price.set('Order Price(£):\n' + str(list[5]))
+        l_order_price = tk.Label(single_order_frame, textvariable=v_order_price)
+
+        # OrderStartTime
+        v_order_start_time = tk.StringVar()
+        v_order_start_time.set('Order Start Time:\n' + str(list[3]))
+        l_order_start_time = tk.Label(single_order_frame, textvariable=v_order_start_time)
+
+        # OrderEndTime
+        v_order_end_time = tk.StringVar()
+        v_order_end_time.set('Order End Time:\n' + str(list[4]))
+        l_order_end_time = tk.Label(single_order_frame, textvariable=v_order_end_time)
+
+        # CarStartLocation
+        v_car_start_location = tk.StringVar()
+        v_car_start_location.set('Car Start Location:\n' + str(list[7]))
+        l_car_start_location = tk.Label(single_order_frame, textvariable=v_car_start_location)
+
+        # CarEndLocation
+        v_car_end_location = tk.StringVar()
+        v_car_end_location.set('Car End Location:\n' + str(list[8]))
+        l_car_end_location = tk.Label(single_order_frame, textvariable=v_car_end_location)
+
+        l_order_id.place(relx=0, rely=0, relwidth=0.1, relheight=1)
+        l_user_name.place(relx=0.1, rely=0, relwidth=0.3, relheight=0.25)
+        l_order_state.place(relx=0.1, rely=0.25, relwidth=0.3, relheight=0.25)
+        l_car_id.place(relx=0.1, rely=0.5, relwidth=0.3, relheight=0.25)
+        l_order_price.place(relx=0.1, rely=0.75, relwidth=0.3, relheight=0.25)
+        l_order_start_time.place(relx=0.4, rely=0, relwidth=0.6, relheight=0.25)
+        l_order_end_time.place(relx=0.4, rely=0.25, relwidth=0.6, relheight=0.25)
+        l_car_start_location.place(relx=0.4, rely=0.5, relwidth=0.6, relheight=0.25)
+        l_car_end_location.place(relx=0.4, rely=0.75, relwidth=0.6, relheight=0.25)
+
+        return single_order_frame
+
+        # bg1 = '#36a1b7'
+        # l_vehicle_no_value.config(bg=bg1, fg='white')
+        # l_rent_value.config(bg=bg1, fg='white')
+        # l_battery_life_value.config(bg=bg1, fg='white')
+        # l_vehicle_type_value.config(bg=bg1, fg='white')
+        # l_location_value.config(bg=bg1, fg='white')
+        # l_state_value.config(bg=bg1, fg='white')
 
     def user_account_page(self):
         # print('user_account_page')
@@ -535,7 +637,7 @@ class ETSP:
 
         label = bs.Label(f_main, image=user_image, bootstyle='primary')
         label.image = user_image  # 保持对图像的引用，以防止被垃圾回收
-        label.place(relx=5/16, rely=0.1, relwidth=3/8, relheight=0.32)
+        label.place(relx=5 / 16, rely=0.1, relwidth=3 / 8, relheight=0.32)
         # label.pack(side='top')
 
         v_username = tk.StringVar()  # 用户选择的用户名
@@ -548,7 +650,8 @@ class ETSP:
         l_user_debt = tk.Label(f_main, textvariable=v_user_debt)
         l_user_debt.place(relx=0.2, rely=0.7, relwidth=0.6, relheight=0.1)
 
-        b_pay = bs.Button(f_main, text='Pay', bootstyle='primary-outline', command=lambda: self.pay_in_account(self.user_info[3]))
+        b_pay = bs.Button(f_main, text='Pay', bootstyle='primary-outline',
+                          command=lambda: self.pay_in_account(self.user_info[3]))
         b_pay.place(relx=0.4, rely=0.85, relwidth=0.2, relheight=0.05)
 
     def pay_in_account(self, debt, ):
@@ -557,6 +660,7 @@ class ETSP:
         else:
             tk.messagebox.showinfo("Congratulations!", "You have paid!")
             # TODO: 更改数据库状态
+
     def user_place_page(self, f_middle):
         """
         用户主界面-位置选择界面
@@ -920,7 +1024,7 @@ class ETSP:
             v_vehicle_no.set('No.' + str(vehicle_no))
             # print(v_vehicle_no.get())
             # l_vehicle_no = bs.Label(frame_info, textvariable=v_vehicle_no, bootstyle='inverse-info')
-            l_vehicle_no = tk.Label(frame_info, text='Vehicle No.: ', padx=padx_label, pady=pady_label)
+            # l_vehicle_no = tk.Label(frame_info, text='Vehicle No.: ', padx=padx_label, pady=pady_label)
             l_vehicle_no_value = tk.Label(frame_info, textvariable=v_vehicle_no, padx=padx_label, pady=pady_label)
             # l_vehicle_no_value.configure(bg="SystemTransparent")
 
@@ -945,14 +1049,14 @@ class ETSP:
             rent = round(rent, 2)
             v_rent.set('£' + str(rent) + '/h')
             # l_rent = bs.Label(frame_info, textvariable=v_rent, bootstyle='inverse-info')
-            l_rent = tk.Label(frame_info, text='Rental cost (£/h): ', padx=padx_label, pady=pady_label)
+            # l_rent = tk.Label(frame_info, text='Rental cost (£/h): ', padx=padx_label, pady=pady_label)
             l_rent_value = tk.Label(frame_info, textvariable=v_rent, padx=padx_label, pady=pady_label)
 
             v_battery_life = bs.StringVar()  # 剩余电量
             battery_lift = round(battery_lift, 2)
             v_battery_life.set(str(battery_lift) + '%')
             # l_battery_life = bs.Label(frame_info, textvariable=v_battery_life, bootstyle='inverse-info')
-            l_battery_life = tk.Label(frame_info, text='Battery life: ', padx=padx_label, pady=pady_label)
+            # l_battery_life = tk.Label(frame_info, text='Battery life: ', padx=padx_label, pady=pady_label)
             l_battery_life_value = tk.Label(frame_info, textvariable=v_battery_life, padx=padx_label, pady=pady_label)
 
             v_vehicle_type = bs.StringVar()  # 车辆类型
@@ -962,19 +1066,19 @@ class ETSP:
             #     v_vehicle_type.set("Vehicle type: electric scooter")
             v_vehicle_type.set(str(vehicle_type))
             # l_vehicle_type = bs.Label(frame_info, textvariable=v_vehicle_type, bootstyle='inverse-info')
-            l_vehicle_type = tk.Label(frame_info, text='Vehicle type: ', padx=padx_label, pady=pady_label)
+            # l_vehicle_type = tk.Label(frame_info, text='Vehicle type: ', padx=padx_label, pady=pady_label)
             l_vehicle_type_value = tk.Label(frame_info, textvariable=v_vehicle_type, padx=padx_label, pady=pady_label)
 
             v_location = bs.StringVar()  # 位置
             v_location.set(str(location))
             # l_location = bs.Label(frame_info, textvariable=v_location, bootstyle='inverse-info')
-            l_location = tk.Label(frame_info, text='Location: ', padx=padx_label, pady=pady_label)
+            # l_location = tk.Label(frame_info, text='Location: ', padx=padx_label, pady=pady_label)
             l_location_value = tk.Label(frame_info, textvariable=v_location, padx=padx_label, pady=pady_label)
 
             v_state = bs.StringVar()  # 状态
             v_state.set(str(state))
             # l_state = bs.Label(frame_info, textvariable=v_state, bootstyle='inverse-info')
-            l_state = tk.Label(frame_info, text='State: ', padx=padx_label, pady=pady_label)
+            # l_state = tk.Label(frame_info, text='State: ', padx=padx_label, pady=pady_label)
             l_state_value = tk.Label(frame_info, textvariable=v_state, padx=padx_label, pady=pady_label)
 
             bg1 = '#36a1b7'
@@ -1528,15 +1632,6 @@ class ETSP:
     def print_PDF(self):
         pass
         # TODO: print to a PDF file
-
-    def user_vehicle_page(self):
-        pass
-
-    def user_order_page(self):
-        pass
-
-    def user_home_page(self):
-        pass
 
     def operator_main_page(self):
         self.root.geometry('1600x800')
