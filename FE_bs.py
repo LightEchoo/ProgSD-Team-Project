@@ -111,7 +111,20 @@ class ETSP:
         """
         初次显示页面
         """
-        self.root.geometry('1600x800')
+        # self.root.geometry('1600x800')
+        
+        screen_width = self.root.winfo_screenwidth()
+        screen_height = self.root.winfo_screenheight()
+        window_width = 1600
+        window_height = 800
+
+        # 计算 x 和 y 坐标
+        x = (screen_width // 2) - (window_width // 2)
+        y = (screen_height // 2) - (window_height // 2)
+
+        # 设置窗口的尺寸和位置
+        self.root.geometry(f'{window_width}x{window_height}+{x}+{y}')
+
         f_main = bs.Frame(self.root, bootstyle='dark')
         f_main.place(relx=0, rely=0, relwidth=1, relheight=1)
         top = self.frame_top(f_main, 'Welcome to Electric Transportation Sharing Program !')
@@ -165,7 +178,7 @@ class ETSP:
             f_top.place(relx=0, rely=0, relwidth=1, relheight=0.1)
 
             # b_back = bs.Button(f_top, text='Back', bootstyle='dark-outline', command=self.test)
-            b_back = bs.Button(f_top, text='Back', bootstyle='dark-outline')
+            b_back = bs.Button(f_top, text='Back', bootstyle='dark-outline', command=self.show_first_page)
             b_back.place(relx=0.02, rely=0.3, relwidth=0.2, relheight=0.4)
 
             # l_name = tk.Label(f_top, text=current_page_name)
@@ -209,7 +222,7 @@ class ETSP:
             # # 绑定鼠标按钮释放事件
             # b_back_icon.bind('<ButtonRelease-1>', on_release)
 
-            b_back = bs.Button(f_top, text='Back to login', bootstyle='dark-outline')
+            b_back = bs.Button(f_top, text='Back to login', bootstyle='dark-outline', command=self.show_first_page)
             b_back.place(relx=0.1, rely=0.3, relwidth=0.08, relheight=0.4)
 
             # l_name = tk.Label(f_top, text=current_page_name)
@@ -1039,17 +1052,18 @@ class ETSP:
         :param info:
         :return:
         """
-        # TODO: 传入后端username、vehicle_no，返回字符串，若成功，返回订单编号、开始时间
         result = BEF.rent_start(vehicle_no, self.user_info[0])
-        if result == 'DepositError':
-            tk.messagebox.showerror('Deposit Error', 'Your balance is insufficient.')
-        elif result == 'OngoingError':
-            # TODO: 链接到Onging page
+        print(result)
+        if result == 'OngoingError':
             tk.messagebox.showerror('Ongoing Error', 'There is an ongoing order, please complete the order first.')
-        elif result == 'PayError':
+            self.order_in_progress(vehicle_no, result[0], result[1])
+        elif result == 'DepositError':
             tk.messagebox.showerror('Order not completed',
                                     'There is an uncompleted order, please complete the order first.')
-            self.complete_order_page()
+            print(self.user_info[0])
+            order_info = SQF.get_user_specific_order(self.user_info[0], 'due')
+            print(order_info)
+            self.complete_order_page(order_info[1], order_info[0])
         elif result == 'UnavailableError':
             tk.messagebox.showerror('Unavailable Error',
                                     'This vehicle is unavailable, please try again later.')
@@ -1122,7 +1136,7 @@ class ETSP:
         v_price_value = bs.StringVar()  # price
         pd_vehicles=take_pd_vehicles()
         vehicle_price = pd_vehicles[pd_vehicles['CarID'] == vehicle_no]['CarPrice'].iloc[0]
-        print('p:', vehicle_price)
+        # print(vehicle_price)
         v_price_value.set('Price\n£' + str(vehicle_price) + '/h')
         l_price = tk.Label(f_vehicle_info, textvariable=v_price_value)
         # l_price = bs.Label(f_vehicle_info, text='test_price', bootstyle='inverse-info')
@@ -1136,31 +1150,47 @@ class ETSP:
         f_button.place(relx=0, rely=0.9, relwidth=1, relheight=0.1)
 
         b_pay = bs.Button(f_button, text="Return", bootstyle='info',
-                          command=lambda: self.return_vehicle(w_order_in_progress, order_no))
+                          command=lambda: self.return_vehicle_page(w_order_in_progress, order_no, vehicle_no))
         b_pay.place(relx=0.2, rely=0.1, relwidth=0.2, relheight=0.8)
 
         b_back = bs.Button(f_button, text="Back", bootstyle='info',
                            command=lambda: w_order_in_progress.destroy())
         b_back.place(relx=0.6, rely=0.1, relwidth=0.2, relheight=0.8)
 
-    def return_vehicle(self, w_order_in_progress, order_no):
+    def return_vehicle_page(self, w_order_in_progress, order_no, vehicle_no):
         """
         用户归还车辆，确认后还车，并跳转到pay/report界面
         :param w_order_in_progress:
         :return:
         """
+        w_choice_location = self.create_new_window(400, 40)
+
+        # 在新窗口中添加一个 Label
+        label = tk.Label(w_choice_location, text="new location: ")
+        label.place(relx=0, rely=0.2, relwidth=0.3, relheight=0.6)
+
+        # 在新窗口中添加一个 Entry
+        combobox = bs.Combobox(w_choice_location, values=LOCATIONS, bootstyle="info")
+        combobox.place(relx=0.3, rely=0.2, relwidth=0.45, relheight=0.6)
+
+        # 在新窗口中添加一个 Button
+        button = tk.Button(w_choice_location, text="confirm",
+                           command=lambda: self.return_vehicle(w_choice_location, combobox.get(), w_order_in_progress, order_no, vehicle_no))
+        button.place(relx=0.8, rely=0.2, relwidth=0.15, relheight=0.6)
+
+    def return_vehicle(self, w_choice_location, choice_location, w_order_in_progress, order_no, vehicle_no):
+        w_choice_location.destroy()
         result = tk.messagebox.askquestion(title="Confirm", message="Are you sure you want to return the car?")
         if result == 'yes':
-            db_result = BEF.return_car(order_no)
+            db_result = BEF.return_car(order_no, choice_location)
             if db_result == "Successful":
                 tk.messagebox.showinfo('info', 'Your vehicle is returned!')
                 w_order_in_progress.destroy()
-                self.complete_order_page()
+                self.complete_order_page(vehicle_no, order_no)
             elif db_result == "ReturnError":
                 tk.messagebox.showerror('Rent Error', 'Database error, please try again later.')
 
-
-    def complete_order_page(self):
+    def complete_order_page(self, vehicle_no, order_no):
         """
         当预定是用户存在未支付订单，或正常结束订单还车后，会跳转到此界面
         :return:
@@ -1175,115 +1205,137 @@ class ETSP:
         l_pay = bs.Label(f_pay, text='Complete Order', bootstyle='inverse-primary', anchor='center')
         l_pay.place(relx=0.2, rely=0.1, relwidth=0.6, relheight=0.8)
 
-        # TODO: 车辆信息获取
+        pd_vehicles = take_pd_vehicles()
+        vehicle_info = pd_vehicles[pd_vehicles['CarID'] == vehicle_no]
         f_vehicle = bs.Frame(f_main, bootstyle='primary')  # vehicle frame
-        f_vehicle.place(relx=0, rely=0.1, relwidth=1, relheight=0.4)
+        f_vehicle.place(relx=0, rely=0.1, relwidth=1, relheight=0.3)
 
-        l_vehicle_info = bs.Label(f_vehicle, text='Vehicle Info', bootstyle='danger')  # vehicle info frame
-        l_vehicle_info.place(relx=0.2, rely=0, relwidth=0.6, relheight=0.2)
+        l_vehicle_info = bs.Label(f_vehicle, text='Vehicle Info', bootstyle='danger', anchor='center')  # vehicle info frame
+        l_vehicle_info.place(relx=0.2, rely=0, relwidth=0.6, relheight=0.25)
 
         v_vehicle_no_value = bs.StringVar()  # vehicle no
-        v_vehicle_no_value.set('test_vehicle_no')
-        # l_vehicle_no = bs.Label(f_vehicle, textvariable=v_vehicle_no_value, bootstyle='info')
-        l_vehicle_no = bs.Label(f_vehicle, text='test_vehicle_no', bootstyle='inverse-info')
-        l_vehicle_no.place(relx=0.2, rely=0.2, relwidth=0.6, relheight=0.2)
+        v_vehicle_no_value.set('Vehicle No.：' + str(vehicle_info['CarID'].iloc[0]))
+        l_vehicle_no = tk.Label(f_vehicle, textvariable=v_vehicle_no_value)
+        # l_vehicle_no = bs.Label(f_vehicle, text='test_vehicle_no', bootstyle='inverse-info')
+        l_vehicle_no.place(relx=0.2, rely=0.25, relwidth=0.6, relheight=0.25)
 
         v_vehicle_type_value = bs.StringVar()  # vehicle type
-        v_vehicle_type_value.set('test_vehicle_type')
-        # l_vehicle_type = bs.Label(f_vehicle, textvariable=v_vehicle_type_value, bootstyle='info')
-        l_vehicle_type = bs.Label(f_vehicle, text='test_vehicle_type', bootstyle='inverse-info')
-        l_vehicle_type.place(relx=0.2, rely=0.4, relwidth=0.6, relheight=0.2)
+        v_vehicle_type_value.set('Vehicle Type: ' + str(vehicle_info['CarType'].iloc[0]))
+        l_vehicle_type = tk.Label(f_vehicle, textvariable=v_vehicle_type_value)
+        # l_vehicle_type = bs.Label(f_vehicle, text='test_vehicle_type', bootstyle='inverse-info')
+        l_vehicle_type.place(relx=0.2, rely=0.5, relwidth=0.6, relheight=0.25)
 
-        v_vehicle_power_value = bs.StringVar()  # vehicle power
-        v_vehicle_power_value.set('test_vehicle_power')
-        # l_vehicle_power = bs.Label(f_vehicle, textvariable=v_vehicle_power_value, bootstyle='info')
-        l_vehicle_power = bs.Label(f_vehicle, text='test_vehicle_power', bootstyle='inverse-info')
-        l_vehicle_power.place(relx=0.2, rely=0.6, relwidth=0.6, relheight=0.2)
-
-        v_vehicle_duration_value = bs.StringVar()  # vehicle duration
-        v_vehicle_duration_value.set('test_vehicle_duration')
-        # l_vehicle_duration = bs.Label(f_vehicle, textvariable=v_vehicle_duration_value, bootstyle='info')
-        l_vehicle_duration = bs.Label(f_vehicle, text='test_vehicle_duration', bootstyle='inverse-info')
-        l_vehicle_duration.place(relx=0.2, rely=0.8, relwidth=0.6, relheight=0.2)
+        v_vehicle_power_left_value = bs.StringVar()  # vehicle power
+        v_vehicle_power_left_value.set('Vehicle Power left: ' + str(vehicle_info['CarPower'].iloc[0]))
+        l_vehicle_power_left = tk.Label(f_vehicle, textvariable=v_vehicle_power_left_value)
+        # l_vehicle_power_left = bs.Label(f_vehicle, text='test_vehicle_power', bootstyle='inverse-info')
+        l_vehicle_power_left.place(relx=0.2, rely=0.75, relwidth=0.6, relheight=0.25)
 
         # TODO: 订单信息获取
+        df_orders = take_pd_orders()
+        order_info = df_orders[df_orders['OrderID'] == order_no]
         f_order = bs.Frame(f_main, bootstyle='primary')  # order frame
-        f_order.place(relx=0, rely=0.55, relwidth=1, relheight=0.3)
+        f_order.place(relx=0, rely=0.45, relwidth=1, relheight=0.4)
 
-        l_order_info = bs.Label(f_order, text='Order Info', bootstyle='danger')  # order info frame
-        l_order_info.place(relx=0.2, rely=0, relwidth=0.6, relheight=0.25)
+        l_order_info = bs.Label(f_order, text='Order Info', bootstyle='danger', anchor='center')  # order info frame
+        l_order_info.place(relx=0.2, rely=0, relwidth=0.6, relheight=0.2)
 
         v_order_start_time_value = bs.StringVar()  # order_start_time
-        v_order_start_time_value.set('test_vehicle_no')
-        # l_order_start_time = bs.Label(f_vehicle, textvariable=v_order_start_time_value, bootstyle='info')
-        l_order_start_time = bs.Label(f_order, text='test_vehicle_no', bootstyle='inverse-info')
-        l_order_start_time.place(relx=0.2, rely=0.25, relwidth=0.6, relheight=0.25)
+        v_order_start_time_value.set('Order Start Time: ' + str(order_info['OrderStartTime'].iloc[0]))
+        l_order_start_time = tk.Label(f_order, textvariable=v_order_start_time_value)
+        # l_order_start_time = bs.Label(f_order, text='test_vehicle_no', bootstyle='inverse-info')
+        l_order_start_time.place(relx=0.2, rely=0.2, relwidth=0.6, relheight=0.2)
 
         v_order_end_time_value = bs.StringVar()  # order_end_time
-        v_order_end_time_value.set('test_vehicle_type')
-        # l_order_end_time = bs.Label(f_vehicle, textvariable=v_order_end_time_value, bootstyle='info')
-        l_order_end_time = bs.Label(f_order, text='test_vehicle_type', bootstyle='inverse-info')
-        l_order_end_time.place(relx=0.2, rely=0.5, relwidth=0.6, relheight=0.25)
+        v_order_end_time_value.set('Order End Time: ' + str(order_info['OrderEndTime'].iloc[0]))
+        l_order_end_time = tk.Label(f_order, textvariable=v_order_end_time_value)
+        # l_order_end_time = bs.Label(f_order, text='test_vehicle_type', bootstyle='inverse-info')
+        l_order_end_time.place(relx=0.2, rely=0.4, relwidth=0.6, relheight=0.2)
 
         v_total_amount_value = bs.StringVar()  # total_amount
-        v_total_amount_value.set('test_vehicle_power')
-        # l_total_amount = bs.Label(f_vehicle, textvariable=v_total_amount_value, bootstyle='info')
-        l_total_amount = bs.Label(f_order, text='test_vehicle_power', bootstyle='inverse-info')
-        l_total_amount.place(relx=0.2, rely=0.75, relwidth=0.6, relheight=0.25)
+        v_total_amount_value.set('Total Amount: ' + str(order_info['OrderPrice'].iloc[0]))
+        l_total_amount = tk.Label(f_order, textvariable=v_total_amount_value)
+        # l_total_amount = bs.Label(f_order, text='test_vehicle_power', bootstyle='inverse-info')
+        l_total_amount.place(relx=0.2, rely=0.6, relwidth=0.6, relheight=0.2)
+
+        v_order_state_value = bs.StringVar()  # order_state
+        v_order_state_value.set('Order State: ' + str(order_info['OrderState'].iloc[0]))
+        l_order_state = tk.Label(f_order, textvariable=v_order_state_value)
+        # l_order_state = bs.Label(f_order, text='test_vehicle_power', bootstyle='inverse-info')
+        l_order_state.place(relx=0.2, rely=0.8, relwidth=0.6, relheight=0.2)
+
 
         f_button = bs.Frame(f_main, bootstyle='primary')  # button frame
         f_button.place(relx=0, rely=0.9, relwidth=1, relheight=0.1)
 
         b_pay = bs.Button(f_button, text="Pay", bootstyle='light',
-                          command=lambda: self.pay_order_page())
+                          command=lambda: self.pay_order_page(v_order_state_value, order_no))
         b_pay.place(relx=0.1, rely=0.1, relwidth=0.2, relheight=0.8)
 
         b_report = bs.Button(f_button, text="Report", bootstyle='light',
-                          command=lambda: self.report_page())
+                          command=lambda: self.report_page(order_no, order_info['CarEndLocation'].iloc[0]))
         b_report.place(relx=0.4, rely=0.1, relwidth=0.2, relheight=0.8)
 
         b_back = bs.Button(f_button, text="Back", bootstyle='light',
                            command=lambda: w_complete_order.destroy())
         b_back.place(relx=0.7, rely=0.1, relwidth=0.2, relheight=0.8)
 
-    def pay_order_page(self):
+    def pay_order_page(self, v_order_state_value, order_no):
         """
         支付界面
         :return:
         """
         result = tk.messagebox.askquestion(title="Confirm", message="Are you sure you want to pay this bill?")
         if result == 'yes':
-            # TODO 给后端传入username、车辆id、订单编号，返回支付情况
-            tk.messagebox.showinfo('info', 'Your bill has paid!')
+            # print(self.user_info[0])
+            if BEF.pay_order(order_no):
+                tk.messagebox.showinfo('info', 'Your bill has paid!')
+                v_order_state_value.set('Order State: end')
+            else:
+                tk.messagebox.showerror('Error', 'Pay Order Failed')
 
-    def report_page(self):
+    def report_page(self, order_no, end_location):
+        # w_choice_location = self.create_new_window(400, 40)
+        #
+        # # 在新窗口中添加一个 Label
+        # label = tk.Label(w_choice_location, text="new location: ")
+        # label.place(relx=0, rely=0.2, relwidth=0.3, relheight=0.6)
+        #
+        # # 在新窗口中添加一个 Entry
+        # combobox = bs.Combobox(w_choice_location, values=LOCATIONS, bootstyle="info")
+        # combobox.place(relx=0.3, rely=0.2, relwidth=0.45, relheight=0.6)
+        #
+        # # 在新窗口中添加一个 Button
+        # button = tk.Button(w_choice_location, text="confirm")
+        # button.place(relx=0.8, rely=0.2, relwidth=0.15, relheight=0.6)
+        #
         w_report = self.create_new_window(400, 400)
 
         f_top = bs.Frame(w_report, bootstyle='primary')  # top frame
         f_top.place(relx=0, rely=0, relwidth=1, relheight=0.1)
-        l_report = bs.Label(f_top, text='Report', bootstyle='inverse-info')
+        l_report = bs.Label(f_top, text='Report', bootstyle='inverse-primary', anchor='center')
         l_report.place(relx=0.2, rely=0.1, relwidth=0.6, relheight=0.8)
 
         f_middle = bs.Frame(w_report, bootstyle='primary')  # middle frame
-        f_middle.place(relx=0, rely=0, relwidth=1, relheight=0.8)
-        e_report = bs.Entry(f_middle, bootstyle='info')
-        e_report.place(relx=0.2, rely=0.1, relwidth=0.6, relheight=0.8)
+        f_middle.place(relx=0, rely=0.1, relwidth=1, relheight=0.75)
+        e_report = bs.Entry(f_middle, bootstyle='primary')
+        e_report.place(relx=0.2, rely=0.1, relwidth=0.6, relheight=0.9)
 
         f_bottom = bs.Frame(w_report, bootstyle='primary')  # bottom frame
-        f_bottom.place(relx=0, rely=0.8, relwidth=1, relheight=0.1)
-        b_report = bs.Button(f_bottom, text="Confirm", bootstyle='info', command=lambda: self.report(e_report.get()))
-        b_report.place(relx=0.2, rely=0.1, relwidth=0.2, relheight=0.8)
-        b_back = bs.Button(f_bottom, text="Back", bootstyle='info', command=w_report.destroy())
-        b_back.place(relx=0.6, rely=0.1, relwidth=0.2, relheight=0.8)
+        f_bottom.place(relx=0, rely=0.85, relwidth=1, relheight=0.15)
+        b_report = bs.Button(f_bottom, text="Confirm", bootstyle='info', command=lambda: self.report(w_report, e_report.get(), order_no, end_location))
+        b_report.place(relx=0.4, rely=0.1, relwidth=0.2, relheight=0.8)
+        # b_report.place(relx=0.2, rely=0.1, relwidth=0.2, relheight=0.8)
+        # b_back = bs.Button(f_bottom, text="Back", bootstyle='info')
+        # b_back.place(relx=0.6, rely=0.1, relwidth=0.2, relheight=0.8)
 
-    def report(self, info):
-        # TODO: 将report内容传给后端
-        pass
-
-    def pay_order(self):
-        # TODO: 将tb_user中相应数值调整
-        pass
-        tk.messagebox.showinfo('info', 'Pay Order Success')
+    def report(self, w_report, info, order_no, end_location):
+        w_report.destroy()
+        result = BEF.repair(order_no, info, end_location)
+        if result == "OrderError":
+            tk.messagebox.showerror('Error', 'No Such Order')
+        elif result == "Successful":
+            tk.messagebox.showinfo('info', 'Repair Success')
 
     def back(self):
         # TODO: 返回上一层

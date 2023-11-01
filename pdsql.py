@@ -24,10 +24,22 @@ USER_TEST_DATA = {
         'UserName': ['manager', 'operator', 'user', 'user1'],
         'UserPassword': ['000', '000', '000', '000'],
         'UserType': ['manager', 'operator', 'customer', 'customer'],
-        'UserDebt': [0, 0, 0, 1],
-        'UserDeposit': [0, 0, 1, 1],
-        'UserLocation': ['None', 'None', 'IKEA']
-    }
+        'UserDebt': [0, 0, 0, 7],
+        'UserDeposit': [0, 0, 0, 0],
+        'UserLocation': ['None', 'None', 'Hospital', 'UofG']
+}
+
+ORDER_TEST_DATA = {
+        'OrderID': [1],
+        'CarID': [1],
+        'UserName': ['user1'],
+        'OrderStartTime': ['2023-07-14 19:04:32'],
+        'OrderEndTime': ['2023-07-14 21:04:32'],
+        'OrderPrice': [14],
+        'OrderState': ['due'],
+        'CarStartLocation': ['IKEA'],
+        'CarEndLocation': ['Hospital']
+}
 
 # 创建数据库连接
 def connect_to_database():
@@ -227,6 +239,8 @@ def test_cars_data_initialization(num_car_samples):
 
 
 def test_order_data_initialization(num_cars_samples, num_order_samples):
+    orders_test_data = pd.DataFrame(ORDER_TEST_DATA)
+    num_order_samples = num_order_samples - len(orders_test_data)
     def generate_random_datetimes(num_datetimes, start_year=2020, end_year=2023):
         """
         Generate a list of random datetimes in the format "%Y-%m-%d %H:%M:%S".
@@ -337,7 +351,7 @@ def test_order_data_initialization(num_cars_samples, num_order_samples):
 
     # 使满足条件：一个用户可以有很多已经完成只能最多有一个未付款或一个正在进行
     for _ in range(num_order_samples):
-        user_name = random.choice(df_users['UserName'].tolist())
+        user_name = random.choice(df_users['UserName'][len(USER_TEST_DATA):].tolist())
         user_names.append(user_name)
 
         # 如果用户已经有了ongoing或due状态，只能分配end状态
@@ -368,6 +382,7 @@ def test_order_data_initialization(num_cars_samples, num_order_samples):
         'CarEndLocation': [random.choice(LOCATIONS) for _ in range(num_order_samples)]
     })
 
+    df_orders = pd.concat([orders_test_data, df_orders], ignore_index=True)
     # print("df_orders: ", df_orders)
 
     connect = connect_to_database()
