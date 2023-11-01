@@ -44,6 +44,7 @@ def update_user_debt(user_name, user_debt):
     cursor = connect.cursor()
     
     try:
+        user_debt = int(user_debt)
         cursor.execute("UPDATE tb_Users SET UserDebt = ? WHERE UserName = ?", (user_debt, user_name))
         connect.commit()
         connect.close()
