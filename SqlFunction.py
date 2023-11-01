@@ -141,6 +141,7 @@ def get_one_user_orders(user_name):
         user_orders = cursor.fetchall()
         connect.close()
         return user_orders
+
     except sqlite3.Error as e:
         print("查询用户订单时发生错误:", str(e))
         connect.close()

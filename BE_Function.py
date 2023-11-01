@@ -120,6 +120,7 @@ def rent_start(car_id, user_name):
     #print(user_info)
     #print(car_info)
 
+
     if user_info[3] != 0:
         connect.close()
         return "DepositError"
@@ -253,7 +254,7 @@ def pay_order(order_id):
     try:
         order_info = SqlFunction.get_one_order_info(order_id)
         SqlFunction.pay_one_order(order_id)
-        SqlFunction.update_user_debt(order_info[3], 0)
+        SqlFunction.update_user_debt(order_info[2], 0)
         return True
 
     except sqlite3.Error as e:
