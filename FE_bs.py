@@ -1,4 +1,5 @@
 import random
+import re
 import tkinter as tk
 from datetime import datetime
 from pathlib import Path
@@ -646,16 +647,46 @@ class ETSP:
         v_username = tk.StringVar()  # 用户选择的用户名
         v_username.set('Username: ' + str(self.user_info[0]))
         l_username = tk.Label(f_main, textvariable=v_username)
-        l_username.place(relx=0.2, rely=0.55, relwidth=0.6, relheight=0.1)
+        l_username.place(relx=0.2, rely=0.5, relwidth=0.6, relheight=0.1)
 
         v_user_debt = tk.StringVar()  # 用户欠费
         v_user_debt.set('User Debt: ' + str(self.user_info[3]))
         l_user_debt = tk.Label(f_main, textvariable=v_user_debt)
-        l_user_debt.place(relx=0.2, rely=0.7, relwidth=0.6, relheight=0.1)
+        l_user_debt.place(relx=0.2, rely=0.62, relwidth=0.6, relheight=0.1)
+
+        v_user_balance = tk.StringVar()  # 用户余额
+        money = random.randint(0, 20)
+        v_user_balance.set('User Balance: ' + str(money))
+        l_user_balance = tk.Label(f_main, textvariable=v_user_balance)
+        l_user_balance.place(relx=0.2, rely=0.74, relwidth=0.6, relheight=0.1)
 
         b_pay = bs.Button(f_main, text='Pay', bootstyle='primary-outline',
                           command=lambda: self.pay_in_account(self.user_info[3]))
-        b_pay.place(relx=0.4, rely=0.85, relwidth=0.2, relheight=0.05)
+        b_pay.place(relx=0.2, rely=0.86, relwidth=0.2, relheight=0.05)
+
+        b_recharge = bs.Button(f_main, text='Recharge', bootstyle='primary-outline',
+                               command=lambda: self.recharge_in_account(v_user_balance))
+        b_recharge.place(relx=0.6, rely=0.86, relwidth=0.2, relheight=0.05)
+
+    def recharge_in_account(self, v_user_balance):
+        w_recharge = self.create_new_window(400, 40)
+
+        # 在新窗口中添加一个 Label
+        label = tk.Label(w_recharge, text="Money to recharge: ")
+        label.place(relx=0, rely=0.2, relwidth=0.4, relheight=0.6)
+
+        # 在新窗口中添加一个 Entry
+        entry = bs.Entry(w_recharge, bootstyle="info")
+        entry.place(relx=0.4, rely=0.2, relwidth=0.35, relheight=0.6)
+
+        # 在新窗口中添加一个 Button
+        button = tk.Button(w_recharge, text="confirm",
+                           command=lambda: self.recharge_confirm(entry.get(), v_user_balance))
+        button.place(relx=0.8, rely=0.2, relwidth=0.15, relheight=0.6)
+
+    def recharge_confirm(self, v_user_refresh, v_user_balance):
+        value = int(re.findall(r'\d+', str(v_user_balance.get()))[0]) + int(v_user_refresh)
+        v_user_balance.set('User Balance: ' + str(value))
 
     def pay_in_account(self, debt, ):
         if debt == 0:

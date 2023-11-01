@@ -21,25 +21,31 @@ pd.set_option('display.max_rows', None)
 pd.set_option('display.max_columns', None)
 
 USER_TEST_DATA = {
-        'UserName': ['manager', 'operator', 'user', 'user1'],
-        'UserPassword': ['000', '000', '000', '000'],
-        'UserType': ['manager', 'operator', 'customer', 'customer'],
-        'UserDebt': [0, 0, 0, 7],
-        'UserDeposit': [0, 0, 0, 0],
-        'UserLocation': ['None', 'None', 'Hospital', 'UofG']
+    'UserName': ['manager', 'operator', 'user', 'user1'],
+    'UserPassword': ['000', '000', '000', '000'],
+    'UserType': ['manager', 'operator', 'customer', 'customer'],
+    'UserDebt': [0, 0, 0, 7],
+    'UserDeposit': [0, 0, 0, 0],
+    'UserLocation': ['None', 'None', 'Hospital', 'UofG']
 }
 
+NUM_USER_SAMPLES, NUM_CARS_SAMPLES, NUM_ORDER_SAMPLES = 100, 100, 1000
+
 ORDER_TEST_DATA = {
-        'OrderID': [1],
-        'CarID': [1],
-        'UserName': ['user1'],
-        'OrderStartTime': ['2023-07-14 19:04:32'],
-        'OrderEndTime': ['2023-07-14 21:04:32'],
-        'OrderPrice': [14],
-        'OrderState': ['due'],
-        'CarStartLocation': ['IKEA'],
-        'CarEndLocation': ['Hospital']
+    'OrderID': [NUM_ORDER_SAMPLES - 4, NUM_ORDER_SAMPLES - 3, NUM_ORDER_SAMPLES - 2, NUM_ORDER_SAMPLES - 1,
+                NUM_ORDER_SAMPLES],
+    'CarID': [1, 21, 53, 6, 77],
+    'UserName': ['user1', 'user1', 'user1', 'user1', 'user1'],
+    'OrderStartTime': ['2023-07-14 19:04:32', '2020-06-19 08:17:02', '2022-05-01 00:12:19', '2021-10-25 15:44:05',
+                       '2022-03-17 04:09:49'],
+    'OrderEndTime': ['2023-07-14 21:04:32', '2020-06-19 11:17:02', '2022-05-01 02:12:19', '2021-10-25 16:44:05',
+                     '2022-03-17 06:09:49'],
+    'OrderPrice': [14, 21, 14, 7, 14],
+    'OrderState': ['due', 'end', 'end', 'end', 'end'],
+    'CarStartLocation': ['IKEA', 'Hospital', 'UofG', 'Square', 'City Center'],
+    'CarEndLocation': ['Hospital', 'UofG', 'Square', 'City Center', 'IKEA']
 }
+
 
 # 创建数据库连接
 def connect_to_database():
@@ -89,7 +95,8 @@ def get_all_orders():
 
 
 def test_data_initialization():
-    num_user_samples, num_cars_samples, num_order_samples = 100, 100, 1000
+    num_user_samples, num_cars_samples, num_order_samples = NUM_USER_SAMPLES, NUM_CARS_SAMPLES, NUM_ORDER_SAMPLES
+
     test_user_initialization(num_user_samples)
     test_cars_data_initialization(num_cars_samples)
     test_order_data_initialization(num_cars_samples, num_order_samples)
@@ -104,6 +111,7 @@ def test_user_initialization(num_user_samples):
     # 用户测试用例
     users_test_data = pd.DataFrame(USER_TEST_DATA)
     num_user_samples = num_user_samples - len(users_test_data)
+
     # print(users_test_data)
 
     def generate_usernames(num_usernames):
@@ -241,6 +249,7 @@ def test_cars_data_initialization(num_car_samples):
 def test_order_data_initialization(num_cars_samples, num_order_samples):
     orders_test_data = pd.DataFrame(ORDER_TEST_DATA)
     num_order_samples = num_order_samples - len(orders_test_data)
+
     def generate_random_datetimes(num_datetimes, start_year=2020, end_year=2023):
         """
         Generate a list of random datetimes in the format "%Y-%m-%d %H:%M:%S".
@@ -388,6 +397,7 @@ def test_order_data_initialization(num_cars_samples, num_order_samples):
     connect = connect_to_database()
     df_orders.to_sql('tb_Orders', connect, if_exists='replace', index=False)
     connect.close()
+
 
 if __name__ == "__main__":
     test_data_initialization()
