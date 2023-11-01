@@ -1,6 +1,7 @@
 import tkinter as tk
 from datetime import datetime
 from pathlib import Path
+import random
 from tkinter import messagebox
 
 import pandas as pd
@@ -112,7 +113,7 @@ class ETSP:
         初次显示页面
         """
         # self.root.geometry('1600x800')
-        
+
         screen_width = self.root.winfo_screenwidth()
         screen_height = self.root.winfo_screenheight()
         window_width = 1600
@@ -162,6 +163,10 @@ class ETSP:
         # app = FE_User.AppManager()
         # app.mainloop()
 
+    def random_style_choice(self):
+        random_choice = random.randint(0, len(ttkbootstrap_themes) - 1)
+        self.style = bs.Style(theme=ttkbootstrap_themes[random_choice])
+
     def frame_top(self, frame, current_page_name='electric transportation sharing', flag=1, icon_file_name='bike.png'):
         """
         顶部导航栏
@@ -179,12 +184,15 @@ class ETSP:
 
             # b_back = bs.Button(f_top, text='Back', bootstyle='dark-outline', command=self.test)
             b_back = bs.Button(f_top, text='Back', bootstyle='dark-outline', command=self.show_first_page)
-            b_back.place(relx=0.02, rely=0.3, relwidth=0.2, relheight=0.4)
+            b_back.place(relx=0.02, rely=0.3, relwidth=0.13, relheight=0.4)
+
+            b_style = bs.Button(f_top, text='Click me!', bootstyle='dark-outline', command=self.random_style_choice)
+            b_style.place(relx=0.16, rely=0.3, relwidth=0.2, relheight=0.4)
 
             # l_name = tk.Label(f_top, text=current_page_name)
             l_name = bs.Label(f_top, text=current_page_name, bootstyle='inverse-dark',
                               font=("Arial", 30), anchor='center', justify=tk.CENTER)
-            l_name.place(relx=0.3, rely=0.2, relwidth=0.4, relheight=0.6)
+            l_name.place(relx=0.35, rely=0.2, relwidth=0.4, relheight=0.6)
 
             time_label = bs.Label(f_top, font=('Arial', 20), bootstyle='inverse-dark')
             time_label.place(relx=0.7, rely=0.2, relwidth=0.3, relheight=0.6)
@@ -230,8 +238,11 @@ class ETSP:
                               font=("Arial", 30), anchor='center', justify=tk.CENTER)
             l_name.place(relx=0.2, rely=0.2, relwidth=0.6, relheight=0.6)
 
+            b_style = bs.Button(f_top, text='Click me!', bootstyle='dark-outline', command=self.random_style_choice)
+            b_style.place(relx=0.82, rely=0.3, relwidth=0.06, relheight=0.4)
+
             time_label = bs.Label(f_top, font=('Arial', 20), bootstyle='inverse-dark')
-            time_label.place(relx=0.85, rely=0.2, relwidth=0.1, relheight=0.6)
+            time_label.place(relx=0.91, rely=0.2, relwidth=0.08, relheight=0.6)
             self.update_time(f_top, time_label)
 
         return f_top
@@ -294,12 +305,15 @@ class ETSP:
 
         b_vehicle = bs.Button(f_b_l, text="Vehicle", bootstyle='dark-outline',
                               command=lambda: self.user_main_page())
-        b_order = bs.Button(f_b_m, text="Order", bootstyle='dark-outline')
-        b_home = bs.Button(f_b_r, text="Home", bootstyle='dark-outline')
+        b_order = bs.Button(f_b_m, text="Order", bootstyle='dark-outline', command=lambda: self.user_order_page())
+        b_home = bs.Button(f_b_r, text="Home", bootstyle='dark-outline', command=lambda: self.user_account_page())
+        # b_order = bs.Button(f_b_m, text="Order", bootstyle='dark-outline')
+        # b_home = bs.Button(f_b_r, text="Home", bootstyle='dark-outline')
 
-        b_vehicle.pack(fill='both', expand=True)
-        b_order.pack(fill='both', expand=True)
-        b_home.pack(fill='both', expand=True)
+
+        b_vehicle.place(relx=0.2, rely=0.2, relwidth=0.6, relheight=0.6)
+        b_order.place(relx=0.2, rely=0.2, relwidth=0.6, relheight=0.6)
+        b_home.place(relx=0.2, rely=0.2, relwidth=0.6, relheight=0.6)
 
         return f_bottom
 
@@ -378,11 +392,11 @@ class ETSP:
         l_psw.place(relx=0.15, rely=0.5, relwidth=0.2, relheight=0.2)
 
         e_psw = bs.Entry(register_lab_frame, bootstyle='info', show="*")
-        e_psw.place(relx=0.45, rely=0.5, relwidth=0.4, relheight=0.15)
+        e_psw.place(relx=0.45, rely=0.5, relwidth=0.4, relheight=0.2)
 
         b_login = bs.Button(register_lab_frame, text='Return', bootstyle='info-outline',
                             command=lambda: self.login_page(f_middle))
-        b_login.place(relx=0.2, rely=0.8, relwidth=0.2, relheight=0.2)
+        b_login.place(relx=0.2, rely=0.8, relwidth=0.2, relheight=0.15)
         b_register = bs.Button(register_lab_frame, text='Register', bootstyle='info-outline',
                                command=lambda: self.register_test(f_middle, e_username.get(), e_psw.get()))
         b_register.place(relx=0.6, rely=0.8, relwidth=0.2, relheight=0.15)
@@ -435,6 +449,7 @@ class ETSP:
         用户主界面框架
         :return: None
         """
+        print('user_main_page')
         # 获取屏幕尺寸和窗口尺寸
         screen_width = self.root.winfo_screenwidth()
         screen_height = self.root.winfo_screenheight()
@@ -453,6 +468,24 @@ class ETSP:
         top = self.frame_top(f_main, 'User!', 0)
         middle = self.frame_middle(f_main)
         self.user_place_page(middle)
+        bottom = self.frame_bottom(f_main, middle)
+
+    def user_order_page(self):
+        print('user_order_page')
+        f_main = bs.Frame(self.root, bootstyle='dark')
+        f_main.place(relx=0, rely=0, relwidth=1, relheight=1)
+        top = self.frame_top(f_main, 'Order!', 0)
+        middle = self.frame_middle(f_main)
+        # self.user_place_page(middle)
+        bottom = self.frame_bottom(f_main, middle)
+
+    def user_account_page(self):
+        print('user_account_page')
+        f_main = bs.Frame(self.root, bootstyle='dark')
+        f_main.place(relx=0, rely=0, relwidth=1, relheight=1)
+        top = self.frame_top(f_main, 'Home!', 0)
+        middle = self.frame_middle(f_main)
+        # self.user_place_page(middle)
         bottom = self.frame_bottom(f_main, middle)
 
     def user_place_page(self, f_middle):
