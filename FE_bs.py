@@ -479,10 +479,12 @@ class ETSP:
         bottom = self.frame_bottom(f_main, middle)
 
     def user_order(self, frame):
-        print(self.user_info[0])
-        list_order = SQF.get_one_user_orders(self.user_info[0])
+        # print(self.user_info[0])
+        list_orders = SQF.get_one_user_orders(self.user_info[0])
         # TODO: 返回值不充足，只有最后一个订单
-        print(list_order)
+        # print(list_orders)
+        list_orders = [list(item) for item in list_orders]
+        # print(list_orders)
 
         # 选车界面 frame
         f_order = bs.Frame(frame, bootstyle='primary')
@@ -531,22 +533,23 @@ class ETSP:
         # l_test.pack()
 
         # for list in list_order:
-        for _ in range(10):
-            single_order_bar = self.single_order_bar(f_vehicle)
+        for list_order in list_orders:
+            single_order_bar = self.single_order_bar(f_vehicle, list_order)
             single_order_bar.pack()
             space_frame = bs.Frame(f_vehicle, width=380, height=10, bootstyle='primary')
             space_frame.pack()
         frame_fill = bs.Frame(f_vehicle, width=380, height=700, bootstyle='primary')
         frame_fill.pack()
 
-    def single_order_bar(self, frame,
-                         list=[61, 11, 'Alex17', '2022-04-29 20:20:07', '2022-04-29 21:20:07', 7, 'ongoing', 'IKEA',
-                               'Square']):
+    def single_order_bar(self, frame, list=None):
         single_order_frame = bs.Frame(frame, width=380, height=200, bootstyle='primary')  # 主框架
-        list = [61, 11, 'Alex17', '2022-04-29 20:20:07', '2022-04-29 21:20:07', 7, 'ongoing', 'IKEA',
-                'Square']
-        # OrderID; UserName, OrderState; CarID, OrderPrice; OrderStartTime, OrderEndTime; CarStartLocation, CarEndLocation;
+        # list = [61, 11, 'Alex17', '2022-04-29 20:20:07', '2022-04-29 21:20:07', 7, 'ongoing', 'IKEA', 'Square']
 
+        # print('list: ',  list)
+        # print('list[0]: ',  list[0])
+        # print('list[1]: ',  list[1])
+
+        # OrderID; UserName, OrderState; CarID, OrderPrice; OrderStartTime, OrderEndTime; CarStartLocation, CarEndLocation;
         # OrderID
         v_order_id = tk.StringVar()
         v_order_id.set('Order\nNo.' + str(list[0]))
@@ -924,7 +927,7 @@ class ETSP:
             single_width = 380
         elif flag == 1:  # operator
             single_width = 1520
-        info = [f_vehicle, choice_type, choice_location, choice_state, choice_sort_by]
+        info = [flag, f_vehicle, choice_type, choice_location, choice_state, choice_sort_by]
         # self.operator_page_clear()
         self.destroy_frame(f_vehicle)
         # f_vehicle = bs.Frame(canvas_vehicle)
@@ -1437,7 +1440,6 @@ class ETSP:
         # l_vehicle_power_left = bs.Label(f_vehicle, text='test_vehicle_power', bootstyle='inverse-info')
         l_vehicle_power_left.place(relx=0.2, rely=0.75, relwidth=0.6, relheight=0.25)
 
-        # TODO: 订单信息获取
         df_orders = take_pd_orders()
         order_info = df_orders[df_orders['OrderID'] == order_no]
         f_order = bs.Frame(f_main, bootstyle='primary')  # order frame
@@ -1555,6 +1557,7 @@ class ETSP:
         if charge_info == 'ChargeSuccess':
             tk.messagebox.showinfo('info', 'Charge Success')
             self.data(info[0], info[1], info[2], info[3], info[4])
+
         elif charge_info == 'CarFalse':
             tk.messagebox.showerror('Error', 'No Such Car')
         elif charge_info == 'RepairFalse':

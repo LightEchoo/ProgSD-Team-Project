@@ -284,7 +284,7 @@ def opt_update_car(update_action, car_id, car_location = "Main Building"):
                     charging = SqlFunction.update_car_power(car_id, 100)
 
                     if charging:
-                        SqlFunction.update_car_state(car_id, "avaliable")
+                        SqlFunction.update_car_state(car_id, "available")
                         return "ChargeSuccess"
                     else:
                         return "ChargeFalse"
@@ -292,7 +292,7 @@ def opt_update_car(update_action, car_id, car_location = "Main Building"):
             #报修
             elif update_action == "repair":
                 if car_info[6] == "repair":
-                    repairing = SqlFunction.update_car_state(car_id, "avaliavle")
+                    repairing = SqlFunction.update_car_state(car_id, "available")
                     if repairing == True:
                         return "RepairSuccess"
                     else:
