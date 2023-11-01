@@ -1,7 +1,7 @@
+import random
 import tkinter as tk
 from datetime import datetime
 from pathlib import Path
-import random
 from tkinter import messagebox
 
 import pandas as pd
@@ -11,8 +11,8 @@ from matplotlib import pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 import BE_Function as BEF
-import pdsql
 import SqlFunction as SQF
+import pdsql
 
 IMG_PATH = Path(__file__).parent / 'images'
 # 车辆类型
@@ -310,7 +310,6 @@ class ETSP:
         # b_order = bs.Button(f_b_m, text="Order", bootstyle='dark-outline')
         # b_home = bs.Button(f_b_r, text="Home", bootstyle='dark-outline')
 
-
         b_vehicle.place(relx=0.2, rely=0.2, relwidth=0.6, relheight=0.6)
         b_order.place(relx=0.2, rely=0.2, relwidth=0.6, relheight=0.6)
         b_home.place(relx=0.2, rely=0.2, relwidth=0.6, relheight=0.6)
@@ -449,7 +448,7 @@ class ETSP:
         用户主界面框架
         :return: None
         """
-        print('user_main_page')
+        # print('user_main_page')
         # 获取屏幕尺寸和窗口尺寸
         screen_width = self.root.winfo_screenwidth()
         screen_height = self.root.winfo_screenheight()
@@ -471,7 +470,7 @@ class ETSP:
         bottom = self.frame_bottom(f_main, middle)
 
     def user_order_page(self):
-        print('user_order_page')
+        # print('user_order_page')
         f_main = bs.Frame(self.root, bootstyle='dark')
         f_main.place(relx=0, rely=0, relwidth=1, relheight=1)
         top = self.frame_top(f_main, 'Order!', 0)
@@ -479,15 +478,85 @@ class ETSP:
         # self.user_place_page(middle)
         bottom = self.frame_bottom(f_main, middle)
 
+        # f_main = bs.Frame(frame)
+        # f_main.place(relx=0, rely=0, relwidth=1, relheight=1)
+        #
+        # pd_vehicles = take_pd_vehicles()
+        # vehicle_headers = pd_vehicles.columns.tolist()  # 表头
+        # tree = bs.Treeview(f_main, columns=vehicle_headers, show='headings', bootstyle='info')
+        # tree.pack(side=tk.LEFT, fill="both", expand=True)
+        # for header in vehicle_headers:  # 设置表头属性
+        #     tree.heading(header, text=header)
+        #     tree.column(header, stretch=tk.YES, anchor='center')
+        #
+        # pd_vehicles = take_pd_vehicles()
+        # vehicle_data = pd_vehicles.sort_values(by=sort_column, ascending=sort_type).values.tolist()  # 数值
+        # for data in vehicle_data:  # 插入数值
+        #     tree.insert('', 'end', values=data)
+        # self.adjust_column_width(tree, vehicle_headers)  # 调整列宽度自适应
+        #
+        # # 配置交替行颜色的树状视图
+        # for index, child in enumerate(tree.get_children()):
+        #     if index % 2 == 0:
+        #         tree.item(child, tags=('evenrow',))
+        #     else:
+        #         tree.item(child, tags=('oddrow',))
+        #
+        # tree.tag_configure('evenrow', background='white')
+        # tree.tag_configure('oddrow', background='lightgray')
+        #
+        # # 创建垂直滚动条
+        # vsb = bs.Scrollbar(f_main, orient="vertical", command=tree.yview, bootstyle="info-round")
+        # tree.configure(yscrollcommand=vsb.set)
+        # vsb.pack(side=tk.RIGHT, fill=tk.Y)
+
     def user_account_page(self):
-        print('user_account_page')
-        f_main = bs.Frame(self.root, bootstyle='dark')
+        # print('user_account_page')
+        f_main = bs.Frame(self.root, bootstyle='info')
         f_main.place(relx=0, rely=0, relwidth=1, relheight=1)
         top = self.frame_top(f_main, 'Home!', 0)
         middle = self.frame_middle(f_main)
-        # self.user_place_page(middle)
+        self.account_page(middle)
         bottom = self.frame_bottom(f_main, middle)
 
+    def account_page(self, f_middle):
+        """
+        user account界面
+        :return:
+        """
+        f_main = bs.Frame(f_middle, bootstyle='primary')
+        f_main.place(relx=0, rely=0, relwidth=1, relheight=1)
+
+        images_path_list = ['user_image_0.png', 'user_image_1.png']
+        # print(images_path_list)
+        # print(images_path_list[random.randint(0, 1)])
+        user_image = self.resize_image(images_path_list[random.randint(0, 1)], 150, 200)
+        # print(user_image)
+
+        label = bs.Label(f_main, image=user_image, bootstyle='primary')
+        label.image = user_image  # 保持对图像的引用，以防止被垃圾回收
+        label.place(relx=5/16, rely=0.1, relwidth=3/8, relheight=0.32)
+        # label.pack(side='top')
+
+        v_username = tk.StringVar()  # 用户选择的用户名
+        v_username.set('Username: ' + str(self.user_info[0]))
+        l_username = tk.Label(f_main, textvariable=v_username)
+        l_username.place(relx=0.2, rely=0.55, relwidth=0.6, relheight=0.1)
+
+        v_user_debt = tk.StringVar()  # 用户欠费
+        v_user_debt.set('User Debt: ' + str(self.user_info[3]))
+        l_user_debt = tk.Label(f_main, textvariable=v_user_debt)
+        l_user_debt.place(relx=0.2, rely=0.7, relwidth=0.6, relheight=0.1)
+
+        b_pay = bs.Button(f_main, text='Pay', bootstyle='primary-outline', command=lambda: self.pay_in_account(self.user_info[3]))
+        b_pay.place(relx=0.4, rely=0.85, relwidth=0.2, relheight=0.05)
+
+    def pay_in_account(self, debt, ):
+        if debt == 0:
+            tk.messagebox.showerror("Error", "You don't need to pay!")
+        else:
+            tk.messagebox.showinfo("Congratulations!", "You have paid!")
+            # TODO: 更改数据库状态
     def user_place_page(self, f_middle):
         """
         用户主界面-位置选择界面
@@ -605,7 +674,7 @@ class ETSP:
             if location == '':
                 c_vehicle_location.current(0)
             else:
-                c_vehicle_location.current(LOCATIONS.index(location)+1)
+                c_vehicle_location.current(LOCATIONS.index(location) + 1)
 
             l_vehicle_type.place(relx=0.04, rely=0.25, relwidth=0.15, relheight=0.5)
             c_vehicle_type.place(relx=0.19, rely=0.25, relwidth=0.2, relheight=0.5)
@@ -714,7 +783,8 @@ class ETSP:
                                                             c_vehicle_location.get(),
                                                             c_vehicle_state.get(), c_sort_by.get()))
             b_confirm.place(relx=0.89, rely=0.25, relwidth=0.06, relheight=0.5)
-            self.data(flag, f_vehicle, c_vehicle_type.get(), c_vehicle_location.get(), c_vehicle_state.get(), c_sort_by.get())
+            self.data(flag, f_vehicle, c_vehicle_type.get(), c_vehicle_location.get(), c_vehicle_state.get(),
+                      c_sort_by.get())
 
     def operator_page_clear(self):
         """
@@ -847,7 +917,7 @@ class ETSP:
             # 车辆编号
             v_vehicle_no = tk.StringVar()
             # # print("车辆编号："+str(vehicle_no))
-            v_vehicle_no.set('No.'+ str(vehicle_no))
+            v_vehicle_no.set('No.' + str(vehicle_no))
             # print(v_vehicle_no.get())
             # l_vehicle_no = bs.Label(frame_info, textvariable=v_vehicle_no, bootstyle='inverse-info')
             l_vehicle_no = tk.Label(frame_info, text='Vehicle No.: ', padx=padx_label, pady=pady_label)
@@ -928,7 +998,8 @@ class ETSP:
             frame_book = bs.Frame(single_frame, width=r_width, height=main_height, bootstyle='primary')  # 右侧预定按钮框架
             frame_book.place(x=0 + l_width + m_width, y=0)
 
-            b_booking = bs.Button(frame_book, text="Book", bootstyle='info', command=lambda: self.booking(vehicle_no, info))
+            b_booking = bs.Button(frame_book, text="Book", bootstyle='info',
+                                  command=lambda: self.booking(vehicle_no, info))
             b_booking.place(relx=0, rely=0.25, relwidth=0.9, relheight=0.4)
 
         elif flag == 1:  # operator
@@ -938,8 +1009,8 @@ class ETSP:
             m_width = 1100
             r_width = 320
             label_width = 80
-        # style = ttk.Style()
-        # style.configure('Custom11.TFrame', bg='dark', borderwidth=5, relief='groove')
+            # style = ttk.Style()
+            # style.configure('Custom11.TFrame', bg='dark', borderwidth=5, relief='groove')
 
             single_frame = bs.Frame(frame, width=main_width, height=main_height, style='primary',
                                     padding=((0, 5)))  # 主框架
@@ -1107,7 +1178,6 @@ class ETSP:
             tk.messagebox.showinfo('info', 'Your vehicle has been booked successfully!')
             self.order_in_progress(vehicle_no, result[0], result[1])
 
-
     def order_in_progress(self, vehicle_no, order_no=None, start_time=None):
         """
         用户book成功后跳转至当前页面，用于显示正在进行中的订单信息
@@ -1133,19 +1203,19 @@ class ETSP:
 
         f_order_in_progress = bs.Frame(f_main, bootstyle='primary')
         f_order_in_progress.place(relx=0, rely=0, relwidth=1, relheight=0.1)
-        l_order_in_progress = bs.Label(f_order_in_progress, text='Order in progress', anchor='center', bootstyle='inverse-primary')
+        l_order_in_progress = bs.Label(f_order_in_progress, text='Order in progress', anchor='center',
+                                       bootstyle='inverse-primary')
         l_order_in_progress.place(relx=0.2, rely=0.1, relwidth=0.6, relheight=0.8)
 
         f_order_info = bs.Frame(f_main, bootstyle='primary')
         f_order_info.place(relx=0, rely=0.1, relwidth=1, relheight=0.8)
 
-
         vehicle_image = self.resize_image(image_file_name, 200, 200)
         l_icon = bs.Label(f_order_info, image=vehicle_image, bootstyle='primary')
         l_icon.image = vehicle_image  # 保持对图像的引用，以防止被垃圾回收
-        l_icon.place(relx=0.25, rely=0.03, relwidth=0.5, relheight=5/8, bordermode='outside')
+        l_icon.place(relx=0.25, rely=0.03, relwidth=0.5, relheight=5 / 8, bordermode='outside')
 
-        f_vehicle_info = bs.Frame(f_order_info, bootstyle='primary') # vehicle info
+        f_vehicle_info = bs.Frame(f_order_info, bootstyle='primary')  # vehicle info
         f_vehicle_info.place(relx=0, rely=0.705, relwidth=1, relheight=0.295, bordermode='outside')
 
         v_vehicle_no_value = bs.StringVar()  # vehicle no
@@ -1153,21 +1223,18 @@ class ETSP:
         l_vehicle_no = tk.Label(f_vehicle_info, textvariable=v_vehicle_no_value)
         # l_vehicle_no = bs.Label(f_vehicle_info, text='test_vehicle_no', bootstyle='inverse-info')
 
-
         v_order_no_value = bs.StringVar()  # order no
         v_order_no_value.set('Order No.\n' + str(order_no))
         l_order_no = tk.Label(f_vehicle_info, textvariable=v_order_no_value)
         # l_order_no = bs.Label(f_vehicle_info, text='test_order_no', bootstyle='inverse-info')
-
 
         v_start_time_value = bs.StringVar()  # start time
         v_start_time_value.set('Start Time\n' + str(start_time))
         l_start_time = tk.Label(f_vehicle_info, textvariable=v_start_time_value)
         # l_start_time = bs.Label(f_vehicle_info, text='test_start_time', bootstyle='inverse-info')
 
-
         v_price_value = bs.StringVar()  # price
-        pd_vehicles=take_pd_vehicles()
+        pd_vehicles = take_pd_vehicles()
         vehicle_price = pd_vehicles[pd_vehicles['CarID'] == vehicle_no]['CarPrice'].iloc[0]
         # print(vehicle_price)
         v_price_value.set('Price\n£' + str(vehicle_price) + '/h')
@@ -1208,7 +1275,8 @@ class ETSP:
 
         # 在新窗口中添加一个 Button
         button = tk.Button(w_choice_location, text="confirm",
-                           command=lambda: self.return_vehicle(w_choice_location, combobox.get(), w_order_in_progress, order_no, vehicle_no))
+                           command=lambda: self.return_vehicle(w_choice_location, combobox.get(), w_order_in_progress,
+                                                               order_no, vehicle_no))
         button.place(relx=0.8, rely=0.2, relwidth=0.15, relheight=0.6)
 
     def return_vehicle(self, w_choice_location, choice_location, w_order_in_progress, order_no, vehicle_no):
@@ -1243,7 +1311,8 @@ class ETSP:
         f_vehicle = bs.Frame(f_main, bootstyle='primary')  # vehicle frame
         f_vehicle.place(relx=0, rely=0.1, relwidth=1, relheight=0.3)
 
-        l_vehicle_info = bs.Label(f_vehicle, text='Vehicle Info', bootstyle='danger', anchor='center')  # vehicle info frame
+        l_vehicle_info = bs.Label(f_vehicle, text='Vehicle Info', bootstyle='danger',
+                                  anchor='center')  # vehicle info frame
         l_vehicle_info.place(relx=0.2, rely=0, relwidth=0.6, relheight=0.25)
 
         v_vehicle_no_value = bs.StringVar()  # vehicle no
@@ -1297,7 +1366,6 @@ class ETSP:
         # l_order_state = bs.Label(f_order, text='test_vehicle_power', bootstyle='inverse-info')
         l_order_state.place(relx=0.2, rely=0.8, relwidth=0.6, relheight=0.2)
 
-
         f_button = bs.Frame(f_main, bootstyle='primary')  # button frame
         f_button.place(relx=0, rely=0.9, relwidth=1, relheight=0.1)
 
@@ -1306,7 +1374,7 @@ class ETSP:
         b_pay.place(relx=0.1, rely=0.1, relwidth=0.2, relheight=0.8)
 
         b_report = bs.Button(f_button, text="Report", bootstyle='light',
-                          command=lambda: self.report_page(order_no, order_info['CarEndLocation'].iloc[0]))
+                             command=lambda: self.report_page(order_no, order_info['CarEndLocation'].iloc[0]))
         b_report.place(relx=0.4, rely=0.1, relwidth=0.2, relheight=0.8)
 
         b_back = bs.Button(f_button, text="Back", bootstyle='light',
@@ -1356,7 +1424,8 @@ class ETSP:
 
         f_bottom = bs.Frame(w_report, bootstyle='primary')  # bottom frame
         f_bottom.place(relx=0, rely=0.85, relwidth=1, relheight=0.15)
-        b_report = bs.Button(f_bottom, text="Confirm", bootstyle='info', command=lambda: self.report(w_report, e_report.get(), order_no, end_location))
+        b_report = bs.Button(f_bottom, text="Confirm", bootstyle='info',
+                             command=lambda: self.report(w_report, e_report.get(), order_no, end_location))
         b_report.place(relx=0.4, rely=0.1, relwidth=0.2, relheight=0.8)
         # b_report.place(relx=0.2, rely=0.1, relwidth=0.2, relheight=0.8)
         # b_back = bs.Button(f_bottom, text="Back", bootstyle='info')
