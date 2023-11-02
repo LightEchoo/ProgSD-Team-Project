@@ -35,7 +35,7 @@ ORDER_TEST_DATA = {
     'OrderID': [NUM_ORDER_SAMPLES - 4, NUM_ORDER_SAMPLES - 3, NUM_ORDER_SAMPLES - 2, NUM_ORDER_SAMPLES - 1,
                 NUM_ORDER_SAMPLES],
     'CarID': [1, 21, 53, 6, 77],
-    'UserName': ['user1', 'user1', 'user1', 'user1', 'user1'],
+    'UserName': ['user1', 'user', 'user', 'user', 'user'],
     'OrderStartTime': ['2023-07-14 19:04:32', '2020-06-19 08:17:02', '2022-05-01 00:12:19', '2021-10-25 15:44:05',
                        '2022-03-17 04:09:49'],
     'OrderEndTime': ['2023-07-14 21:04:32', '2020-06-19 11:17:02', '2022-05-01 02:12:19', '2021-10-25 16:44:05',
