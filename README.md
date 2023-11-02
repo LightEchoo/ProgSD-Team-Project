@@ -36,7 +36,7 @@ There are several libraries should be installed before using this software:
 * PIL
 * matplotlib
 
-
+IMPORTANT: you have to install before start:
 * pathlib
 * ttkbootstrap
 
