@@ -77,7 +77,8 @@ IMPORTANT: you have to install before start:
 * ttkbootstrap
 
 ## Usage
-Test account name and password:
+* Run the main file 
+* Test account name and password:
 
 | account type |   name   | password|
 |:------------:|:--------:| :---: |
